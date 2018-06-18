@@ -6,7 +6,16 @@ set (CMAKE_VERSION_MAJOR 0)
 set (CMAKE_VERSION_MINOR 1)
 configure_file("${PROJECT_SOURCE_DIR}/version.h.in" "${PROJECT_BINARY_DIR}/version.h")
 
+# Make sure the re-written version header can be included
 include_directories("${PROJECT_BINARY_DIR}")
+
+# Add documentation
+find_package(Doxygen)
+if(DOXYGEN_FOUND)
+configure_file("${PROJECT_SOURCE_DIR}/Doxyfile.in" "${PROJECT_BINARY_DIR}/Doxyfile")
+add_custom_target(doc COMMAND "${DOXYGEN_EXECUTABLE}" "${PROJECT_BINARY_DIR}/Doxyfile" WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+COMMENT "Generating documentation with Doxygen" VERBATIM)
+endif(DOXYGEN_FOUND)
 
 # Build RakNet
 add_subdirectory(RakNet)

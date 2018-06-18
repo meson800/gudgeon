@@ -1,0 +1,4 @@
+#pragma once
+
+#define NETWORK_MAX_CLIENTS 20
+#define NETWORK_SERVER_PORT 53735
