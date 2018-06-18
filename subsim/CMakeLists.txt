@@ -8,8 +8,9 @@ configure_file("${PROJECT_SOURCE_DIR}/version.h.in" "${PROJECT_BINARY_DIR}/versi
 
 include_directories("${PROJECT_BINARY_DIR}")
 
-# Make the game master executable
-add_executable(subsim_gm game_master/main.cpp)
+# Build RakNet
+add_subdirectory(RakNet)
 
-# Make the client executable
-add_executable(subsim_client client/main.cpp)
+# Build the game master and client
+add_subdirectory(game_master)
+add_subdirectory(client)
