@@ -1,0 +1,29 @@
+Depdencies
+----------
+To build the client, you need OpenAL installed. You also need CMake.
+On Ubuntu(esque) things this requires:
+
+sudo apt-get intall libopenal1 libopenal-dev cmake
+
+
+Building
+--------
+First, make sure that the RakNet submodule has been downloaded. We use a 
+submodule so we can track a specific version, without duplicating all of the
+code for this version in this repo. If you didn't do a recursive checkout, run
+
+git submodule update --recursive --remote
+
+Then, do a normal CMake build! Run
+
+mkdir build
+cd build
+cmake ../
+make
+
+After that, in the build directory, there should be two executables, at
+
+game_master/subsim_gm
+client/subsim_client
+
+Make sure these both run!
