@@ -8,6 +8,8 @@ configure_file("${PROJECT_SOURCE_DIR}/version.h.in" "${PROJECT_BINARY_DIR}/versi
 
 # Make sure the re-written version header can be included
 include_directories("${PROJECT_BINARY_DIR}")
+# Also make sure that we can find the RakNet header files
+include_directories("${PROJECT_SOURCE_DIR}/RakNet/Source")
 
 # Add documentation
 find_package(Doxygen)
@@ -20,6 +22,11 @@ endif(DOXYGEN_FOUND)
 # Build RakNet
 add_subdirectory(RakNet)
 
+# Let CMake find the files inside the common folder
+FILE(GLOB COMMONSRC common/*.cpp)
+
 # Build the game master and client
 add_subdirectory(game_master)
+
 add_subdirectory(client)
+
