@@ -26,3 +26,10 @@ Network::~Network()
     RakNet::RakPeerInterface::DestroyInstance(node);
 }
 
+void Network::connect(const std::string& hostname)
+{
+    if (node->Connect(hostname.c_str(), NETWORK_SERVER_PORT, 0, 0) != RakNet::CONNECTION_ATTEMPT_STARTED)
+    {
+        throw NetworkConnectionError("Couldn't initiate connection to remote host!");
+    }
+}

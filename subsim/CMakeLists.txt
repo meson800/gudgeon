@@ -1,6 +1,9 @@
 cmake_minimum_required (VERSION 2.6)
 project (subsim)
 
+# Use C++11
+set(CMAKE_CXX_STANDARD 11)
+
 # Set the current version number, save it into the version header
 set (CMAKE_VERSION_MAJOR 0)
 set (CMAKE_VERSION_MINOR 1)
