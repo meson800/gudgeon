@@ -1,12 +1,45 @@
 #pragma once
 
 #include <string> // For std::string
+#include <set>
+#include <thread>
+
+#include "RakNetTypes.h" // For RakNetGUID
 
 /// Forward definition of RakPeerInterface
 namespace RakNet
 {
     class RakPeerInterface;
 }
+
+/*!
+ * RecieveInterface is a virtual class from which objects interested in recieving
+ * simulation messages should derive. A pointer to a class of this type is passed
+ * to the main Network thread, who then uses member functions to send callbacks to.
+ *
+ * Callbacks are not implemented as pure virtual functions, as the default action
+ * for the callbacks should be to drop the packet (return false).
+ *
+ * If a callback successfully handled a packet, the callback function should return true.
+ *
+ * Network will iterate through the list of registered callback classes, and emit a warning
+ * if a callback is unhandled. Callback propogation stops when the first callback class successfully
+ * handles the message.
+ */
+class RecieveInterface
+{
+public:
+    /**
+     * Callback called when a Connect call has succeeded. Client can now send messages
+     * to the listed node
+     */
+    bool ConnectionEstablished(RakNet::RakNetGUID other) { return false; }
+    /**
+     * Callback called when another system has attempted to connect to us. Messages
+     * can now be sent to the other system.
+     */
+    bool IncomingConnection(RakNet::RakNetGUID other) { return false; }
+};
 
 /*!
  * Network encapsulates network interactions with other clients. This abstracts
@@ -26,6 +59,24 @@ public:
     /// Connects to a game master given a hostname or IP as a string
     void connect(const std::string& hostname);
 
+    /// Adds a callback class to the registered callback list
+    void registerCallback(RecieveInterface* callback);
+
+    /// Removes a callback class from the registered callback list
+    void deregisterCallback(RecieveInterface* callback);
+
 private:
     RakNet::RakPeerInterface* node;
+
+    /// Member thread that handles recieving messages from the queue.
+    std::thread recieveThread;
+
+    /// Member variables storing all currently registered callbacks
+    std::set<RecieveInterface*> callbacks;
+
+    /**
+     * Main thread function. This handles packets as they come in, and notifies
+     * registered callbacks of any changes.
+     */
+    void handlePackets();
 };

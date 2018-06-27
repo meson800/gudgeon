@@ -11,7 +11,7 @@ int main(int argc, char **argv)
     Log::shouldMirrorToConsole(true);
     Log::setLogLevel(Log::ALL);
 
-    Log::writeToLog(Log::INFO, "Subsim game master version v", VERSION_MAJOR, ".", VERSION_MINOR, " started\n");
+    Log::writeToLog(Log::INFO, "Subsim game master version v", VERSION_MAJOR, ".", VERSION_MINOR, " started");
 
     Network network(true);
 
