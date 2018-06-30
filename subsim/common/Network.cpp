@@ -7,8 +7,21 @@
 #include "RakPeerInterface.h" // For RakPeer
 
 #include "Log.h"
+#include "Messages.h" // For various message types
+
+#include <iostream>
+
+/*!
+ * Definition of an ostream override so that we can easily log
+ * RakNetGUID's
+ */
+std::ostream& operator<< (std::ostream& stream, const RakNet::RakNetGUID& guid)
+{
+    return stream << RakNet::RakNetGUID::ToUint32(guid);
+}
 
 Network::Network(bool is_server)
+    : shouldShutdown(false)
 {
     node = RakNet::RakPeerInterface::GetInstance();
 
@@ -28,11 +41,25 @@ Network::Network(bool is_server)
 
         throw NetworkStartupError("Couldn't start networking!");
     }
+    Log::writeToLog(Log::L_DEBUG, "Starting networking thread");
+    recieveThread = std::thread(&Network::handlePackets, this);
 }
 
 Network::~Network()
 {
+    Log::writeToLog(Log::INFO, "Shutting down networking");
+    Log::writeToLog(Log::L_DEBUG, "Signaling networking thread to close...");
+    /* Shutdown inside a locked mutex. Lock guard for exception safety */
+    {
+        std::lock_guard<std::mutex> lock(shutdownMutex);
+        shouldShutdown = true;
+    }
+    // Wait for the networking thread to fully shutdown
+    recieveThread.join();
+    Log::writeToLog(Log::L_DEBUG, "Networking thread closed! Waiting for connections to close.");
+    node->Shutdown(500);
     RakNet::RakPeerInterface::DestroyInstance(node);
+    Log::writeToLog(Log::INFO, "Networking fully shutdown.");
 }
 
 void Network::connect(const std::string& hostname)
@@ -71,10 +98,64 @@ void Network::handlePackets()
 {
     while (true)
     {
+        /* Check for shutdown inside a locked mutex */
+        {
+            std::lock_guard<std::mutex> lock(shutdownMutex);
+            if (shouldShutdown)
+            {
+                return;
+            }
+        }
+        /* Yield so we don't busy loop */
+        std::this_thread::yield();
         for (RakNet::Packet* packet = node->Receive(); packet; node->DeallocatePacket(packet), packet = node->Receive())
         {
             switch (packet->data[0])
             {
+            case ID_CONNECTION_REQUEST_ACCEPTED:
+                Log::writeToLog(Log::L_DEBUG, "Successfully connected to system GUID:", packet->guid);
+                // Send a version message to the other computer to validate.
+
+                break;
+
+            case ID_NEW_INCOMING_CONNECTION:
+                Log::writeToLog(Log::L_DEBUG, "System GUID:", packet->guid, " connected to us!");
+                // Wait for the client to send the version number
+                break;
+
+            case ID_ALREADY_CONNECTED:
+                Log::writeToLog(Log::WARN, "Attempted to connect to a computer already connected to!");
+                break;
+
+            case ID_NO_FREE_INCOMING_CONNECTIONS:
+                Log::writeToLog(Log::ERR, "Server full! Unable to add another connection.");
+                throw NetworkConnectionError("Server full!");
+                break;
+
+            case ID_DISCONNECTION_NOTIFICATION:
+            {
+                Log::writeToLog(Log::L_DEBUG, "System GUID:", packet->guid, " disconnected gracefully.");
+                // Remove this from our confirmed connections list
+                auto foundIt = confirmedConnections.find(packet->guid);
+                if (foundIt != confirmedConnections.end())
+                {
+                    confirmedConnections.erase(foundIt);
+                }
+                break;
+            }
+
+            case ID_CONNECTION_LOST:
+            {
+                Log::writeToLog(Log::L_DEBUG, "System GUID:", packet->guid, " disconnected rudely.");
+                // Remove this from our confirmed connections list
+                auto foundIt = confirmedConnections.find(packet->guid);
+                if (foundIt != confirmedConnections.end())
+                {
+                    confirmedConnections.erase(foundIt);
+                }
+                break;
+            }
+
             default:
                 Log::writeToLog(Log::WARN, "Unknown packet with id:" , packet->data[0], " recieved");
                 break;

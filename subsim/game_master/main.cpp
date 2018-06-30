@@ -1,4 +1,6 @@
 #include <iostream>
+#include <string>
+#include <thread>
 
 #include "version.h"
 #include "../common/Network.h"
@@ -15,5 +17,8 @@ int main(int argc, char **argv)
 
     Network network(true);
 
+    std::cout << "Press enter to exit...\n";
+    std::string dummy;
+    std::getline(std::cin, dummy);
     return 0;
 }

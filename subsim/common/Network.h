@@ -3,6 +3,9 @@
 #include <string> // For std::string
 #include <set>
 #include <thread>
+#include <mutex>
+
+#include <iostream>
 
 #include "RakNetTypes.h" // For RakNetGUID
 
@@ -11,6 +14,7 @@ namespace RakNet
 {
     class RakPeerInterface;
 }
+
 
 /*!
  * RecieveInterface is a virtual class from which objects interested in recieving
@@ -73,6 +77,16 @@ private:
 
     /// Member variables storing all currently registered callbacks
     std::set<RecieveInterface*> callbacks;
+
+    /// Member variable indicating when the networking thread should shutdown, along with protective mutex
+    std::mutex shutdownMutex;
+    bool shouldShutdown;
+
+    /** Member variable storing all "confirmed" connections.
+     * A connection is confirmed when the version number has been validated to be the same
+     * between computers.
+     */
+    std::set<RakNet::RakNetGUID> confirmedConnections;
 
     /**
      * Main thread function. This handles packets as they come in, and notifies
