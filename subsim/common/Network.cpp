@@ -45,6 +45,13 @@ Network::Network(bool is_server)
 
         throw NetworkStartupError("Couldn't start networking!");
     }
+
+    /* Make sure people can connect to us */
+    if (is_server)
+    {
+        node->SetMaximumIncomingConnections(NETWORK_MAX_CLIENTS);
+    }
+
     Log::writeToLog(Log::L_DEBUG, "Starting networking thread");
     recieveThread = std::thread(&Network::handlePackets, this);
 }
@@ -150,7 +157,7 @@ void Network::handlePackets()
                 Log::writeToLog(Log::L_DEBUG, "System GUID:", packet->guid, " connected with verison ",
                     otherVersion.versionMajor, ".", otherVersion.versionMinor);
 
-                if (otherVersion.versionMajor != VERSION_MAJOR || otherVersion.versionMinor)
+                if (otherVersion.versionMajor != VERSION_MAJOR || otherVersion.versionMinor != VERSION_MINOR)
                 {
                     Log::writeToLog(Log::WARN, "System GUID:", packet->guid, " has version mismatch! Disconnecting");
                     /* Inform the other computer of the verion mismatch then disconnect */

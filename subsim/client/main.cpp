@@ -19,7 +19,7 @@ int main(int argc, char **argv)
 
     Log::writeToLog(Log::INFO, "Subsim client version v", VERSION_MAJOR, ".", VERSION_MINOR, " starting");
 
-    if (argc != 3 && std::string(argv[1]) != std::string("-s"))
+    if (argc != 3 || std::string(argv[1]) != std::string("-s"))
     {
         print_usage(argv[0]);
         return 1;
@@ -27,5 +27,9 @@ int main(int argc, char **argv)
 
     Network network;
     network.connect(argv[2]);
+
+    std::cout << "Press enter to exit...\n";
+    std::string dummy;
+    std::getline(std::cin, dummy);
     return 0;
 }

@@ -17,15 +17,15 @@ VersionMessage::VersionMessage(RakNet::BitStream& source)
 
 void VersionMessage::deserialize(RakNet::BitStream& source)
 {
-    source.Write(versionMajor);
-    source.Write(versionMinor);
-}
-
-void VersionMessage::serialize(RakNet::BitStream& source)
-{
     if (!source.Read(versionMajor) || !source.Read(versionMinor))
     {
         Log::writeToLog(Log::ERR, "Unable to deserialize a VersionMessage");
         throw NetworkMessageError("VersionMessage deserialization failure!");
     }
+}
+
+void VersionMessage::serialize(RakNet::BitStream& source)
+{
+    source.Write(versionMajor);
+    source.Write(versionMinor);
 }
