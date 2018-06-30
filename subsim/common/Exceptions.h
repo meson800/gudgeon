@@ -28,3 +28,12 @@ class NetworkConnectionError : public NetworkError
 public:
     NetworkConnectionError(const std::string &err) : NetworkError(err) {}
 };
+
+/**
+ * Exception representing a failure to decode a network message.
+ */
+class NetworkMessageError : public NetworkError
+{
+public:
+    NetworkMessageError(const std::string &err) : NetworkError(err) {}
+};

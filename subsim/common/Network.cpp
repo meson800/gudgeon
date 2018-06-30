@@ -5,9 +5,11 @@
 
 #include "RakNetTypes.h" // For SocketDescriptor
 #include "RakPeerInterface.h" // For RakPeer
+#include "BitStream.h"
 
 #include "Log.h"
 #include "Messages.h" // For various message types
+#include "version.h"
 
 #include <iostream>
 
@@ -29,6 +31,8 @@ Network::Network(bool is_server)
     RakNet::SocketDescriptor sd = is_server ? 
         RakNet::SocketDescriptor(NETWORK_SERVER_PORT, 0) : RakNet::SocketDescriptor();
     unsigned short num_clients = is_server ? NETWORK_MAX_CLIENTS : 1;
+
+    Log::writeToLog(Log::L_DEBUG, "Starting networking with ", num_clients, " possible active connections");
 
     if (node->Startup(num_clients, &sd, 1, 0) != RakNet::RAKNET_STARTED) // last zero is thread priority 0
     {
@@ -64,6 +68,7 @@ Network::~Network()
 
 void Network::connect(const std::string& hostname)
 {
+    Log::writeToLog(Log::L_DEBUG, "Attempting to connect to server:", hostname, " on port ", NETWORK_SERVER_PORT);
     if (node->Connect(hostname.c_str(), NETWORK_SERVER_PORT, 0, 0) != RakNet::CONNECTION_ATTEMPT_STARTED)
     {
         Log::writeToLog(Log::ERR, "Couldn't connect to server: ", hostname, " on port ", NETWORK_SERVER_PORT);
@@ -110,18 +115,59 @@ void Network::handlePackets()
         std::this_thread::yield();
         for (RakNet::Packet* packet = node->Receive(); packet; node->DeallocatePacket(packet), packet = node->Receive())
         {
+            RakNet::BitStream packetBs(packet->data + 1, packet->length - 1, false);
             switch (packet->data[0])
             {
             case ID_CONNECTION_REQUEST_ACCEPTED:
+            {
                 Log::writeToLog(Log::L_DEBUG, "Successfully connected to system GUID:", packet->guid);
                 // Send a version message to the other computer to validate.
+                VersionMessage ourVersion(VERSION_MAJOR, VERSION_MINOR);
+                RakNet::BitStream out;
 
+                out.Write((RakNet::MessageID)ID_VERSION);
+                ourVersion.serialize(out);
+                node->Send(&out, HIGH_PRIORITY, RELIABLE, 0, packet->guid, false);
                 break;
+            }
 
             case ID_NEW_INCOMING_CONNECTION:
+            {
                 Log::writeToLog(Log::L_DEBUG, "System GUID:", packet->guid, " connected to us!");
-                // Wait for the client to send the version number
+                // Send a version message to the other computer to validate.
+                VersionMessage ourVersion(VERSION_MAJOR, VERSION_MINOR);
+                RakNet::BitStream out;
+
+                out.Write((RakNet::MessageID)ID_VERSION);
+                ourVersion.serialize(out);
+                node->Send(&out, HIGH_PRIORITY, RELIABLE, 0, packet->guid, false);
                 break;
+            }
+
+            case ID_VERSION:
+            {
+                VersionMessage otherVersion(packetBs);
+                Log::writeToLog(Log::L_DEBUG, "System GUID:", packet->guid, " connected with verison ",
+                    otherVersion.versionMajor, ".", otherVersion.versionMinor);
+
+                if (otherVersion.versionMajor != VERSION_MAJOR || otherVersion.versionMinor)
+                {
+                    Log::writeToLog(Log::WARN, "System GUID:", packet->guid, " has version mismatch! Disconnecting");
+                    /* Inform the other computer of the verion mismatch then disconnect */
+                    VersionMessage ourVersion(VERSION_MAJOR, VERSION_MINOR);
+                    RakNet::BitStream out;
+
+                    out.Write((RakNet::MessageID)ID_VERSION_MISMATCH);
+                    ourVersion.serialize(out);
+                    node->Send(&out, IMMEDIATE_PRIORITY, RELIABLE, 0, packet->guid, false);
+
+                    // hangup nicely
+                    node->CloseConnection(packet->guid, true);
+
+                    break;
+                }
+                break;
+            }
 
             case ID_ALREADY_CONNECTED:
                 Log::writeToLog(Log::WARN, "Attempted to connect to a computer already connected to!");
