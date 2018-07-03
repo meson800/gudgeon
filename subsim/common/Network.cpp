@@ -12,6 +12,8 @@
 #include "version.h"
 
 #include <iostream>
+#include <thread> // For std::this_thread
+#include <chrono> // For std::chrono::milliseconds
 
 /*!
  * Definition of an ostream override so that we can easily log
@@ -118,8 +120,8 @@ void Network::handlePackets()
                 return;
             }
         }
-        /* Yield so we don't busy loop */
-        std::this_thread::yield();
+        /* Sleep so we don't busy loop */
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
         for (RakNet::Packet* packet = node->Receive(); packet; node->DeallocatePacket(packet), packet = node->Receive())
         {
             RakNet::BitStream packetBs(packet->data + 1, packet->length - 1, false);

@@ -6,6 +6,9 @@ set (CMAKE_VERSION_MAJOR 0)
 set (CMAKE_VERSION_MINOR 1)
 configure_file("${PROJECT_SOURCE_DIR}/version.h.in" "${PROJECT_BINARY_DIR}/version.h")
 
+# Set the module search path so we can use custom find modules
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake_modules")
+
 # Make sure the re-written version header can be included
 include_directories("${PROJECT_BINARY_DIR}")
 # Also make sure that we can find the RakNet header files
