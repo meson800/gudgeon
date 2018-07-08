@@ -13,7 +13,9 @@ namespace RakNet
 enum MessageType
 {
     ID_VERSION = ID_USER_PACKET_ENUM + 1,
-    ID_VERSION_MISMATCH
+    ID_VERSION_MISMATCH,
+    ID_LOBBY_STATUS_REQUEST,
+    ID_LOBBY_STATUS
 };
 
 

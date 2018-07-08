@@ -9,6 +9,7 @@
 
 #include "Log.h"
 #include "Messages.h" // For various message types
+#include "Lobby.h"   // For LobbyStatus
 #include "version.h"
 
 #include <iostream>
@@ -108,6 +109,32 @@ void Network::deregisterCallback(RecieveInterface* callback)
     Log::writeToLog(Log::L_DEBUG, "Deregistered callback class ", callback);
 }
 
+/*!
+ * Templated function that attempts to call a given function pointer
+ * on each entry in a vector, assuming the function pointer returns a bool.
+ *
+ * The first entry in the vector that returns true "captures" the event, preventing future
+ * modules from being informed about the event.
+ *
+ * Returns true if the event was handled, false if it was not. There might be different
+ * relevant error states. Not handeling a information event may only be a warning,
+ * whereas not handling a syncronization event could be fatal.
+ */
+template <typename T, typename ...Types>
+bool tryCallbacks(std::set<RecieveInterface*>& interfaces, T func, Types... args)
+{
+    for (auto it : interfaces)
+    {
+        if ((it->*func)(args...))
+        {
+            // We handled it! Stop trying handlers.
+            return true;
+        }
+    }
+    return false;
+}
+
+
 void Network::handlePackets()
 {
     while (true)
@@ -175,6 +202,17 @@ void Network::handlePackets()
 
                     break;
                 }
+
+                /* Add this system to the verified connection list */
+                confirmedConnections.insert(packet->guid);
+
+
+                /* We successfully connected! Inform any waiting callbacks */
+                if (!tryCallbacks(callbacks, &RecieveInterface::ConnectionEstablished, packet->guid))
+                {
+                    Log::writeToLog(Log::WARN, "ConnectionEstablished callback not handled!");
+                }
+
                 break;
             }
 
@@ -196,6 +234,11 @@ void Network::handlePackets()
                 {
                     confirmedConnections.erase(foundIt);
                 }
+
+                if (!tryCallbacks(callbacks, &RecieveInterface::ConnectionLost, packet->guid))
+                {
+                    Log::writeToLog(Log::WARN, "ConnectionLost callback not handled!");
+                }
                 break;
             }
 
@@ -207,6 +250,30 @@ void Network::handlePackets()
                 if (foundIt != confirmedConnections.end())
                 {
                     confirmedConnections.erase(foundIt);
+                }
+
+                if (!tryCallbacks(callbacks, &RecieveInterface::ConnectionLost, packet->guid))
+                {
+                    Log::writeToLog(Log::WARN, "ConnectionLost callback not handled!");
+                }
+                break;
+            }
+
+            case ID_LOBBY_STATUS_REQUEST:
+                if (!tryCallbacks(callbacks, &RecieveInterface::LobbyStatusRequested, packet->guid))
+                {
+                    Log::writeToLog(Log::ERR, "Incoming LobbyStatusRequest not handled!");
+                    throw NetworkMessageUnhandledError("LobbyStatusRequested not handled!");
+                }
+                break;
+
+            case ID_LOBBY_STATUS:
+            {
+                LobbyStatus newStatus(packetBs);
+                if (!tryCallbacks(callbacks, &RecieveInterface::UpdatedLobbyStatus, newStatus))
+                {
+                    Log::writeToLog(Log::ERR, "Got unexpected/unhandled LobbyStatus!");
+                    throw NetworkMessageUnhandledError("UpdatedLobbyStatus not handled!");
                 }
                 break;
             }

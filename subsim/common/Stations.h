@@ -11,4 +11,4 @@ enum StationType
 /*!
  * Static array that stores the string version of a station
  */
-const char* StationNames[] = {"Helm"};
+static const char* StationNames[] = {"Helm"};

@@ -15,6 +15,9 @@ namespace RakNet
     class RakPeerInterface;
 }
 
+/// Forward declaration of LobbyStatus
+class LobbyStatus;
+
 
 /*!
  * RecieveInterface is a virtual class from which objects interested in recieving
@@ -36,13 +39,29 @@ public:
     /**
      * Callback called when a Connect call has succeeded. Client can now send messages
      * to the listed node
+     *
+     * This callback is called after version verification has succeeded.
      */
     bool ConnectionEstablished(RakNet::RakNetGUID other) { return false; }
+
     /**
-     * Callback called when another system has attempted to connect to us. Messages
-     * can now be sent to the other system.
+     * Callback called when a client has disconnected.
+     *
+     * Function argument is the disconnected system GUID.
      */
-    bool IncomingConnection(RakNet::RakNetGUID other) { return false; }
+    bool ConnectionLost(RakNet::RakNetGUID other) { return false; }
+
+    /**
+     * Callback used when a connected client requests lobby status.
+     *
+     * Function argument is the requesting system.
+     */
+    bool LobbyStatusRequested(RakNet::RakNetGUID other) { return false; }
+
+    /**
+     * Callback for when the lobby status has changed.
+     */
+    bool UpdatedLobbyStatus(const LobbyStatus& status) { return false; }
 };
 
 /*!

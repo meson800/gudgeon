@@ -37,3 +37,12 @@ class NetworkMessageError : public NetworkError
 public:
     NetworkMessageError(const std::string &err) : NetworkError(err) {}
 };
+
+/**
+ * Exception representing a failure to handle an incoming message.
+ */
+class NetworkMessageUnhandledError : public NetworkMessageError
+{
+public:
+    NetworkMessageUnhandledError(const std::string& err) : NetworkMessageError(err) {}
+};
