@@ -6,6 +6,8 @@
 #include "../common/Network.h"
 #include "../common/Log.h"
 
+#include "LobbyHandler.h"
+
 int main(int argc, char **argv)
 {
     Log::setLogfile(std::string(argv[0]) + ".log");
@@ -16,6 +18,9 @@ int main(int argc, char **argv)
     Log::writeToLog(Log::INFO, "Subsim game master version v", VERSION_MAJOR, ".", VERSION_MINOR, " started");
 
     Network network(true);
+
+    LobbyHandler lobby;
+    network.registerCallback(&lobby);
 
     std::cout << "Press enter to exit...\n";
     std::string dummy;

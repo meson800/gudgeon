@@ -5,10 +5,11 @@
  */
 enum StationType
 {
-    Helm = 0
+    Unassigned = 0,
+    Helm
 };
 
 /*!
  * Static array that stores the string version of a station
  */
-static const char* StationNames[] = {"Helm"};
+static const char* StationNames[] = {"Unassigned", "Helm"};

@@ -5,10 +5,42 @@
 #include "../common/Network.h"
 #include "../common/Log.h"
 
-#include "SDL.h"
+#include "UI.h"
+#include "LobbyHandler.h"
+
+
+/**
+ * Top level recieving class that tries to join a lobby upon connect.
+ * Once the lobby has been joined, it attempts to start a game as soon as
+ * the lobby is ready
+ */
+class JoinGame : public ReceiveInterface
+{
+private:
+    LobbyHandler lobby;
+
+public:
+    virtual bool ConnectionEstablished(RakNet::RakNetGUID other) override
+    {
+        Log::writeToLog(Log::INFO, "Connected to server ", other, "! Attempting to join lobby");
+        // Register the join lobby callback now
+        network->registerCallback(&lobby);
+
+        lobby.joinLobby(other, 1);
+        return true;
+    }
+
+    virtual bool ConnectionLost(RakNet::RakNetGUID other) override
+    {
+        Log::writeToLog(Log::INFO, "Lost connection with server ", other, ". Shutting down lobby");
+        network->deregisterCallback(&lobby);
+        return true;
+    }
+};
 
 void print_usage(char* prog_name)
 {
+    Log::writeToLog(Log::FATAL, "Invalid command line arguments");
     std::cerr << prog_name << " -s [ip/hostname]\n";
 }
 
@@ -28,23 +60,22 @@ int main(int argc, char **argv)
     }
 
     Network network;
+
+    // Startup the UI
+    UI ui;
+    UI::setGlobalUI(&ui);
+
+    // and start our JoinGame client
+    JoinGame game;
+    network.registerCallback(&game);
+
+    // Connect to get this party started
     network.connect(argv[2]);
-
-    // Startup SDL
-    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
-    SDL_Window *window = SDL_CreateWindow("Lobby", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 480, 0);
-    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-    SDL_RenderClear(renderer);
-    SDL_RenderPresent(renderer);
-
-    SDL_Delay(3000);
-
-    SDL_DestroyWindow(window);
-    SDL_Quit();
 
     std::cout << "Press enter to exit...\n";
     std::string dummy;
     std::getline(std::cin, dummy);
+
+    network.deregisterCallback(&game);
     return 0;
 }

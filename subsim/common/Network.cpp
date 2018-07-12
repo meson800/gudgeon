@@ -16,14 +16,6 @@
 #include <thread> // For std::this_thread
 #include <chrono> // For std::chrono::milliseconds
 
-/*!
- * Definition of an ostream override so that we can easily log
- * RakNetGUID's
- */
-std::ostream& operator<< (std::ostream& stream, const RakNet::RakNetGUID& guid)
-{
-    return stream << RakNet::RakNetGUID::ToUint32(guid);
-}
 
 Network::Network(bool is_server)
     : shouldShutdown(false)
@@ -86,17 +78,19 @@ void Network::connect(const std::string& hostname)
     }
 }
 
-void Network::registerCallback(RecieveInterface* callback)
+void Network::registerCallback(ReceiveInterface* callback)
 {
     if (callbacks.insert(callback).second == false)
     {
         Log::writeToLog(Log::WARN, "Callback class ", callback, "already registered! Ignoring.");
     } else {
+        /* Set network pointer so the callback can call network functions */
+        callback->network = this;
         Log::writeToLog(Log::L_DEBUG, "Registered callback class ", callback);
     }
 }
 
-void Network::deregisterCallback(RecieveInterface* callback)
+void Network::deregisterCallback(ReceiveInterface* callback)
 {
     auto it = callbacks.find(callback);
 
@@ -106,7 +100,31 @@ void Network::deregisterCallback(RecieveInterface* callback)
         throw std::runtime_error("Removal of unregistered callback attempted!");
     }
 
+    (*it)->network = nullptr;
+    callbacks.erase(it);
+
     Log::writeToLog(Log::L_DEBUG, "Deregistered callback class ", callback);
+}
+
+void Network::sendMessage(RakNet::RakNetGUID destination, MessageInterface* message, PacketReliability reliability)
+{
+    // Check that this actually is a valid destination
+    if (confirmedConnections.count(destination) == 0)
+    {
+        Log::writeToLog(Log::WARN, "Attempted to send a message of type:", message->getType(),
+            " to invalid destination GUID:", destination);
+        throw InvalidDestinationError("Attempted to send a message to invalid destination.");
+    }
+
+    RakNet::BitStream outStream;
+    outStream.Write((RakNet::MessageID)message->getType());
+    message->serialize(outStream);
+
+    if (node->Send(&outStream, PacketPriority::MEDIUM_PRIORITY, reliability, message->getType(), destination, false) == 0)
+    {
+        Log::writeToLog(Log::ERR, "Unable to send message with type:", message->getType(), " to system ", destination);
+        throw NetworkMessageError("Unable to send message to destination");
+    }
 }
 
 /*!
@@ -121,7 +139,7 @@ void Network::deregisterCallback(RecieveInterface* callback)
  * whereas not handling a syncronization event could be fatal.
  */
 template <typename T, typename ...Types>
-bool tryCallbacks(std::set<RecieveInterface*>& interfaces, T func, Types... args)
+bool tryCallbacks(std::set<ReceiveInterface*>& interfaces, T func, Types... args)
 {
     for (auto it : interfaces)
     {
@@ -208,7 +226,7 @@ void Network::handlePackets()
 
 
                 /* We successfully connected! Inform any waiting callbacks */
-                if (!tryCallbacks(callbacks, &RecieveInterface::ConnectionEstablished, packet->guid))
+                if (!tryCallbacks(callbacks, &ReceiveInterface::ConnectionEstablished, packet->guid))
                 {
                     Log::writeToLog(Log::WARN, "ConnectionEstablished callback not handled!");
                 }
@@ -235,7 +253,7 @@ void Network::handlePackets()
                     confirmedConnections.erase(foundIt);
                 }
 
-                if (!tryCallbacks(callbacks, &RecieveInterface::ConnectionLost, packet->guid))
+                if (!tryCallbacks(callbacks, &ReceiveInterface::ConnectionLost, packet->guid))
                 {
                     Log::writeToLog(Log::WARN, "ConnectionLost callback not handled!");
                 }
@@ -252,7 +270,7 @@ void Network::handlePackets()
                     confirmedConnections.erase(foundIt);
                 }
 
-                if (!tryCallbacks(callbacks, &RecieveInterface::ConnectionLost, packet->guid))
+                if (!tryCallbacks(callbacks, &ReceiveInterface::ConnectionLost, packet->guid))
                 {
                     Log::writeToLog(Log::WARN, "ConnectionLost callback not handled!");
                 }
@@ -260,17 +278,21 @@ void Network::handlePackets()
             }
 
             case ID_LOBBY_STATUS_REQUEST:
-                if (!tryCallbacks(callbacks, &RecieveInterface::LobbyStatusRequested, packet->guid))
+            {   
+                LobbyStatusRequest newRequest(packetBs);
+
+                if (!tryCallbacks(callbacks, &ReceiveInterface::LobbyStatusRequested, packet->guid, newRequest))
                 {
                     Log::writeToLog(Log::ERR, "Incoming LobbyStatusRequest not handled!");
                     throw NetworkMessageUnhandledError("LobbyStatusRequested not handled!");
                 }
                 break;
+            }
 
             case ID_LOBBY_STATUS:
             {
                 LobbyStatus newStatus(packetBs);
-                if (!tryCallbacks(callbacks, &RecieveInterface::UpdatedLobbyStatus, newStatus))
+                if (!tryCallbacks(callbacks, &ReceiveInterface::UpdatedLobbyStatus, newStatus))
                 {
                     Log::writeToLog(Log::ERR, "Got unexpected/unhandled LobbyStatus!");
                     throw NetworkMessageUnhandledError("UpdatedLobbyStatus not handled!");

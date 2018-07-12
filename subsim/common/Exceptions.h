@@ -3,6 +3,15 @@
 #include <stdexcept>
 
 /**
+ * Exception representing an SDL error
+ */
+class SDLError : public std::runtime_error
+{
+public:
+    SDLError(const std::string& err) : std::runtime_error(err) {}
+};
+
+/**
  * Exception representing a network failure of some kind.
  */
 class NetworkError : public std::runtime_error
@@ -45,4 +54,13 @@ class NetworkMessageUnhandledError : public NetworkMessageError
 {
 public:
     NetworkMessageUnhandledError(const std::string& err) : NetworkMessageError(err) {}
+};
+
+/**
+ * Exception representing a message sent to an invalid destination
+ */
+class InvalidDestinationError : public NetworkMessageError
+{
+public:
+    InvalidDestinationError(const std::string& err) : NetworkMessageError(err) {}
 };
