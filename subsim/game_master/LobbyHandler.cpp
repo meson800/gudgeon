@@ -13,7 +13,21 @@ bool LobbyHandler::LobbyStatusRequested(RakNet::RakNetGUID other, const LobbySta
     if (waitingSystems.count(other) == 0)
     {
         waitingSystems.insert(other);
+        // Also insert into the "client to stations" map, so we know if all stations used
+        status.clientToStations[other] = request.stations.size();
+
     }
+
+    /* Make sure that we didn't change the number of stations */
+    if (status.clientToStations[other] != request.stations.size())
+    {
+        Log::writeToLog(Log::WARN, "Lobby status request from system:", other, " invalid!",
+            " Number of stations changed from ", status.clientToStations[other], " to ", request.stations.size(), "!");
+        return true;
+    }
+
+    status.stations[std::pair<uint16_t, StationType>(1, StationType::Helm)] = RakNet::UNASSIGNED_RAKNET_GUID;
+
 
     /* Update the LobbyStatus if possible
      * Do this using the idea of a "transaction". Only if all modifications/updates
@@ -24,6 +38,12 @@ bool LobbyHandler::LobbyStatusRequested(RakNet::RakNetGUID other, const LobbySta
     bool transaction_fail = false;
     for (auto station : request.stations)
     {
+        // Check to see if this is null/unassigned station. Ignore it if so
+        if (station.second == StationType::Unassigned)
+        {
+            continue;
+        }
+
         /* Check for error conditions. This isn't assignable if either
          * the requested station doesn't exist or is already assigned to
          * someone else
