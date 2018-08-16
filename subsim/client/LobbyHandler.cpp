@@ -37,7 +37,6 @@ bool LobbyHandler::LobbyStatusRequested(RakNet::RakNetGUID other, const LobbySta
 bool LobbyHandler::UpdatedLobbyStatus(const LobbyStatus& status)
 {
     /* Unwrap the lobby status into stations per team */
-    std::map<uint16_t, std::vector<std::pair<StationType, RakNet::RakNetGUID>>> perTeamLobby;
     for (auto station : status.stations)
     {
         auto idPair = station.first;
@@ -55,21 +54,29 @@ bool LobbyHandler::UpdatedLobbyStatus(const LobbyStatus& status)
     }
 
     // Now draw the lobby status, using grayed out circles for free, open spots
+    scheduleRedraw();
+
+    return true;
+}
+
+void LobbyHandler::redraw()
+{
     uint16_t numTeams = perTeamLobby.size();
 
-    /*
     SDL_RenderClear(renderer);
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+    SDL_RenderClear(renderer);
     for (auto team : perTeamLobby)
     {
         uint16_t y = 30;
 
         // Space out teams evenly along the viewport
-        uint16_t x = static_cast<double>(team.first + 1) / numTeams * WIDTH;
+        uint16_t x = (static_cast<double>(team.first + 1) / numTeams * (WIDTH - 100) + 50);
 
         Log::writeToLog(Log::L_DEBUG, "Drawing status of team ", team.first);
         for (auto station : team.second)
         {
+            Log::writeToLog(Log::L_DEBUG, "Drawing box and circle at location ", x, ",", y);
             boxColor(renderer, x, y, x + 30, y + 30, 0xFFFFFFFF);
             if (filledCircleColor(renderer, x, y, 15, 0xFFFFFFFF) != 0)
             {
@@ -83,11 +90,4 @@ bool LobbyHandler::UpdatedLobbyStatus(const LobbyStatus& status)
 
     SDL_RenderPresent(renderer);
     SDL_RenderPresent(renderer);
-    */
-        
-    return true;
-}
-
-void LobbyHandler::redraw()
-{
 }

@@ -108,6 +108,7 @@ Renderable::~Renderable()
 
 void Renderable::scheduleRedraw()
 {
+    Log::writeToLog(Log::L_DEBUG, "Redraw requested from renderable ", this);
     if (renderer != nullptr)
     {
         UI::getGlobalUI()->triggerRedraw(renderer);
@@ -140,7 +141,9 @@ void UI::internalRegisterRenderable(SDL_Renderer* renderer, Renderable* renderab
     {
         Log::writeToLog(Log::WARN, "Renderable callback class ", renderable, "already registered on renderer ", renderer, "! Ignoring.");
     } else {
-        Log::writeToLog(Log::L_DEBUG, "Registered renderable ", renderable, " on renderer", renderer);
+        Log::writeToLog(Log::L_DEBUG, "Registered renderable ", renderable, " on renderer ", renderer);
+        // Schedule a redraw as we've added a new item to the render stack
+        triggerRedraw(renderer);
     }
 }
 
@@ -217,6 +220,30 @@ void UI::runSDLloop(bool& startupDone, std::mutex& startupMux)
             }
             rendererRequests.clear();
         }
+
+        // Lock the redraw mutex and redraw any renders that have requested it
+        {
+            std::lock_guard<std::mutex> lock(redrawMux);
+
+            for (SDL_Renderer* renderer : toRedraw)
+            {
+
+                if (renderStack.count(renderer) == 0)
+                {
+                    Log::writeToLog(Log::ERR, "Redraw requested for nonexistent renderer ", renderer, "!");
+                    throw std::runtime_error("Redraw requested for nonexistent renderer!");
+                }
+                Log::writeToLog(Log::L_DEBUG, "Redrawing renderer ", renderer);
+
+                for (Renderable* renderable : renderStack[renderer])
+                {
+                    renderable->redraw();
+                }
+            }
+            // Clear the redraw queue; we're done!
+            toRedraw.clear();
+        }
+                
 
         std::this_thread::sleep_for(std::chrono::milliseconds(170));
 

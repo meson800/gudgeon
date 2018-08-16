@@ -26,7 +26,7 @@ bool LobbyHandler::LobbyStatusRequested(RakNet::RakNetGUID other, const LobbySta
         return true;
     }
 
-    status.stations[std::pair<uint16_t, StationType>(1, StationType::Helm)] = RakNet::UNASSIGNED_RAKNET_GUID;
+    status.stations[std::pair<uint16_t, StationType>(0, StationType::Helm)] = RakNet::UNASSIGNED_RAKNET_GUID;
 
 
     /* Update the LobbyStatus if possible

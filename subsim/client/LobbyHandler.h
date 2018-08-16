@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+#include <map>
+
 #include "../common/Lobby.h"
 #include "../common/Network.h"
 #include "UI.h"
@@ -37,4 +39,7 @@ public:
 private:
     /// Stores our current requested station state
     LobbyStatusRequest state;
+
+    /// Stores unpacked version of LobbyStatus for easy drawing
+    std::map<uint16_t, std::vector<std::pair<StationType, RakNet::RakNetGUID>>> perTeamLobby;
 };
