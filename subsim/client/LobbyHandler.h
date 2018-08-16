@@ -4,6 +4,7 @@
 
 #include "../common/Lobby.h"
 #include "../common/Network.h"
+#include "UI.h"
 
 /// Forward declaration of SDL_Renderer
 class SDL_Renderer;
@@ -11,8 +12,11 @@ class SDL_Renderer;
 /*!
  * Client version of the LobbyHandler. Recieves LobbyStatus
  * and sends the server any local user-induced lobby changes to the server
+ *
+ * Inherits from both RecieveInterface and Renderable, so that we recieve callbacks for
+ * network calls and can draw on the screen.
  */
-class LobbyHandler : public ReceiveInterface
+class LobbyHandler : public ReceiveInterface, public Renderable
 {
 public:
     /// Inits our internal state
@@ -27,10 +31,10 @@ public:
     /// Handles incoming lobby status information, displaying it on the screen
     virtual bool UpdatedLobbyStatus(const LobbyStatus& status) override;
 
-private:
-    /// Stores the renderer context
-    SDL_Renderer* renderer;
+    /// Handles drawing the current state on the renderer.
+    virtual void redraw() override;
 
+private:
     /// Stores our current requested station state
     LobbyStatusRequest state;
 };

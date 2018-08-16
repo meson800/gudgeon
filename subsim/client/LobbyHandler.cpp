@@ -11,8 +11,10 @@
 #define HEIGHT 480
 
 LobbyHandler::LobbyHandler()
-    : renderer(nullptr)
-{}
+    : Renderable(WIDTH, HEIGHT)
+{
+    Log::writeToLog(Log::L_DEBUG, "LobbyHandler started");
+}
 
 void LobbyHandler::joinLobby(RakNet::RakNetGUID server, uint8_t numStations)
 {
@@ -34,12 +36,6 @@ bool LobbyHandler::LobbyStatusRequested(RakNet::RakNetGUID other, const LobbySta
 
 bool LobbyHandler::UpdatedLobbyStatus(const LobbyStatus& status)
 {
-    // Startup a renderer if we haven't already to visually display state
-    if (renderer == nullptr)
-    {
-        renderer = UI::getGlobalUI()->getFreeRenderer(WIDTH, HEIGHT);
-    }
-
     /* Unwrap the lobby status into stations per team */
     std::map<uint16_t, std::vector<std::pair<StationType, RakNet::RakNetGUID>>> perTeamLobby;
     for (auto station : status.stations)
@@ -61,6 +57,7 @@ bool LobbyHandler::UpdatedLobbyStatus(const LobbyStatus& status)
     // Now draw the lobby status, using grayed out circles for free, open spots
     uint16_t numTeams = perTeamLobby.size();
 
+    /*
     SDL_RenderClear(renderer);
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
     for (auto team : perTeamLobby)
@@ -86,6 +83,11 @@ bool LobbyHandler::UpdatedLobbyStatus(const LobbyStatus& status)
 
     SDL_RenderPresent(renderer);
     SDL_RenderPresent(renderer);
+    */
         
     return true;
+}
+
+void LobbyHandler::redraw()
+{
 }
