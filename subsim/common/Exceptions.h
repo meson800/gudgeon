@@ -3,6 +3,24 @@
 #include <stdexcept>
 
 /**
+ * Exception representing a generic parse failure.
+ */
+class GenericParseError : public std::runtime_error
+{
+public:
+    GenericParseError(const std::string& err) : std::runtime_error(err) {}
+};
+
+/**
+ * Exception representing a TeamParser error.
+ */
+class TeamParseError : public GenericParseError
+{
+public:
+    TeamParseError(const std::string& err) : GenericParseError(err) {}
+};
+
+/**
  * Exception representing an SDL error
  */
 class SDLError : public std::runtime_error

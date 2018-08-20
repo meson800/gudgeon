@@ -11,6 +11,8 @@
 class LobbyHandler : public ReceiveInterface
 {
 public:
+    /// Sets up the initial lobby status, by opening lobby.cfg
+    LobbyHandler();
     /// Catch disconnect events so we can remove them from the lobby
     virtual bool ConnectionLost(RakNet::RakNetGUID other) override;
     /// Catch lobby request events so we can identify people who want to join the lobby

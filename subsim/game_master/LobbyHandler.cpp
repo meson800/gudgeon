@@ -2,6 +2,19 @@
 
 #include "../common/Log.h"
 
+#include "../common/TeamParser.h"
+
+LobbyHandler::LobbyHandler()
+{
+    std::vector<std::pair<uint16_t, StationType>> requestedStations = 
+        TeamParser::parseStations(GenericParser::parse("lobby.cfg"));
+
+    for (auto station : requestedStations)
+    {
+        status.stations[station] = RakNet::UNASSIGNED_RAKNET_GUID;
+    }
+}
+
 bool LobbyHandler::ConnectionLost(RakNet::RakNetGUID other)
 {
     return false;
@@ -25,9 +38,6 @@ bool LobbyHandler::LobbyStatusRequested(RakNet::RakNetGUID other, const LobbySta
             " Number of stations changed from ", status.clientToStations[other], " to ", request.stations.size(), "!");
         return true;
     }
-
-    status.stations[std::pair<uint16_t, StationType>(0, StationType::Helm)] = RakNet::UNASSIGNED_RAKNET_GUID;
-
 
     /* Update the LobbyStatus if possible
      * Do this using the idea of a "transaction". Only if all modifications/updates
