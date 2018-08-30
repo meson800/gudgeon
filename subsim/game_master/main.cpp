@@ -3,6 +3,7 @@
 #include <thread>
 
 #include "version.h"
+#include "../common/EventSystem.h"
 #include "../common/Network.h"
 #include "../common/Log.h"
 
@@ -16,6 +17,8 @@ int main(int argc, char **argv)
     Log::setLogLevel(Log::ALL);
 
     Log::writeToLog(Log::INFO, "Subsim game master version v", VERSION_MAJOR, ".", VERSION_MINOR, " started");
+
+    EventSystem events;
 
     Network network(true);
 

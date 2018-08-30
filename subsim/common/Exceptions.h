@@ -3,6 +3,15 @@
 #include <stdexcept>
 
 /**
+ * Exception representing an event system error
+ */
+class EventError : public std::runtime_error
+{
+public:
+    EventError(const std::string& err) : std::runtime_error(err) {}
+};
+
+/**
  * Exception representing a generic parse failure.
  */
 class GenericParseError : public std::runtime_error

@@ -2,6 +2,7 @@
 
 #include "version.h"
 
+#include "../common/EventSystem.h"
 #include "../common/Network.h"
 #include "../common/Log.h"
 
@@ -58,6 +59,9 @@ int main(int argc, char **argv)
         print_usage(argv[0]);
         return 1;
     }
+
+    // Startup the event system
+    EventSystem events;
 
     Network network;
 
