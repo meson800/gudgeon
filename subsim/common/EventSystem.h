@@ -52,6 +52,25 @@ enum HandleResult
 };
 
 /*!
+ * Interface for receiving events. Inherit from this
+ * if you want to receive events.
+ */
+class EventReceiver
+{
+public:
+    /// Hooks this class into the event system
+    EventReceiver(HandleResult(*_dispatcher)(EventReceiver* handler, Event* event))
+        : dispatcher(_dispatcher)
+    {}
+
+    /// Removes this class from the event system
+    virtual ~EventReceiver() {}
+
+    /// Handles a given event. You can use the dispatchEvent template to implement this for your class.
+    HandleResult(*dispatcher)(EventReceiver* handler, Event* event);
+};
+
+/*!
  * This is a helper template that handles dispatch/casting into member types.
  * Once you define an EventReciever, initalize it with a function pointer to
  * this type, once you include the various destination functions as template parameters
@@ -60,11 +79,11 @@ enum HandleResult
  * to the event type, and return a HandleResult.
  */
  template <typename Handler, typename T, HandleResult(Handler::*hfunc)(T*), typename ...args>
- HandleResult dispatchEvent(Handler* handler, Event* event)
+ HandleResult dispatchEvent(EventReceiver* handler, Event* event)
  {
     if (event->i_category == T::category && event->i_id == T::id)
     {
-        return (handler->*hfunc)((T*)event);
+        return (static_cast<Handler*>(handler)->*hfunc)((T*)event);
     } else {
         return dispatchEvent<Handler, args...>(handler, event);
     }
@@ -74,28 +93,13 @@ enum HandleResult
   * Base case of dispatchEvent
   */
 template <typename Handler>
-HandleResult dispatchEvent(Handler* handler, Event* event)
+HandleResult dispatchEvent(EventReceiver* handler, Event* event)
 {
     //base case, abort!
     return HandleResult::Unhandled;
 }
 
 
-/*!
- * Interface for receiving events. Inherit from this
- * if you want to receive events.
- */
-class EventReceiver
-{
-public:
-    /// Hooks this class into the event system
-    EventReceiver();
-    /// Removes this class from the event system
-    virtual ~EventReceiver();
-
-    /// Handles a given event. You can use the dispatchEvent template to easily override this.
-    virtual HandleResult handleEvent(Event* event) = 0;
-};
 
 
 

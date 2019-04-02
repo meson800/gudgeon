@@ -89,7 +89,7 @@ void EventSystem::deliverEvents()
 
                 for (EventReceiver* callback : callbacks)
                 {
-                    HandleResult result = callback->handleEvent(top_event.get());
+                    HandleResult result = callback->dispatcher(callback, top_event.get());
 
                     if (result == HandleResult::Stop || result == HandleResult::Error)
                     {
@@ -99,7 +99,7 @@ void EventSystem::deliverEvents()
             }
         }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(170));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 }
 
