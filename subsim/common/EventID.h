@@ -1,7 +1,21 @@
 #pragma once
+namespace Events {
 
-enum EventCategories
+enum Categories
 {
     Invalid = 0,
+    Netework,
     GUI
 };
+
+enum Network
+{
+    Connected
+};
+
+enum GUIEvents
+{
+    KeyDown,
+    KeyUp
+};
+}

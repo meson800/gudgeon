@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+int result = 1;
+
 class EventTest : public Event
 {
 public:
@@ -20,7 +22,8 @@ public:
 
     HandleResult handleTest(EventTest* test)
     {
-        std::cout << "Handled test event\n";
+        std::cout << "TEST SUCCESS: Handled test event\n";
+        result = 0;
         return HandleResult::Stop;
     }
 
@@ -36,5 +39,8 @@ int main(int argc, char **argv)
     TestHandler handler;
     EventTest test;
     EventSystem system;
-    dispatchEvent<TestHandler, EventTest, &TestHandler::handleTest>(&handler, &test);
+    system.registerCallback(&handler);
+    system.queueEvent(test);
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    return result;
 }

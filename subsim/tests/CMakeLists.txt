@@ -1,6 +1,8 @@
 # Make the event test executable
 add_executable(event_test EventTest.cpp ../common/EventSystem.cpp ../common/Log.cpp)
 
+add_test(NAME test_simple_event_delivery COMMAND event_test)
+
 # Require C++11
 set_property(TARGET event_test PROPERTY CXX_STANDARD 11)
 

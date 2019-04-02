@@ -1,5 +1,6 @@
 cmake_minimum_required (VERSION 2.6)
 project (subsim)
+include(CTest)
 
 # Set the current version number, save it into the version header
 set (CMAKE_VERSION_MAJOR 0)
@@ -37,5 +38,7 @@ add_subdirectory(game_master)
 
 add_subdirectory(client)
 
-# Build test package
-add_subdirectory(tests)
+if(BUILD_TESTING)
+    # Build test package
+    add_subdirectory(tests)
+endif()
