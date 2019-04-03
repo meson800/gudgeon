@@ -4,6 +4,7 @@
 #include "../common/Exceptions.h"
 
 #include "UI.h"
+#include "MockUIEvents.h"
 
 #include <SDL2_gfxPrimitives.h>
 
@@ -12,6 +13,7 @@
 
 LobbyHandler::LobbyHandler()
     : Renderable(WIDTH, HEIGHT)
+    , EventReceiver(dispatchEvent<LobbyHandler, KeyEvent, &LobbyHandler::getKeypress>)
 {
     Log::writeToLog(Log::L_DEBUG, "LobbyHandler started");
 }
@@ -26,6 +28,20 @@ void LobbyHandler::joinLobby(RakNet::RakNetGUID server, uint8_t numStations)
     }
     // Send along our message
     network->sendMessage(server, &state, PacketReliability::RELIABLE_ORDERED);
+}
+
+HandleResult LobbyHandler::getKeypress(KeyEvent* event)
+{
+    if (event->isDown || 
+        (event->key != Key::Left && event->key != Key::Right && event->key != Key::Up 
+        && event->key != Key::Enter))
+    {
+        Log::writeToLog(Log::L_DEBUG, "Skipping event with keypress:", event->key);
+        return HandleResult::Continue;
+    }
+    
+    Log::writeToLog(Log::L_DEBUG, "Got keyup press:", event->key);
+    return HandleResult::Stop;
 }
 
 

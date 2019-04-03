@@ -9,6 +9,19 @@ Event::Event(uint32_t category_, uint32_t id_)
 {}
 Event::~Event() {}
 
+
+EventReceiver::EventReceiver(HandleResult(*_dispatcher)(EventReceiver* handler, Event* event))
+    : dispatcher(_dispatcher)
+{
+    EventSystem::getGlobalInstance()->registerCallback(this);
+}
+
+    /// Removes this class from the event system
+EventReceiver::~EventReceiver()
+{
+    EventSystem::getGlobalInstance()->deregisterCallback(this);
+}
+
 EventSystem* EventSystem::singleton = nullptr;
 
 EventSystem* EventSystem::getGlobalInstance()
@@ -83,6 +96,7 @@ void EventSystem::deliverEvents()
                 events.pop_front();
             }
 
+            Log::writeToLog(Log::L_DEBUG, "Attempting delivery of event ", top_event.get());
             // Now deliver the event to callbacks in the queue
             {
                 std::lock_guard<std::mutex> lock(callbackMux);
@@ -130,11 +144,12 @@ void EventSystem::deregisterCallback(EventReceiver* callback)
 
     callbacks.erase(it);
 
-    Log::writeToLog(Log::L_DEBUG, "Deregistered callback class ", callback);
+    Log::writeToLog(Log::L_DEBUG, "Deregistered event system callback class ", callback);
 }
 
 void EventSystem::internalQueueEvent(std::unique_ptr<Event>&& event)
 {
+    Log::writeToLog(Log::L_DEBUG, "Event: ", event.get(), "enqueued");
     std::lock_guard<std::mutex> lock(queueMux);
     events.push_back(std::move(event));
 }

@@ -1,11 +1,12 @@
 #pragma once
 namespace Events {
 
-enum Categories
+enum Category
 {
     Invalid = 0,
     Netework,
-    GUI
+    UI,
+    MockUI
 };
 
 enum Network
@@ -13,9 +14,8 @@ enum Network
     Connected
 };
 
-enum GUIEvents
+enum MockUIEvents
 {
-    KeyDown,
-    KeyUp
+    Key
 };
 }

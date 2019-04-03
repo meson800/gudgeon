@@ -59,12 +59,10 @@ class EventReceiver
 {
 public:
     /// Hooks this class into the event system
-    EventReceiver(HandleResult(*_dispatcher)(EventReceiver* handler, Event* event))
-        : dispatcher(_dispatcher)
-    {}
+    EventReceiver(HandleResult(*_dispatcher)(EventReceiver* handler, Event* event));
 
     /// Removes this class from the event system
-    virtual ~EventReceiver() {}
+    virtual ~EventReceiver();
 
     /// Handles a given event. You can use the dispatchEvent template to implement this for your class.
     HandleResult(*dispatcher)(EventReceiver* handler, Event* event);

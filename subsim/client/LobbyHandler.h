@@ -6,10 +6,14 @@
 
 #include "../common/Lobby.h"
 #include "../common/Network.h"
+#include "../common/EventSystem.h"
 #include "UI.h"
 
 /// Forward declaration of SDL_Renderer
 class SDL_Renderer;
+
+/// Forward declaration of the key event
+class KeyEvent;
 
 /*!
  * Client version of the LobbyHandler. Recieves LobbyStatus
@@ -18,7 +22,7 @@ class SDL_Renderer;
  * Inherits from both RecieveInterface and Renderable, so that we recieve callbacks for
  * network calls and can draw on the screen.
  */
-class LobbyHandler : public ReceiveInterface, public Renderable
+class LobbyHandler : public ReceiveInterface, public Renderable, public EventReceiver
 {
 public:
     /// Inits our internal state
@@ -42,4 +46,6 @@ private:
 
     /// Stores unpacked version of LobbyStatus for easy drawing
     std::map<uint16_t, std::vector<std::pair<StationType, RakNet::RakNetGUID>>> perTeamLobby;
+
+    HandleResult getKeypress(KeyEvent* event);
 };

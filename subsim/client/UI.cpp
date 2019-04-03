@@ -2,6 +2,7 @@
 
 #include "../common/Log.h"
 #include "../common/Exceptions.h"
+#include "MockUIEvents.h"
 
 #include "SDL.h"
 
@@ -221,6 +222,54 @@ void UI::runSDLloop(bool& startupDone, std::mutex& startupMux)
             rendererRequests.clear();
         }
 
+        // Get SDL events
+        SDL_Event event;
+        while (SDL_PollEvent(&event))
+        {
+            switch (event.type)
+            {
+                case SDL_KEYDOWN:
+                case SDL_KEYUP:
+                {
+                    KeyEvent ke;
+                    ke.isDown = event.type == SDL_KEYDOWN;
+                    ke.repeat = event.key.repeat;
+
+                    switch (event.key.keysym.sym)
+                    {
+                        case SDLK_LEFT:
+                        ke.key = Key::Left;
+                        break;
+
+                        case SDLK_RIGHT:
+                        ke.key = Key::Right;
+                        break;
+
+                        case SDLK_UP:
+                        ke.key = Key::Up;
+                        break;
+
+                        case SDLK_DOWN:
+                        ke.key = Key::Down;
+                        break;
+
+                        case SDLK_RETURN:
+                        ke.key = Key::Enter;
+                        break;
+
+                        default:
+                        ke.key = Key::Other;
+                    }
+
+                    EventSystem::getGlobalInstance()->queueEvent(ke);
+
+                }
+                default:
+                break;
+            }
+        }
+
+
         // Lock the redraw mutex and redraw any renders that have requested it
         {
             std::lock_guard<std::mutex> lock(redrawMux);
@@ -245,7 +294,7 @@ void UI::runSDLloop(bool& startupDone, std::mutex& startupMux)
         }
                 
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(170));
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
     }
 }
