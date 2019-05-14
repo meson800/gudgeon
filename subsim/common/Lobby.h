@@ -9,6 +9,9 @@
 
 #include "Messages.h"
 
+using Unit_owner_t = std::pair<std::string, std::vector<std::pair<StationType, RakNet::RakNetGUID>>>;
+using Team_owner_t = std::pair<std::string, std::vector<Unit_owner_t>>;
+
 /*!
  * Stores the number of stations this client can support,
  * along with their assignments
@@ -19,11 +22,22 @@
 class LobbyStatusRequest : public MessageInterface
 {
 public:
-    /*! 
-     * Stores the assignment of each station. The size of this
-     * vector can be used to determine the number of stations
+    /*!
+     * Struct that stores a station identifier (team ID/unit ID/station ID)
      */
-    std::vector<std::pair<uint16_t, StationType>> stations;
+    struct StationID
+    {
+        uint16_t team;
+        uint16_t unit;
+        uint16_t station;
+    };
+
+    /*! 
+     * Stores the assignment of each station. This transmits our "update" command.
+     * Setting the bool = true means assign this station to us, setting to false means
+     * deassign it from us.
+     */
+    std::vector<std::pair<StationID, bool>> stations;
 
     LobbyStatusRequest();
     LobbyStatusRequest(RakNet::BitStream& stream);
@@ -47,7 +61,7 @@ public:
      * Stores the current occupancy of each possible station.
      * The GUID term is RakNet::UNASSIGNED_RAKNET_GUID for free stations
      */
-    std::map<std::pair<uint16_t, StationType>, RakNet::RakNetGUID> stations;
+    std::map<uint16_t, Team_owner_t> stations;
 
     /*!
      * Stores the number of stations each connected client supports

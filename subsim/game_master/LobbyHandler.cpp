@@ -7,11 +7,25 @@
 LobbyHandler::LobbyHandler()
 {
     std::vector<std::pair<uint16_t, StationType>> requestedStations;
-    TeamParser::parseStations(GenericParser::parse("data/test_game.cfg"));
+    std::map<uint16_t, Team_t> parsedStations = TeamParser::parseStations(GenericParser::parse("data/test_game.cfg"));
 
-    for (auto station : requestedStations)
+using Unit_owner_t = std::pair<std::string, std::vector<std::pair<StationType, RakNet::RakNetGUID>>>;
+using Team_owner_t = std::pair<std::string, std::vector<Unit_owner_t>>;
+    
+    // Build up the lobby status
+    for (auto& team_pair : parsedStations)
     {
-        status.stations[station] = RakNet::UNASSIGNED_RAKNET_GUID;
+        status.stations[team_pair.first] = Team_owner_t(team_pair.second.first, std::vector<Unit_owner_t>());
+
+        for (auto& unit_pair : team_pair.second.second)
+        {
+            std::vector<std::pair<StationType, RakNet::RakNetGUID>> initialState;
+            for (StationType type : unit_pair.second)
+            {
+                initialState.push_back(std::pair<StationType, RakNet::RakNetGUID>(type, RakNet::UNASSIGNED_RAKNET_GUID));
+            }
+            status.stations[team_pair.first].second.push_back(Unit_owner_t(unit_pair.first, initialState));
+        }
     }
 }
 
@@ -31,46 +45,66 @@ bool LobbyHandler::LobbyStatusRequested(RakNet::RakNetGUID other, const LobbySta
 
     }
 
-    /* Make sure that we didn't change the number of stations */
-    if (status.clientToStations[other] != request.stations.size())
-    {
-        Log::writeToLog(Log::WARN, "Lobby status request from system:", other, " invalid!",
-            " Number of stations changed from ", status.clientToStations[other], " to ", request.stations.size(), "!");
-        return true;
-    }
-
-    /* Update the LobbyStatus if possible
-     * Do this using the idea of a "transaction". Only if all modifications/updates
-     * go through should we touch the actual status
-     */
+    // Check if the lobby status has things to validly update
     auto rollback = status.stations;
 
     bool transaction_fail = false;
-    for (auto station : request.stations)
+    for (auto station_assign_pair : request.stations)
     {
-        // Check to see if this is null/unassigned station. Ignore it if so
-        if (station.second == StationType::Unassigned)
-        {
-            continue;
-        }
+        uint16_t team = station_assign_pair.first.team;
+        uint16_t unit = station_assign_pair.first.unit;
+        uint16_t station = station_assign_pair.first.station;
 
-        /* Check for error conditions. This isn't assignable if either
-         * the requested station doesn't exist or is already assigned to
-         * someone else
-         */
-        if (status.stations.count(station) == 0 ||
-            (status.stations[station] != other && 
-             status.stations[station] != RakNet::UNASSIGNED_RAKNET_GUID))
+        // Check if the station that they want is actually in range
+        if (status.stations.count(team) != 1)
         {
             transaction_fail = true;
-            Log::writeToLog(Log::WARN, "Lobby status request transaction failed, for"
-                " requested station on team:", station.first, " and station:", StationNames[station.second],
-                " from client ", other);
+            Log::writeToLog(Log::WARN, "Lobby status request transaction failed"
+                " requested station on team:", team , " which does not exist, from client ", other);
             break;
         }
 
-        // Otherwise, assign the station as normal
-        status.stations[station] = other;
+        if (unit > status.stations[team].second.size())
+        {
+            transaction_fail = true;
+            Log::writeToLog(Log::WARN, "Lobby status request transaction failed, client ", other,
+                " requested unit ", unit, " on team ", team, " which does not exist!");
+            break;
+        }
+
+        if (station > status.stations[team].second[unit].second.size())
+        {
+            transaction_fail = true;
+            Log::writeToLog(Log::WARN, "Lobby status request transaction failed, client ", other,
+                " requested station ", station, " on team ", team, " and unit ", unit, " which does not exist!");
+            break;
+        }
+
+        // Make sure the station is unowned if trying to own
+        RakNet::RakNetGUID currentOwner = status.stations[team].second[unit].second[station].second;
+        if (station_assign_pair.second == true && currentOwner != RakNet::UNASSIGNED_RAKNET_GUID)
+        {
+            transaction_fail = true;
+            Log::writeToLog(Log::WARN, "Lobby status request transaction failed, client ", other,
+                " requested station ", station, " on unit ", unit, " in team ", team, " but it was already owned by client ", currentOwner);
+            break;
+        }
+
+        if (station_assign_pair.second == false && currentOwner != other)
+        {
+            transaction_fail = true;
+            Log::writeToLog(Log::WARN, "Lobby status request transaction failed, client ", other,
+                " tried to release station ", station, " on unit ", unit, " in team ", team, " but it was not owned by them! Currently owned by client ", currentOwner);
+            break;
+        }
+
+        // Finally do the transaction
+        if (station_assign_pair.second == true)
+        {
+            status.stations[team].second[unit].second[station].second = other;
+        } else {
+            status.stations[team].second[unit].second[station].second = RakNet::UNASSIGNED_RAKNET_GUID;
+        }
     }
 
     if (transaction_fail)

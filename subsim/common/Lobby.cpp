@@ -18,12 +18,28 @@ RakNet::MessageID LobbyStatusRequest::getType() const
 
 void LobbyStatusRequest::deserialize(RakNet::BitStream& stream)
 {
-    stream >> stations;
+    uint32_t size;
+    stream >> size;
+    stations.reserve(size);
+    for (int i = 0; i < size; ++i)
+    {
+        StationID id;
+        bool update;
+        stream >> id.team >> id.unit >> id.station >> update;
+
+        stations.push_back(std::pair<StationID, bool>(id, update));
+    }
 }
 
 void LobbyStatusRequest::serialize(RakNet::BitStream& stream) const
 {
-    stream << stations;
+    uint32_t size = stations.size();
+    stream << size;
+    for (auto pair : stations)
+    {
+        stream << pair.first.team << pair.first.unit
+            << pair.first.station << pair.second;
+    }
 }
 
 RakNet::MessageID LobbyStatus::getType() const

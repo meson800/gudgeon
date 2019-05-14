@@ -44,8 +44,7 @@ private:
     /// Stores our current requested station state
     LobbyStatusRequest state;
 
-    /// Stores unpacked version of LobbyStatus for easy drawing
-    std::map<uint16_t, std::vector<std::pair<StationType, RakNet::RakNetGUID>>> perTeamLobby;
+    std::map<uint16_t, Team_owner_t> unpackedState;
 
     HandleResult getKeypress(KeyEvent* event);
 };
