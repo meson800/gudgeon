@@ -5,6 +5,10 @@
 #include "MockUIEvents.h"
 
 #include "SDL.h"
+#include "SDL_ttf.h"
+
+
+
 
 /// Static definition of singleton
 UI* UI::singleton = nullptr;
@@ -105,6 +109,20 @@ Renderable::~Renderable()
     {
         UI::getGlobalUI()->deregisterRenderable(renderer, this);
     }
+
+    // Cleanup the font and texture caches
+    for (auto font_pair : fontCache)
+    {
+        TTF_CloseFont(font_pair.second);
+    }
+
+    for (auto& texts : textCache)
+    {
+        for (auto tex_pair : texts.second)
+        {
+            SDL_DestroyTexture(tex_pair.second);
+        }
+    }
 }
 
 void Renderable::scheduleRedraw()
@@ -113,6 +131,72 @@ void Renderable::scheduleRedraw()
     if (renderer != nullptr)
     {
         UI::getGlobalUI()->triggerRedraw(renderer);
+    }
+}
+
+void Renderable::drawText(const std::string& text, uint8_t fontsize, uint16_t x, uint16_t y, bool shouldCache)
+{
+    if (fontCache.count(fontsize) == 0)
+    {
+        // Open the font in this font size
+        TTF_Font* font = TTF_OpenFont("data/sans.ttf", fontsize);
+        if (!font)
+        {
+            Log::writeToLog(Log::ERR, "Failed to open font! TTF error:", TTF_GetError());
+            throw SDLError("Failed to open font");
+        }
+            
+        fontCache[fontsize] = font;
+
+        // Create a new text cache
+        textCache[fontsize] = std::map<std::string, SDL_Texture*>{};
+    }
+
+    SDL_Texture* renderedText;
+    if (shouldCache == false || textCache[fontsize].count(text) == 0)
+    {
+        // Render new fonts
+        SDL_Color white = {255, 255, 255};
+        SDL_Surface* surfaceVersion = TTF_RenderText_Solid(fontCache[fontsize], text.c_str(), white);
+
+        if (!surfaceVersion)
+        {
+            Log::writeToLog(Log::ERR, "Failed to render text at font size ", fontsize, " and text='", text.c_str(), "'. TTF error:", TTF_GetError());
+            throw SDLError("Failed to render text");
+        }
+
+        renderedText = SDL_CreateTextureFromSurface(renderer, surfaceVersion);
+
+        if (!renderedText)
+        {
+            Log::writeToLog(Log::ERR, "Unable to create texture from rendered surface. SDL error:", SDL_GetError());
+            throw SDLError("Failed to convert rendered text to surface");
+        }
+
+        if (shouldCache)
+        {
+            textCache[fontsize][text] = renderedText;
+        }
+        SDL_FreeSurface(surfaceVersion);
+    } else {
+        // lookup from cache
+        renderedText = textCache[fontsize][text];
+    }
+
+    int width, height;
+    TTF_SizeText(fontCache[fontsize], text.c_str(), &width, &height);
+
+    SDL_Rect messageRect;
+    messageRect.x = x;
+    messageRect.y = y;
+    messageRect.w = width;
+    messageRect.h = height;
+
+    SDL_RenderCopy(renderer, renderedText, NULL, &messageRect);
+
+    if (shouldCache == false)
+    {
+        SDL_DestroyTexture(renderedText);
     }
 }
 
@@ -178,6 +262,12 @@ void UI::runSDLloop(bool& startupDone, std::mutex& startupMux)
         // an exception is thrown
         std::lock_guard<std::mutex> lock(startupMux);
 
+        if (TTF_Init() == -1)
+        {
+            Log::writeToLog(Log::ERR, "Couldn't start SDL TTF library! TTF error:", TTF_GetError());
+            throw SDLError("Error in TTF_Init");
+        }
+
         if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0)
         {
             Log::writeToLog(Log::ERR, "Couldn't start SDL! SDL error:", SDL_GetError());
@@ -205,6 +295,7 @@ void UI::runSDLloop(bool& startupDone, std::mutex& startupMux)
                 {
                     SDL_DestroyWindow(window);
                 }
+                TTF_Quit();
                 SDL_Quit();
                 return;
             }

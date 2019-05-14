@@ -15,6 +15,14 @@ class SDL_Renderer;
 /// Forward declaration of SDL_Window
 class SDL_Window;
 
+/// Forward declaration of SDL_Texture
+class SDL_Texture;
+
+/// Forward declaration of TTF_Font
+struct _TTF_Font;
+typedef struct _TTF_Font TTF_Font;
+
+
 /**
  * This class handles setting up SDL windows; it is a form of a window manager
  * in addition to handling user input.
@@ -49,6 +57,22 @@ class Renderable
     protected:
     /// Drawing renderer variable
     SDL_Renderer* renderer;
+
+    /// Function to draw text of a given size at a given location
+    /**
+     * Function to draw text of a given size at a given location.
+     *
+     * The shouldCache flag can be set to false if you do not wish to cache the render result.
+     * This should be set to false in instances where you are outputting text that is reasonably non-constant.
+     * By default, this otherwise does a cache lookup, rendering the texture if necessary.
+     */
+    void drawText(const std::string& text, uint8_t fontsize, uint16_t x, uint16_t y, bool shouldCache = true);
+
+    /// Stores loaded fonts. Fonts are destroyed when we destroy the renderable.
+    std::map<uint8_t, TTF_Font*> fontCache;
+
+    /// Stores generated textures for text rendered
+    std::map<uint8_t, std::map<std::string, SDL_Texture*>> textCache;
 };
 
 class UI

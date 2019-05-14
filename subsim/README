@@ -1,10 +1,10 @@
 Depdencies
 ----------
-To build the client, you need SDL2, SDL2-gfx, and OpenAL installed.
+To build the client, you need SDL2, SDL2-ttf SDL2-gfx, and OpenAL installed.
 You also need CMake to make either the client or the game master
 On Ubuntu(esque) things this requires:
 
-sudo apt-get intall libsdl2-2.0-0 libsdl2-dev libsdl2-gfx-1.0-0 libsdl2-gfx-dev libopenal1 libopenal-dev cmake
+sudo apt-get intall libsdl2-2.0-0 libsdl2-dev libsdl2-ttf-dev libsdl2-gfx-1.0-0 libsdl2-gfx-dev libopenal1 libopenal-dev cmake
 
 Building
 --------

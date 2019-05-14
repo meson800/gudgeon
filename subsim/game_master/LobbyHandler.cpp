@@ -41,7 +41,7 @@ bool LobbyHandler::LobbyStatusRequested(RakNet::RakNetGUID other, const LobbySta
 
     /* Update the LobbyStatus if possible
      * Do this using the idea of a "transaction". Only if all modifications/updates
-     * go through sohould we touch the actual status
+     * go through should we touch the actual status
      */
     auto rollback = status.stations;
 

@@ -80,8 +80,15 @@ void LobbyHandler::redraw()
     uint16_t numTeams = perTeamLobby.size();
 
     SDL_RenderClear(renderer);
-    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    uint64_t unassigned_color = 0xFF0000FF;
+    uint64_t unconfirmed_color = 0xFCE205FF;
+    uint64_t confirmed_color = 0x00FF00FF;
+
+
+
     SDL_RenderClear(renderer);
+    drawText("Hello world!", 24, 100, 100);
     for (auto team : perTeamLobby)
     {
         uint16_t y = 30;
