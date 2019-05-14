@@ -6,8 +6,8 @@
 
 LobbyHandler::LobbyHandler()
 {
-    std::vector<std::pair<uint16_t, StationType>> requestedStations = 
-        TeamParser::parseStations(GenericParser::parse("lobby.cfg"));
+    std::vector<std::pair<uint16_t, StationType>> requestedStations;
+    TeamParser::parseStations(GenericParser::parse("data/test_game.cfg"));
 
     for (auto station : requestedStations)
     {

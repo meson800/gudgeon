@@ -3,42 +3,118 @@
 #include "Exceptions.h"
 #include "Log.h"
 
- std::vector<std::pair<uint16_t, StationType>> TeamParser::parseStations(const ParseResult& parse)
+#include <sstream>
+
+ std::map<uint16_t,Team_t> TeamParser::parseStations(const ParseResult& parse)
  {
     using Station_t = std::pair<uint16_t, StationType>;
 
-    std::vector<Station_t> result;
+    std::map<uint16_t, Team_t> result;
 
+    // Read in all of the teams
     auto range = parse.equal_range("TEAM");
 
-    uint16_t teamID = 0;
     for (auto it = range.first; it != range.second; ++it)
     {
+        std::string teamName;
+        uint16_t id = 0;
         for (auto keyValIt = it->second.cbegin(); keyValIt != it->second.cend(); ++keyValIt)
         {
             const std::string& key = keyValIt->first;
             const std::vector<std::string>& values = keyValIt->second;
-            if (key != "station")
-            {
-                Log::writeToLog(Log::ERR, "Unexpected key in TEAM section: ", key);
-                throw TeamParseError("Invalid key encountered while parsing a team file");
-            }
 
             if (values.size() != 1)
             {
-                Log::writeToLog(Log::ERR, "Unexpected amount of values in \"station\" key. Number of values:", values.size());
-                throw TeamParseError("Invalid number of valids encountered while parsing a team file.");
+                Log::writeToLog(Log::ERR, "Unexpected amount of values in key:\"", key, "\". Number of values:", values.size());
+                throw TeamParseError("Invalid number of values encountered when parsing a TEAM section.");
             }
 
-            if (StationTypeLookup.count(values.at(0)) != 1)
+            if (key == "name")
             {
-                Log::writeToLog(Log::ERR, "Station type:", values.at(0), " is unknown.");
-                throw TeamParseError("Invalid station type referenced.");
+                teamName = values.at(0);
+            } else if (key == "id") {
+                std::istringstream sstream(values.at(0));
+                sstream >> id;
+            } else {
+                Log::writeToLog(Log::ERR, "Unexpected key in TEAM section: ", key);
+                throw TeamParseError("Invalid key encountered when parsing a TEAM section.");
             }
-
-            result.push_back(Station_t(teamID, StationTypeLookup.at(values.at(0))));
         }
-        ++teamID;
+
+        // Check for invalid ID
+        if (id == 0)
+        {
+            Log::writeToLog(Log::ERR, "Team ID not provided or ID set equal to zero for team with name:", teamName);
+            throw TeamParseError("Invalid ID set/left unset when parsing a TEAM section.");
+        }
+        result[id] = Team_t(teamName, std::vector<Unit_t>{});
+        Log::writeToLog(Log::L_DEBUG, "Successfully processed team with ID=", id, " and name=\"", teamName, "\"");
+    }
+
+    // Now read in units
+    range = parse.equal_range("UNIT");
+
+    for (auto it = range.first; it != range.second; ++it)
+    {
+        std::string unitName;
+        uint16_t team;
+        std::vector<StationType> stations;
+
+        for (auto keyValIt = it->second.cbegin(); keyValIt != it->second.cend(); ++keyValIt)
+        {
+            const std::string& key = keyValIt->first;
+            const std::vector<std::string>& values = keyValIt->second;
+
+            if (key == "name")
+            {
+                if (values.size() > 1)
+                {
+                    Log::writeToLog(Log::WARN, "Extra name key/vals encountered for unit while processing team file!");
+                }
+
+                unitName = values.at(0);
+            } else if (key == "team") {
+                if (values.size() != 1)
+                {
+                    Log::writeToLog(Log::ERR, "Unexpected number of team key/vals given for a unit: ", values.size(), " (expected 1)");
+                    throw TeamParseError("Unexpected number of team keyvals given for a unit");
+                }
+                std::istringstream sstream(values.at(0));
+                sstream >> team;
+            } else if (key == "station") {
+                for (const std::string& name : values)
+                {
+                    if (StationTypeLookup.count(name) != 1)
+                    {
+                        Log::writeToLog(Log::ERR, "Station type:", name, " is unknown.");
+                        throw TeamParseError("Invalid station type referenced.");
+                    }
+
+                    // otherwise, add to station list
+                    stations.push_back(StationTypeLookup.at(name));
+                }
+            } else {
+                Log::writeToLog(Log::ERR, "Unexpected key in UNIT section: ", key);
+                throw TeamParseError("Invalid key encountered while parsing a UNIT sectoin.");
+            }
+        }
+
+        // check for invalid state
+        if (result.count(team) != 1)
+        {
+            Log::writeToLog(Log::ERR, "Unit with name=\"", unitName, "\" had invalid team ID=", team);
+            throw TeamParseError("Unit had invalid team ID.");
+        }
+        std::ostringstream stationConcat;
+        for (auto station : stations)
+        {
+            stationConcat << StationNames[station] << ",";
+        }
+            
+            
+        Log::writeToLog(Log::L_DEBUG, "Succesfully processed unit with name=\"", unitName, "\" for team ", team,
+         ". Included stations:", stationConcat.str().substr(0, stationConcat.str().length() - 1));
+        result[team].second.push_back(Unit_t(unitName, stations));
     }
     return result;
  }
