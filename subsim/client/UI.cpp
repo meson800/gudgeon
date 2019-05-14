@@ -157,7 +157,10 @@ void Renderable::drawText(const std::string& text, uint8_t fontsize, uint16_t x,
     {
         // Render new fonts
         SDL_Color white = {255, 255, 255};
-        SDL_Surface* surfaceVersion = TTF_RenderText_Solid(fontCache[fontsize], text.c_str(), white);
+        // Render in quick-in-dirty mode (Solid) if we are not caching, otherwise render blended
+        SDL_Surface* surfaceVersion = shouldCache ? 
+            TTF_RenderText_Blended(fontCache[fontsize], text.c_str(), white)
+            : TTF_RenderText_Solid(fontCache[fontsize], text.c_str(), white);
 
         if (!surfaceVersion)
         {
