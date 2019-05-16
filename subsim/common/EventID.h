@@ -4,18 +4,30 @@ namespace Events {
 enum Category
 {
     Invalid = 0,
-    Netework,
+    Network,
     UI,
-    MockUI
+    MockUI,
+    Simulation,
 };
 
-enum Network
+enum Net
 {
-    Connected
+    Envelope
 };
 
 enum MockUIEvents
 {
     Key
+};
+
+enum Sim
+{
+    SimStart,
+};
+
+enum Control
+{
+    Power,
+    Weapon,
 };
 }

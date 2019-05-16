@@ -18,9 +18,9 @@ int main(int argc, char **argv)
 
     Log::writeToLog(Log::INFO, "Subsim game master version v", VERSION_MAJOR, ".", VERSION_MINOR, " started");
 
-    EventSystem events;
 
     Network network(true);
+    EventSystem events(&network);
 
     LobbyHandler lobby;
     network.registerCallback(&lobby);

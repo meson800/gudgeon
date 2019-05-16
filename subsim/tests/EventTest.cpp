@@ -38,7 +38,7 @@ int main(int argc, char **argv)
 
     TestHandler handler;
     EventTest test;
-    EventSystem system;
+    EventSystem system(nullptr);
     system.registerCallback(&handler);
     system.queueEvent(test);
     std::this_thread::sleep_for(std::chrono::milliseconds(50));

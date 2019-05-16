@@ -39,6 +39,15 @@ public:
 };
 
 /**
+ * Exception representing a Envelope delivery error
+ */
+class EnvelopeError : public std::runtime_error
+{
+public:
+    EnvelopeError(const std::string& err) : std::runtime_error(err) {}
+};
+
+/**
  * Exception representing an SDL error
  */
 class SDLError : public std::runtime_error

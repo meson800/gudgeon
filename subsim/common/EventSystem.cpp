@@ -3,6 +3,11 @@
 #include "Exceptions.h"
 #include "Log.h"
 
+#include "Network.h"
+#include "EventID.h"
+#include "Messages.h"
+
+
 Event::Event(uint32_t category_, uint32_t id_)
     : i_category(category_)
     , i_id(id_)
@@ -40,8 +45,9 @@ void EventSystem::setGlobalInstance(EventSystem* system)
     singleton = system;
 }
 
-EventSystem::EventSystem()
+EventSystem::EventSystem(Network* network_)
     : shutdownFlag(false)
+    , network(network_)
 {
     if (singleton != nullptr)
     {
@@ -150,6 +156,26 @@ void EventSystem::deregisterCallback(EventReceiver* callback)
 void EventSystem::internalQueueEvent(std::unique_ptr<Event>&& event)
 {
     Log::writeToLog(Log::L_DEBUG, "Event: ", event.get(), "enqueued");
+
+    // Check if this is an envelope event. If so, pass it through the network
+    if (event->i_category == Events::Network && event->i_id == Events::Net::Envelope)
+    {
+        EnvelopeMessage* message = (EnvelopeMessage*)event.get();
+        Log::writeToLog(Log::L_DEBUG, "Event is a network message to node ", message->address);
+        
+        if (!network)
+        {
+            Log::writeToLog(Log::ERR, "Attempted to deliver an envelope when no network setup!");
+            throw EventError("Attempted to deliver an envelope without an active network!");
+        }
+        RakNet::RakNetGUID destination = message->address;
+        if (destination == RakNet::UNASSIGNED_RAKNET_GUID)
+        {
+            destination = network->getFirstConnectionGUID();
+        }
+        network->sendMessage(destination, message, PacketReliability::RELIABLE_SEQUENCED);
+    }
+
     std::lock_guard<std::mutex> lock(queueMux);
     events.push_back(std::move(event));
 }

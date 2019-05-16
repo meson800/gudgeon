@@ -318,6 +318,13 @@ void Network::handlePackets()
                 break;
             }
 
+            case ID_ENVELOPE:
+            {
+                // creation of the envelope will automatically add the event to the queue if possible
+                EnvelopeMessage eventMessage(packetBs, packet->guid);
+                break;
+            }
+
             default:
                 Log::writeToLog(Log::WARN, "Unknown packet with id:" , packet->data[0], " recieved");
                 break;

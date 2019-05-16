@@ -61,9 +61,9 @@ int main(int argc, char **argv)
     }
 
     // Startup the event system
-    EventSystem events;
 
     Network network;
+    EventSystem events(&network);
 
     // Startup the UI
     UI ui;

@@ -14,6 +14,8 @@ public:
     constexpr static uint32_t id = 1;
 };
 
+3. If you want your event to be delivered over the network, define serialize/deserialize commands in common/Envelope.cpp
+
 
 Receiving events
 ================

@@ -9,16 +9,18 @@
 enum StationType
 {
     Unassigned = 0,
-    Helm
+    Helm,
+    Tactical,
 };
 
 /*!
  * Static array that stores the string version of a station
  */
-static const char* StationNames[] = {"Unassigned", "Helm"};
+static const char* StationNames[] = {"Unassigned", "Helm", "Tactical"};
 
 /*!
  * Static map that allows for lookups of StationType by a string
  */
 static const std::map<std::string, StationType> StationTypeLookup = {
-{"helm", StationType::Helm}};
+{"helm", StationType::Helm},
+{"tactical", StationType::Tactical}};

@@ -8,6 +8,9 @@
 #include <mutex>
 #include <thread>
 
+/// Forward declaration of Network
+class Network;
+
 /*!
  * Class from which Events all inherit from. Note that because
  * events are stored polymorphically by the EventSystem, your
@@ -118,7 +121,7 @@ public:
     static EventSystem* getGlobalInstance();
 
     /// Sets up internal EventSystem state, making it ready to deliver events
-    EventSystem();
+    EventSystem(Network* network_);
 
     /// Deregisters on deconstruction
     ~EventSystem();
@@ -182,4 +185,7 @@ private:
 
     /// Thread that delivers events to event receivers
     std::thread deliveryThread;
+
+    /// Stores the network pointer, while open
+    Network* network;
 };
