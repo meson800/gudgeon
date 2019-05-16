@@ -122,6 +122,12 @@ public:
      */
     void sendMessage(RakNet::RakNetGUID destination, MessageInterface* message, PacketReliability reliability);
 
+    /// Returns our own RakNetGUID
+    RakNet::RakNetGUID getOurGUID();
+
+    /// Returns the first GUID in the connections, which is the server for clients
+    RakNet::RakNetGUID getFirstConnectionGUID();
+
 
 
 private:

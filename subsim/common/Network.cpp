@@ -152,6 +152,24 @@ bool tryCallbacks(std::set<ReceiveInterface*>& interfaces, T func, Types... args
     return false;
 }
 
+RakNet::RakNetGUID Network::getOurGUID()
+{
+    if (node)
+    {  
+        return node->GetMyGUID();
+    }
+    return RakNet::UNASSIGNED_RAKNET_GUID;
+}
+
+RakNet::RakNetGUID Network::getFirstConnectionGUID()
+{
+    if (confirmedConnections.size() > 0)
+    {
+        return *confirmedConnections.begin();
+    }
+    return RakNet::UNASSIGNED_RAKNET_GUID;
+}
+
 
 void Network::handlePackets()
 {

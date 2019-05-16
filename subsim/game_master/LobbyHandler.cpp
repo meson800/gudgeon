@@ -31,7 +31,37 @@ using Team_owner_t = std::pair<std::string, std::vector<Unit_owner_t>>;
 
 bool LobbyHandler::ConnectionLost(RakNet::RakNetGUID other)
 {
-    return false;
+    // Unassign all stations from this GUID.
+    Log::writeToLog(Log::INFO, "Client ", other, " disconnected from the lobby.");
+    for (auto& team_pair : status.stations)
+    {
+        for (auto& unit_pair : team_pair.second.second)
+        {
+            for (auto& station_pair : unit_pair.second)
+            {
+                if (station_pair.second == other)
+                {
+                    Log::writeToLog(Log::INFO, "Unassigning station ", StationNames[station_pair.first], " on unit ", 
+                        unit_pair.first, " on team ID", team_pair.first, " because client ", other, " disconnected.");
+                    station_pair.second = RakNet::UNASSIGNED_RAKNET_GUID;
+                }
+            }
+        }
+    }
+
+    // Remove this system from the game master.
+    if (waitingSystems.count(other) == 1)
+    {
+        waitingSystems.erase(other);
+    }
+
+    // Update all stations
+    for (auto system : waitingSystems)
+    {
+        network->sendMessage(system, &status, PacketReliability::RELIABLE_SEQUENCED);
+    }
+
+    return true;
 }
 
 bool LobbyHandler::LobbyStatusRequested(RakNet::RakNetGUID other, const LobbyStatusRequest& request)

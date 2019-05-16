@@ -30,6 +30,15 @@ public:
 };
 
 /**
+ * Exception representing a lobby error
+ */
+class LobbyError : public std::runtime_error
+{
+public:
+    LobbyError(const std::string& err) : std::runtime_error(err) {}
+};
+
+/**
  * Exception representing an SDL error
  */
 class SDLError : public std::runtime_error
