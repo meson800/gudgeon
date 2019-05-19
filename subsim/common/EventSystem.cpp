@@ -155,7 +155,7 @@ void EventSystem::deregisterCallback(EventReceiver* callback)
 
 void EventSystem::internalQueueEvent(std::unique_ptr<Event>&& event)
 {
-    Log::writeToLog(Log::L_DEBUG, "Event: ", event.get(), "enqueued");
+    Log::writeToLog(Log::L_DEBUG, "Event: ", event.get(), " enqueued");
 
     // Check if this is an envelope event. If so, pass it through the network
     if (event->i_category == Events::Network && event->i_id == Events::Net::Envelope)

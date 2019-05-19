@@ -4,6 +4,8 @@
 
 #include "../common/TeamParser.h"
 
+#include "../common/SimulationEvents.h"
+
 LobbyHandler::LobbyHandler()
 {
     std::vector<std::pair<uint16_t, StationType>> requestedStations;
@@ -148,6 +150,53 @@ bool LobbyHandler::LobbyStatusRequested(RakNet::RakNetGUID other, const LobbySta
     {
         network->sendMessage(system, &status, PacketReliability::RELIABLE_SEQUENCED);
     }
+
+    // Check if all stations assigned.
+    // Accumulate the vector of station assignments per RakNet ID.
+    std::map<RakNet::RakNetGUID, std::vector<SimulationStart::Station>> assignments;
+
+    bool done = true;
+    for (auto& team_pair : status.stations)
+    {
+        uint32_t unit = 0;
+        for (auto& unit_pair : team_pair.second.second)
+        {
+            for (auto& station_pair : unit_pair.second)
+            {
+                if (station_pair.second == RakNet::UNASSIGNED_RAKNET_GUID)
+                {
+                    // We aren't done. Just return
+                    done = false;
+                    continue;
+                }
+                //otherwise, accumulate this assignment
+                SimulationStart::Station station;
+                station.team = team_pair.first;
+                station.unit = unit;
+                station.station = station_pair.first;
+                assignments[station_pair.second].push_back(station);
+            }
+            ++unit;
+        }
+    }
+
+    if (done)
+    {
+        Log::writeToLog(Log::INFO, "Lobby creation completed; all stations assigned. Sending SimulationStart messages.");
+        for (auto& pair : assignments)
+        {
+            Log::writeToLog(Log::L_DEBUG, "Sending SimulationStart event to client ", pair.first, " who owns ", pair.second.size(), " stations.");
+            // Create the SimStart event
+            SimulationStart sstart;
+            sstart.stations = pair.second;
+
+            EnvelopeMessage envelope(sstart, pair.first);
+            // deliver simstart's to all attached clients!
+            EventSystem::getGlobalInstance()->queueEvent(envelope);
+        }
+    }
+            
+
 }
 
 bool LobbyHandler::UpdatedLobbyStatus(const LobbyStatus& status)

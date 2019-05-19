@@ -65,17 +65,18 @@ struct EnvelopeMessage : public MessageInterface, public Event
 {
     RakNet::RakNetGUID address;
 
-    std::unique_ptr<Event> event;
+    std::shared_ptr<Event> event;
 
-    EnvelopeMessage(RakNet::BitStream& source, RakNet::RakNetGUID address_);
+    EnvelopeMessage(RakNet::BitStream& source, RakNet::RakNetGUID address_ = RakNet::UNASSIGNED_RAKNET_GUID);
 
     EnvelopeMessage()
         : Event(category, type)
     {}
 
     template <typename T>
-    EnvelopeMessage(const T& event_)
-        : event(new T(event))
+    EnvelopeMessage(const T& event_, RakNet::RakNetGUID address_ = RakNet::UNASSIGNED_RAKNET_GUID)
+        : address(address_)
+        , event(new T(event_))
         , Event(category, type)
     {}
 
