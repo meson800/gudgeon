@@ -3,8 +3,12 @@
 #include <thread>
 
 #include "version.h"
+#include "../common/EventSystem.h"
 #include "../common/Network.h"
 #include "../common/Log.h"
+
+#include "SimulationMaster.h"
+
 
 int main(int argc, char **argv)
 {
@@ -15,7 +19,11 @@ int main(int argc, char **argv)
 
     Log::writeToLog(Log::INFO, "Subsim game master version v", VERSION_MAJOR, ".", VERSION_MINOR, " started");
 
+
     Network network(true);
+    EventSystem events(&network);
+
+    SimulationMaster master(&network);
 
     std::cout << "Press enter to exit...\n";
     std::string dummy;

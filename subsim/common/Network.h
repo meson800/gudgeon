@@ -8,6 +8,7 @@
 #include <iostream>
 
 #include "RakNetTypes.h" // For RakNetGUID
+#include "PacketPriority.h" // For PacketReliability
 
 /// Forward definition of RakPeerInterface
 namespace RakNet
@@ -15,6 +16,25 @@ namespace RakNet
     class RakPeerInterface;
 }
 
+/// Forward declaration of LobbyStatus
+class LobbyStatus;
+/// Forward declaration of LobbyStatusRequest
+class LobbyStatusRequest;
+
+/// Forward declaration of Network
+class Network;
+
+/// Forward declaration of MessageInterface
+class MessageInterface;
+
+/*!
+ * Definition of an ostream override so that we can easily log
+ * RakNetGUID's
+ */
+static std::ostream& operator<< (std::ostream& stream, const RakNet::RakNetGUID& guid)
+{
+    return stream << RakNet::RakNetGUID::ToUint32(guid);
+}
 
 /*!
  * RecieveInterface is a virtual class from which objects interested in recieving
@@ -30,20 +50,45 @@ namespace RakNet
  * if a callback is unhandled. Callback propogation stops when the first callback class successfully
  * handles the message.
  */
-class RecieveInterface
+class ReceiveInterface
 {
 public:
+    ReceiveInterface() : network(nullptr) {}
+
     /**
      * Callback called when a Connect call has succeeded. Client can now send messages
      * to the listed node
+     *
+     * This callback is called after version verification has succeeded.
      */
-    bool ConnectionEstablished(RakNet::RakNetGUID other) { return false; }
+    virtual bool ConnectionEstablished(RakNet::RakNetGUID other) { return false; }
+
     /**
-     * Callback called when another system has attempted to connect to us. Messages
-     * can now be sent to the other system.
+     * Callback called when a client has disconnected.
+     *
+     * Function argument is the disconnected system GUID.
      */
-    bool IncomingConnection(RakNet::RakNetGUID other) { return false; }
+    virtual bool ConnectionLost(RakNet::RakNetGUID other) { return false; }
+
+    /**
+     * Callback used when a connected client requests lobby status.
+     *
+     * Function argument is the requesting system.
+     */
+    virtual bool LobbyStatusRequested(RakNet::RakNetGUID other, const LobbyStatusRequest& status) { return false; }
+
+    /**
+     * Callback for when the lobby status has changed.
+     */
+    virtual bool UpdatedLobbyStatus(const LobbyStatus& status) { return false; }
+
+    /**
+     * Member variable that is set equal to the Network of which it is registered.
+     */
+    Network* network;
+
 };
+
 
 /*!
  * Network encapsulates network interactions with other clients. This abstracts
@@ -64,10 +109,26 @@ public:
     void connect(const std::string& hostname);
 
     /// Adds a callback class to the registered callback list
-    void registerCallback(RecieveInterface* callback);
+    void registerCallback(ReceiveInterface* callback);
 
     /// Removes a callback class from the registered callback list
-    void deregisterCallback(RecieveInterface* callback);
+    void deregisterCallback(ReceiveInterface* callback);
+
+    /**
+     * Sends a message to the specified client.
+     * Throws an InvalidDestinationError if the GUID given isn't a 'confirmed' connection
+     *
+     * Takes a polymorphic type that inherits from MessageInterface
+     */
+    void sendMessage(RakNet::RakNetGUID destination, MessageInterface* message, PacketReliability reliability);
+
+    /// Returns our own RakNetGUID
+    RakNet::RakNetGUID getOurGUID();
+
+    /// Returns the first GUID in the connections, which is the server for clients
+    RakNet::RakNetGUID getFirstConnectionGUID();
+
+
 
 private:
     RakNet::RakPeerInterface* node;
@@ -76,7 +137,7 @@ private:
     std::thread recieveThread;
 
     /// Member variables storing all currently registered callbacks
-    std::set<RecieveInterface*> callbacks;
+    std::set<ReceiveInterface*> callbacks;
 
     /// Member variable indicating when the networking thread should shutdown, along with protective mutex
     std::mutex shutdownMutex;
