@@ -7,7 +7,8 @@
 #include "../common/Network.h"
 #include "../common/Log.h"
 
-#include "LobbyHandler.h"
+#include "SimulationMaster.h"
+
 
 int main(int argc, char **argv)
 {
@@ -22,8 +23,7 @@ int main(int argc, char **argv)
     Network network(true);
     EventSystem events(&network);
 
-    LobbyHandler lobby;
-    network.registerCallback(&lobby);
+    SimulationMaster master(&network);
 
     std::cout << "Press enter to exit...\n";
     std::string dummy;

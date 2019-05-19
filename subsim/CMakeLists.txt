@@ -33,6 +33,7 @@ FILE(GLOB COMMONSRC common/*.cpp)
 
 FILE(GLOB COMMONH common/*.h)
 
+set(CMAKE_BUILD_TYPE Debug)
 # Build the game master and client
 add_subdirectory(game_master)
 

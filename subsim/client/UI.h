@@ -113,7 +113,7 @@ class UI
     /// For a given renderer, registeres a Renderable for that renderer that can be redrawn
     void registerRenderable(SDL_Renderer* renderer, Renderable* renderable);
 
-    /// Deregisters a given renderer
+    /// Deregisters a given renderer, destroying any of its windows
     void deregisterRenderable(SDL_Renderer* renderer, Renderable* renderable);
 
     /// Triggers a redraw on the given renderer
@@ -150,6 +150,12 @@ private:
 
     /// Stores allocated renderers
     std::vector<SDL_Renderer*> renderers;
+
+    /// Stores a mapping between Renderer's and windows
+    std::map<SDL_Renderer*, SDL_Window*> ownedWindows;
+
+    /// Stores the list of windows to destroy
+    std::vector<Renderable*> toDestroy;
 
     /// Stores the list of registered renderables for a given renderer
     std::map<SDL_Renderer*, std::set<Renderable*>> renderStack;

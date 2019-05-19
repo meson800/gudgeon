@@ -154,6 +154,7 @@ bool LobbyHandler::LobbyStatusRequested(RakNet::RakNetGUID other, const LobbySta
     // Check if all stations assigned.
     // Accumulate the vector of station assignments per RakNet ID.
     std::map<RakNet::RakNetGUID, std::vector<SimulationStart::Station>> assignments;
+    std::map<uint32_t, std::vector<std::vector<std::pair<StationType, RakNet::RakNetGUID>>>> serverAssignments;
 
     bool done = true;
     for (auto& team_pair : status.stations)
@@ -161,6 +162,7 @@ bool LobbyHandler::LobbyStatusRequested(RakNet::RakNetGUID other, const LobbySta
         uint32_t unit = 0;
         for (auto& unit_pair : team_pair.second.second)
         {
+            serverAssignments[team_pair.first].push_back(std::vector<std::pair<StationType, RakNet::RakNetGUID>>());
             for (auto& station_pair : unit_pair.second)
             {
                 if (station_pair.second == RakNet::UNASSIGNED_RAKNET_GUID)
@@ -175,6 +177,8 @@ bool LobbyHandler::LobbyStatusRequested(RakNet::RakNetGUID other, const LobbySta
                 station.unit = unit;
                 station.station = station_pair.first;
                 assignments[station_pair.second].push_back(station);
+
+                serverAssignments[team_pair.first][unit].push_back(station_pair);
             }
             ++unit;
         }
@@ -194,6 +198,11 @@ bool LobbyHandler::LobbyStatusRequested(RakNet::RakNetGUID other, const LobbySta
             // deliver simstart's to all attached clients!
             EventSystem::getGlobalInstance()->queueEvent(envelope);
         }
+
+        // Now, send a SimStart command to ourselves
+        SimulationStartServer serverStart;
+        serverStart.assignments = serverAssignments;
+        EventSystem::getGlobalInstance()->queueEvent(serverStart);
     }
             
 

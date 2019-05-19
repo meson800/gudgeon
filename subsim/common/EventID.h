@@ -23,6 +23,7 @@ enum MockUIEvents
 enum Sim
 {
     SimStart,
+    SimStartServer,
 };
 
 enum Control

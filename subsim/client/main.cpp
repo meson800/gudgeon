@@ -7,37 +7,8 @@
 #include "../common/Log.h"
 
 #include "UI.h"
-#include "LobbyHandler.h"
+#include "SimulationMaster.h"
 
-
-/**
- * Top level recieving class that tries to join a lobby upon connect.
- * Once the lobby has been joined, it attempts to start a game as soon as
- * the lobby is ready
- */
-class JoinGame : public ReceiveInterface
-{
-private:
-    LobbyHandler lobby;
-
-public:
-    virtual bool ConnectionEstablished(RakNet::RakNetGUID other) override
-    {
-        Log::writeToLog(Log::INFO, "Connected to server ", other, "! Attempting to join lobby");
-        // Register the join lobby callback now
-        network->registerCallback(&lobby);
-
-        lobby.joinLobby(other, 1);
-        return true;
-    }
-
-    virtual bool ConnectionLost(RakNet::RakNetGUID other) override
-    {
-        Log::writeToLog(Log::INFO, "Lost connection with server ", other, ". Shutting down lobby");
-        network->deregisterCallback(&lobby);
-        return true;
-    }
-};
 
 void print_usage(char* prog_name)
 {
@@ -70,8 +41,8 @@ int main(int argc, char **argv)
     UI::setGlobalUI(&ui);
 
     // and start our JoinGame client
-    JoinGame game;
-    network.registerCallback(&game);
+    SimulationMaster master(&network);
+    network.registerCallback(&master);
 
     // Connect to get this party started
     network.connect(argv[2]);
@@ -80,6 +51,6 @@ int main(int argc, char **argv)
     std::string dummy;
     std::getline(std::cin, dummy);
 
-    network.deregisterCallback(&game);
+    network.deregisterCallback(&master);
     return 0;
 }

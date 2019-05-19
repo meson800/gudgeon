@@ -1,7 +1,11 @@
 #pragma once
 
+#include <map>
+#include <vector>
+
 #include "EventID.h"
 #include "Stations.h"
+#include "EventSystem.h"
 
 namespace RakNet
 {
@@ -31,3 +35,16 @@ public:
     std::vector<Station> stations;
 };
 
+/*!
+ * Event delivered by the game master to itself when the lobby is full.
+ */
+class SimulationStartServer : public Event
+{
+public:
+    SimulationStartServer() : Event(category, id) {}
+    constexpr static uint32_t category = Events::Category::Simulation;
+    constexpr static uint32_t id = Events::Sim::SimStart;
+
+
+    std::map<uint32_t, std::vector<std::vector<std::pair<StationType, RakNet::RakNetGUID>>>> assignments;
+};

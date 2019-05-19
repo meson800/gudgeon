@@ -85,6 +85,7 @@ SDL_Renderer* UI::getFreeRenderer(uint16_t minWidth, uint16_t minHeight)
 
     windows.push_back(newWindow);
     renderers.push_back(newRenderer);
+    ownedWindows[newRenderer] = newWindow;
 
     return newRenderer;
 }
@@ -105,6 +106,7 @@ Renderable::Renderable(uint16_t width, uint16_t height)
 
 Renderable::~Renderable()
 {
+    Log::writeToLog(Log::L_DEBUG, "Renderable deconstructor called for ", this);
     if (renderer != nullptr)
     {
         UI::getGlobalUI()->deregisterRenderable(renderer, this);
@@ -247,7 +249,13 @@ void UI::deregisterRenderable(SDL_Renderer* renderer, Renderable* renderable)
         throw std::runtime_error("Removal of unregistered renderable attempted!");
     }
 
+    Log::writeToLog(Log::L_DEBUG, "Deregistering renderable ", renderable);
+
     renderStack[renderer].erase(renderable);
+
+    // Set this renderer to destroy
+    toDestroy.push_back(renderable);
+
     Log::writeToLog(Log::L_DEBUG, "Deregistered renderable ", renderable, " from renderer ", renderer);
 }
 
@@ -314,6 +322,29 @@ void UI::runSDLloop(bool& startupDone, std::mutex& startupMux)
                 Log::writeToLog(Log::L_DEBUG, "Fulfilled new renderer request for renderable ", request.target);
             }
             rendererRequests.clear();
+
+            // Now, iterate over the renderers and see if we need to destroy anything
+            if (toDestroy.size() > 0)
+            {
+                toDestroy.clear();
+
+                auto it = renderStack.begin();
+                while (it != renderStack.end())
+                {
+                    if (it->second.size() == 0)
+                    {
+                        //This renderable is empty. Destroy it
+                        SDL_DestroyRenderer(it->first);
+                        SDL_DestroyWindow(ownedWindows[it->first]);
+                        ownedWindows.erase(it->first);
+                        it = renderStack.erase(it);
+                    } else {
+                        ++it;
+                    }
+                }
+            }
+
+
         }
 
         // Get SDL events

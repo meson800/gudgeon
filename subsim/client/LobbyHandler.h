@@ -28,6 +28,9 @@ public:
     /// Inits our internal state
     LobbyHandler();
 
+    /// Cleans up state
+    virtual ~LobbyHandler();
+
     /// Contacts the given server, requesting to join the lobby with a given number of stations
     void joinLobby(RakNet::RakNetGUID server, uint8_t numStations);
 
