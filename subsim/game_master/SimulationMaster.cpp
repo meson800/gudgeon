@@ -96,7 +96,7 @@ void SimulationMaster::runSimLoop()
 
 inline bool didCollide(int64_t x1, int64_t y1, int64_t x2, int64_t y2, int32_t radius)
 {
-    return (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1) > radius * radius;
+    return (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1) < radius * radius;
 }
 
 void SimulationMaster::runSimForUnit(UnitState *unitState)
@@ -131,6 +131,7 @@ void SimulationMaster::runSimForUnit(UnitState *unitState)
                 torpedoPair.second.x, torpedoPair.second.y,
                 collisionRadius))
         {
+            Log::writeToLog(Log::INFO, "Torpedo struck submarine");
             torpedosHit.push_back(torpedoPair.first);
         }
     }
@@ -269,6 +270,8 @@ HandleResult SimulationMaster::fire(FireEvent *event)
         torp.depth = unit->depth;
         torp.heading = unit->heading;
         torpedos[nextTorpedoID++] = torp;
+
+        Log::writeToLog(Log::L_DEBUG, "Fired torpedos/mines");
     }
     return HandleResult::Stop;
 }

@@ -1,8 +1,11 @@
 #include "TacticalStation.h"
 
+#include "../common/Messages.h"
+
+#include "../common/Log.h"
+
 #include "UI.h"
 #include <SDL2_gfxPrimitives.h>
-#include "../common/Log.h"
 
 #define WIDTH 640
 #define HEIGHT 480
@@ -48,7 +51,8 @@ HandleResult TacticalStation::handleKeypress(KeyEvent* keypress)
         fire.team = team;
         fire.unit = unit;
 
-        EventSystem::getGlobalInstance()->queueEvent(fire);
+        EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(fire));
+        Log::writeToLog(Log::L_DEBUG, "Fired torpedos/mines");
     }
     return HandleResult::Stop;
 }

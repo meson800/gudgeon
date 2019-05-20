@@ -102,7 +102,6 @@ void EventSystem::deliverEvents()
                 events.pop_front();
             }
 
-            Log::writeToLog(Log::L_DEBUG, "Attempting delivery of event ", top_event.get());
             // Now deliver the event to callbacks in the queue
             {
                 std::lock_guard<std::mutex> lock(callbackMux);
@@ -158,14 +157,11 @@ void EventSystem::deregisterCallback(EventReceiver* callback)
 
 void EventSystem::internalQueueEvent(std::unique_ptr<Event>&& event)
 {
-    Log::writeToLog(Log::L_DEBUG, "Event: ", event.get(), " enqueued");
-
     // Check if this is an envelope event. If so, pass it through the network
     if (event->i_category == Events::Network && event->i_id == Events::Net::Envelope)
     {
         EnvelopeMessage* message = (EnvelopeMessage*)event.get();
-        Log::writeToLog(Log::L_DEBUG, "Event is a network message to node ", message->address);
-        
+
         if (!network)
         {
             Log::writeToLog(Log::ERR, "Attempted to deliver an envelope when no network setup!");
