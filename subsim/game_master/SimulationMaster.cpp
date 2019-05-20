@@ -4,12 +4,15 @@
 
 #include "../common/Log.h"
 
+constexpr static int32_t STEERING_RATE = 2;
+
 SimulationMaster::SimulationMaster(Network* network_)
     : shouldShutdown(false)
     , network(network_)
     , EventReceiver({
         dispatchEvent<SimulationMaster, SimulationStartServer, &SimulationMaster::simStart>,
         dispatchEvent<SimulationMaster, ThrottleEvent, &SimulationMaster::throttle>,
+        dispatchEvent<SimulationMaster, SteeringEvent, &SimulationMaster::steering>,
     })
 {
     lobbyInit = std::unique_ptr<LobbyHandler>(new LobbyHandler());
@@ -86,6 +89,22 @@ inline bool didCollide(int64_t x1, int64_t y1, int64_t x2, int64_t y2, int32_t r
 
 void SimulationMaster::runSimForUnit(UnitState *unitState)
 {
+    // Update submarine heading, only if we are moving
+    if (unitState->speed > 0)
+    {
+        if (unitState->direction == UnitState::SteeringDirection::Left)
+        {
+            int32_t newHeading = static_cast<int32_t>(unitState->heading) - STEERING_RATE;
+            unitState->heading = newHeading < 0 ? newHeading + 360 : newHeading;
+        }
+
+        if (unitState->direction == UnitState::SteeringDirection::Right)
+        {
+            int32_t newHeading = static_cast<int32_t>(unitState->heading) + STEERING_RATE;
+            unitState->heading = newHeading > 360 ? newHeading - 360 : newHeading;
+        }
+    }
+
     // Update submarine position
     unitState->x += unitState->speed * cos(unitState->heading * 2*M_PI/360.0);
     unitState->y += unitState->speed * sin(unitState->heading * 2*M_PI/360.0);
@@ -155,6 +174,7 @@ HandleResult SimulationMaster::simStart(SimulationStartServer* event)
             unitState.y = 0;
             unitState.depth = 0;
             unitState.heading = 0;
+            unitState.direction = UnitState::SteeringDirection::Center;
             unitState.pitch = 0;
             unitState.speed = 0;
             unitState.powerAvailable = 100;
@@ -192,3 +212,20 @@ HandleResult SimulationMaster::throttle(ThrottleEvent *event)
     return HandleResult::Stop;
 }
 
+
+HandleResult SimulationMaster::steering(SteeringEvent *event)
+{
+    {
+        std::lock_guard<std::mutex> lock(stateMux);
+        if (event->isPressed == false)
+        {
+            unitStates[event->team][event->unit].direction = UnitState::SteeringDirection::Center;
+        } else if (event->direction == SteeringEvent::Direction::Left) {
+            unitStates[event->team][event->unit].direction = UnitState::SteeringDirection::Left;
+        } else if (event->direction == SteeringEvent::Direction::Right) {
+            unitStates[event->team][event->unit].direction = UnitState::SteeringDirection::Right;
+        }
+    }
+    return HandleResult::Stop;
+}
+            

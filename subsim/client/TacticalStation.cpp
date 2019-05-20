@@ -105,12 +105,12 @@ void TacticalStation::redraw()
 int64_t TacticalStation::display_x(int64_t x, int64_t y) {
     return WIDTH/2
         - (x - lastState.x) * sin(lastState.heading * 2*M_PI/360.0)
-        - (y - lastState.y) * cos(lastState.heading * 2*M_PI/360.0);
+        + (y - lastState.y) * cos(lastState.heading * 2*M_PI/360.0);
 }
 
 int64_t TacticalStation::display_y(int64_t x, int64_t y) {
     return HEIGHT/2
         - (x - lastState.x) * cos(lastState.heading * 2*M_PI/360.0)
-        + (y - lastState.y) * sin(lastState.heading * 2*M_PI/360.0);
+        - (y - lastState.y) * sin(lastState.heading * 2*M_PI/360.0);
 }
 

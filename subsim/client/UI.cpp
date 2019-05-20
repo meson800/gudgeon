@@ -438,8 +438,8 @@ void UI::runSDLloop(bool& startupDone, std::mutex& startupMux)
 
                 if (renderStack.count(renderer) == 0)
                 {
-                    Log::writeToLog(Log::ERR, "Redraw requested for nonexistent renderer ", renderer, "!");
-                    throw std::runtime_error("Redraw requested for nonexistent renderer!");
+                    Log::writeToLog(Log::WARN, "Redraw requested for nonexistent renderer ", renderer, "!");
+                    continue;
                 }
                 Log::writeToLog(Log::L_DEBUG, "Redrawing renderer ", renderer);
 

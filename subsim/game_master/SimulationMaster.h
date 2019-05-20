@@ -53,6 +53,9 @@ public:
     /// Handles the event when a submarine changes its throttle
     HandleResult throttle(ThrottleEvent *event);
 
+    /// Handles the event when the submarine steers left or right
+    HandleResult steering(SteeringEvent *event);
+
 private:
     /// Internal game simulation function. Runs continuously in its own thread
     void runSimLoop();
