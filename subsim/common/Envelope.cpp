@@ -142,7 +142,7 @@ void EnvelopeMessage::deserialize(RakNet::BitStream& source)
                 case Events::Sim::Steering:
                 {
                     SteeringEvent se;
-                    source >> se.team >> se.unit >> se.tube >> se.direction >> se.isPressed;
+                    source >> se.team >> se.unit >> se.direction >> se.isPressed;
 
                     EventSystem::getGlobalInstance()->queueEvent(se);
                 }
@@ -298,7 +298,7 @@ void EnvelopeMessage::serialize(RakNet::BitStream& source) const
                 case Events::Sim::Steering:
                 {
                     SteeringEvent* se = (SteeringEvent*)event.get();
-                    source << se->team << se->unit << se->tube << se->direction << se->isPressed;
+                    source << se->team << se->unit << se->direction << se->isPressed;
                 }
                 break;
 

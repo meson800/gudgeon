@@ -406,6 +406,10 @@ void UI::runSDLloop(bool& startupDone, std::mutex& startupMux)
                         ke.key = Key::RBracket;
                         break;
 
+                        case SDLK_SPACE:
+                        ke.key = Key::Space;
+                        break;
+
                         default:
                         ke.key = Key::Other;
                     }

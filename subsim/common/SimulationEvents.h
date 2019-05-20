@@ -274,7 +274,6 @@ public:
 
     uint32_t team;
     uint32_t unit;
-    uint16_t tube;
     Direction direction;
     bool isPressed;
 };
