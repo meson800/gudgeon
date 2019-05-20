@@ -81,7 +81,7 @@ SDL_Renderer* UI::getFreeRenderer(uint16_t minWidth, uint16_t minHeight)
     }
 
     // Clear the screen initially
-    SDL_SetRenderDrawColor(newRenderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+    SDL_SetRenderDrawColor(newRenderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
     SDL_RenderClear(newRenderer);
     SDL_RenderPresent(newRenderer);
 

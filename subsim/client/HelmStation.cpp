@@ -4,6 +4,9 @@
 
 #include "../common/Log.h"
 
+#include "UI.h"
+#include <SDL2_gfxPrimitives.h>
+
 #include <sstream>
 
 #define WIDTH 640
@@ -61,6 +64,7 @@ HandleResult HelmStation::handleKeypress(KeyEvent* keypress)
 
 HandleResult HelmStation::handleUnitState(UnitState* state)
 {
+    Log::writeToLog(Log::L_DEBUG, "Got updated UnitState from server");
     lastState = *state;
     scheduleRedraw();
     return HandleResult::Stop;
@@ -68,7 +72,15 @@ HandleResult HelmStation::handleUnitState(UnitState* state)
 
 void HelmStation::redraw()
 {
+    //SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    //SDL_RenderClear(renderer);
+
+    Log::writeToLog(Log::L_DEBUG, "Renderer:", renderer, "Drawing updated speed:", lastState.speed);
     std::ostringstream sstream;
     sstream << "Speed:" << lastState.speed;
     drawText(sstream.str(), 20, 50, 50);
+    //filledCircleColor(renderer, 100, 100, 50, 0xFFFFFFFF);
+
+    SDL_RenderPresent(renderer);
+    SDL_RenderPresent(renderer);
 }
