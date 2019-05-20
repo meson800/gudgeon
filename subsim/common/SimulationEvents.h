@@ -76,3 +76,54 @@ public:
 
     std::string message;
 };
+
+/*!
+ * Event that stores the complete state of a Unit. The game master sends
+ * these messages out to the clients after every simulation time step.
+ */
+class UnitState : public Event
+{
+public:
+    UnitState() : Event(category, id) {}
+    constexpr static uint32_t category = Events::Category::Simulation;
+    constexpr static uint32_t id = Events::Sim::UnitState;
+
+    /**
+     * Stores the armed/reload status of the tubes.
+     * Tubes can only be reloaded if they are not armed, and
+     * tubes can only be fired if they are armed
+     */
+    std::vector<bool> tubeIsArmed;
+
+    /// Stores the different possible loaded states
+    enum TubeStatus
+    {
+        Empty,
+        Torpedo,
+        Mine
+    };
+
+    /// Stores the occupancy of the tubes
+    std::vector<TubeStatus> tubeOccupancy;
+
+    /// Stores the current maximum distance of the torpedos
+    uint64_t torpedoDistance;
+
+    /// Stores the position of the sub. These are int's for easy serialization purposes
+    int64_t x, y, depth;
+
+    /// Stores the current heading of the sub in degrees. This is also an integer for easy serialization
+    uint16_t heading;
+
+    /// Stores the current speed of the sub, as this affects power usage.
+    uint16_t speed;
+
+    /// Stores the current power available (used as health)
+    uint16_t powerAvailable;
+
+    /// Stores the current power usage
+    uint16_t powerUsage;
+
+    /// Stores the enable/disable status of various power items
+    bool yawEnabled, pitchEnabled, engineEnabled, commsEnabled, sonarEnabled, weaponsEnabled;
+};
