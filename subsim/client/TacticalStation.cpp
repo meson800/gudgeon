@@ -136,12 +136,12 @@ void TacticalStation::renderSubmarine(int64_t x, int64_t y, int16_t heading) {
         displayHeading(heading - 90), displayHeading(heading + 90),
         255, 0, 0, 255);
     lineRGBA(renderer,
-        displayX(x+u*10+v*10, y+v*10+u*10), displayY(x+u*10+v*10, y+v*10+u*10),
-        displayX(x-u*10+v*10, y-v*10+u*10), displayY(x-u*10+v*10, y-v*10+u*10),
+        displayX(x+u*10+v*10, y+v*10-u*10), displayY(x+u*10+v*10, y+v*10-u*10),
+        displayX(x-u*10+v*10, y-v*10-u*10), displayY(x-u*10+v*10, y-v*10-u*10),
         255, 0, 0, 255);
     lineRGBA(renderer,
-        displayX(x+u*10-v*10, y+v*10-u*10), displayY(x+u*10-v*10, y+v*10-u*10),
-        displayX(x-u*10-v*10, y-v*10-u*10), displayY(x-u*10-v*10, y-v*10-u*10),
+        displayX(x+u*10-v*10, y+v*10+u*10), displayY(x+u*10-v*10, y+v*10+u*10),
+        displayX(x-u*10-v*10, y-v*10+u*10), displayY(x-u*10-v*10, y-v*10+u*10),
         255, 0, 0, 255);
 }
 

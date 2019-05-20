@@ -29,6 +29,9 @@ public:
     /// Handles the event when the submarine steers left or right
     HandleResult steering(SteeringEvent *event);
 
+    /// Handles the event when the submarine fires its armed torpedos/mines
+    HandleResult fire(FireEvent *event);
+
 private:
     /// Internal game simulation function. Runs continuously in its own thread
     void runSimLoop();
@@ -58,10 +61,14 @@ private:
     /// Internal unit states
     std::map<uint32_t, std::vector<UnitState>> unitStates;
 
+    /// Stores the next unused ID number for torpedos/mines
+    TorpedoID nextTorpedoID;
+    MineID nextMineID;
+
     /// Stores the current state of all torpedos
-    std::map<uint32_t, TorpedoState> torpedos;
+    std::map<TorpedoID, TorpedoState> torpedos;
 
     /// Stores the current location of all mines
-    std::map<uint32_t, MineState> mines;
+    std::map<MineID, MineState> mines;
 };
 
