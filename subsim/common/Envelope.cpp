@@ -63,6 +63,7 @@ void EnvelopeMessage::deserialize(RakNet::BitStream& source)
                     // inject event
                     EventSystem::getGlobalInstance()->queueEvent(simevent);
                 }
+                break;
 
                 case Events::Sim::UnitState:
                 {
