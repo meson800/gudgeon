@@ -46,6 +46,9 @@ public:
 
     /// Handles the event spawned when the lobby is full, and the game is starting
     HandleResult simStart(SimulationStartServer* event);
+    
+    /// Handles the event when a submarine changes its throttle
+    HandleResult throttle(ThrottleEvent *event);
 
 private:
     /// Internal game simulation function. Runs continuously in its own thread

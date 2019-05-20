@@ -88,6 +88,9 @@ public:
     constexpr static uint32_t category = Events::Category::Simulation;
     constexpr static uint32_t id = Events::Sim::UnitState;
 
+    uint32_t team;
+    uint32_t unit;
+
     /**
      * Stores the armed/reload status of the tubes.
      * Tubes can only be reloaded if they are not armed, and
@@ -146,5 +149,4 @@ public:
     uint32_t unit;
     uint16_t speed;
 };
-
 

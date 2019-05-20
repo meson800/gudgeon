@@ -68,7 +68,9 @@ void EnvelopeMessage::deserialize(RakNet::BitStream& source)
                 case Events::Sim::UnitState:
                 {
                     UnitState us;
-                    source >> us.tubeIsArmed >> us.tubeOccupancy >> us.remainingTorpedos >> us.remainingMines >> us.torpedoDistance
+                    source
+                        >> us.team >> us.unit
+                        >> us.tubeIsArmed >> us.tubeOccupancy >> us.remainingTorpedos >> us.remainingMines >> us.torpedoDistance
                         >> us.x >> us.y >> us.depth >> us.heading >> us.pitch
                         >> us.speed >> us.powerAvailable >> us.powerUsage
                         >> us.yawEnabled >> us.pitchEnabled >> us.engineEnabled >> us.commsEnabled >> us.sonarEnabled
@@ -136,7 +138,9 @@ void EnvelopeMessage::serialize(RakNet::BitStream& source) const
                 {
                     UnitState* us = (UnitState*)event.get();
 
-                    source << us->tubeIsArmed << us->tubeOccupancy << us->remainingTorpedos << us->remainingMines << us->torpedoDistance
+                    source
+                        << us->team << us->unit
+                        << us->tubeIsArmed << us->tubeOccupancy << us->remainingTorpedos << us->remainingMines << us->torpedoDistance
                         << us->x << us->y << us->depth << us->heading << us->pitch 
                         << us->speed << us->powerAvailable << us->powerUsage
                         << us->yawEnabled << us->pitchEnabled << us->engineEnabled << us->commsEnabled << us->sonarEnabled
