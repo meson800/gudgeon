@@ -43,11 +43,16 @@ void SimulationMaster::runSimLoop()
 
         for (auto& torpedoPair : torpedos)
         {
-            TorpedoState &torpedo = torpedoPair.second;
+            TorpedoState *torpedo = &torpedoPair.second;
             constexpr int torpedo_speed = 10;
-            torpedo.x += torpedo_speed * cos(torpedo.heading * 2*M_PI/360.0);
-            torpedo.y += torpedo_speed * sin(torpedo.heading * 2*M_PI/360.0);
-            sonar.addDot(torpedo.x, torpedo.y);
+            torpedo->x += torpedo_speed * cos(torpedo->heading * 2*M_PI/360.0);
+            torpedo->y += torpedo_speed * sin(torpedo->heading * 2*M_PI/360.0);
+            sonar.torpedos.push_back(*torpedo);
+        }
+
+        for (auto& minePair : mines)
+        {
+            sonar.mines.push_back(minePair.second);
         }
 
         for (auto& teamPair : unitStates)
@@ -56,7 +61,13 @@ void SimulationMaster::runSimLoop()
             {
                 runSimForUnit(&unitState);
 
-                sonar.addDot(unitState.x, unitState.y);
+                UnitSonarState unitSonarState;
+                unitSonarState.team = unitState.team;
+                unitSonarState.unit = unitState.unit;
+                unitSonarState.x = unitState.x;
+                unitSonarState.y = unitState.y;
+                unitSonarState.depth = unitState.depth;
+                sonar.units.push_back(unitSonarState);
 
                 // Deliver latest UnitState to every attached client
                 // This will send a redundant message if the same client is
@@ -168,6 +179,19 @@ HandleResult SimulationMaster::simStart(SimulationStartServer* event)
             unitStates[teamPair.first].push_back(unitState);
         }
     }
+
+    TorpedoState torp;
+    torp.x = 80;
+    torp.y = 80;
+    torp.depth = 0;
+    torp.heading = 0;
+    torpedos[0] = torp;
+
+    MineState mine;
+    mine.x = 200;
+    mine.y = 200;
+    mine.depth = 0;
+    mines[0] = mine;
 
     Log::writeToLog(Log::INFO, "Starting server-side simulation. Final assignments:", sstream.str());
     // Unhook the lobby handler and destroy it

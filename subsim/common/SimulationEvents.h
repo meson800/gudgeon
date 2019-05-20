@@ -138,6 +138,44 @@ public:
     bool yawEnabled, pitchEnabled, engineEnabled, commsEnabled, sonarEnabled, weaponsEnabled;
 };
 
+
+typedef uint32_t TorpedoID;
+typedef uint32_t MineID;
+
+/*!
+ * Class that stores what information we need for torpedos
+ */
+struct TorpedoState
+{
+    /// Stores the location of the torpedo.
+    int64_t x, y, depth;
+
+    /// Stores the current heading of the torpedo in degrees.
+    uint16_t heading;
+
+    // All torpedos travel at the same speed; we don't have a speed entry here because of this
+};
+
+/*!
+ * Stores the location of mines.
+ */
+struct MineState
+{
+    /// Just store the location of mines; they don't move
+    int64_t x, y, depth;
+};
+
+/*!
+ * Stores the subset of UnitState that should be visible to other units on sonar
+ */
+struct UnitSonarState
+{
+    uint32_t team;
+    uint32_t unit;
+
+    int64_t x, y, depth;
+};
+
 /*!
  * Event that stores the complete state of every visible entity; essentially, a
  * list of all the dots that should be displayed on the sonar screen.
@@ -149,20 +187,9 @@ public:
     constexpr static uint32_t category = Events::Category::Simulation;
     constexpr static uint32_t id = Events::Sim::SonarDisplay;
 
-    class Dot
-    {
-    public:
-        int64_t x, y;
-    };
-    std::vector<Dot> dots;
-
-    void addDot(int64_t x, int64_t y)
-    {
-        Dot d;
-        d.x = x;
-        d.y = y;
-        dots.push_back(d);
-    }
+    std::vector<UnitSonarState> units;
+    std::vector<TorpedoState> torpedos;
+    std::vector<MineState> mines;
 };
 
 class ThrottleEvent : public Event

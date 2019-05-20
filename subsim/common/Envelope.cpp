@@ -84,10 +84,28 @@ void EnvelopeMessage::deserialize(RakNet::BitStream& source)
                 {
                     SonarDisplayState sd;
                     uint32_t len;
+
                     source >> len;
-                    sd.dots.resize(len);
-                    for (int i = 0; i < len; ++i) {
-                      source >> sd.dots[i].x >> sd.dots[i].y;
+                    sd.units.resize(len);
+                    for (int i = 0; i < len; ++i)
+                    {
+                        source >> sd.units[i].team >> sd.units[i].unit
+                            >> sd.units[i].x >> sd.units[i].y >> sd.units[i].depth;
+                    }
+
+                    source >> len;
+                    sd.torpedos.resize(len);
+                    for (int i = 0; i < len; ++i)
+                    {
+                        source >> sd.torpedos[i].x >> sd.torpedos[i].y >> sd.torpedos[i].depth
+                            >> sd.torpedos[i].heading;
+                    }
+
+                    source >> len;
+                    sd.mines.resize(len);
+                    for (int i = 0; i < len; ++i)
+                    {
+                        source >> sd.mines[i].x >> sd.mines[i].y >> sd.mines[i].depth;
                     }
 
                     EventSystem::getGlobalInstance()->queueEvent(sd);
@@ -228,11 +246,27 @@ void EnvelopeMessage::serialize(RakNet::BitStream& source) const
                 case Events::Sim::SonarDisplay:
                 {
                     SonarDisplayState* sd = (SonarDisplayState*)event.get();
-                    uint32_t len = sd->dots.size();
+                    uint32_t len;
 
+                    len = sd->units.size();
                     source << len;
-                    for (auto dot : sd->dots) {
-                      source << dot.x << dot.y;
+                    for (auto unit : sd->units)
+                    {
+                        source << unit.team << unit.unit << unit.x << unit.y << unit.depth;
+                    }
+
+                    len = sd->torpedos.size();
+                    source << len;
+                    for (auto torp : sd->torpedos)
+                    {
+                        source << torp.x << torp.y << torp.depth << torp.heading;
+                    }
+
+                    len = sd->mines.size();
+                    source << len;
+                    for (auto mine : sd->mines)
+                    {
+                        source << mine.x << mine.y << mine.depth;
                     }
                 }
                 break;

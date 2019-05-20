@@ -37,10 +37,15 @@ public:
     virtual void redraw() override;
 
 private:
-    /// display_x() and display_y() convert from world coordinates to display
+    void renderSubmarine(int64_t x, int64_t y, int16_t heading);
+
+    /// displayX() and displayY() convert from world coordinates to SDL display
     /// coordinates based on the unit's current location
-    int64_t display_x(int64_t x, int64_t y);
-    int64_t display_y(int64_t x, int64_t y);
+    int64_t displayX(int64_t x, int64_t y);
+    int64_t displayY(int64_t x, int64_t y);
+
+    // displayHeading() converts from a global heading to a SDL angle number
+    int16_t displayHeading(int16_t heading);
 
     uint32_t team;
     uint32_t unit;

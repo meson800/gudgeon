@@ -6,33 +6,6 @@
 #include <memory>
 #include <thread>
 
-typedef uint32_t TorpedoID;
-typedef uint32_t MineID;
-
-/*!
- * Class that stores what information we need for torpedos
- */
-struct TorpedoState
-{
-    /// Stores the location of the torpedo.
-    int64_t x, y, depth;
-
-    /// Stores the current heading of the torpedo in degrees.
-    uint16_t heading;
-
-    // All torpedos travel at the same speed; we don't have a speed entry here because of this
-};
-
-/*!
- * Stores the location of mines.
- */
-struct MineState
-{
-    /// Just store the location of mines; they don't move
-    int64_t x, y, depth;
-};
-
-
 /*!
  * This class controls the entire simulation from the server-side. It first spawns
  * an instance of a LobbyHandler to get clients, but once it acquries enough clients
