@@ -14,7 +14,7 @@
 
 LobbyHandler::LobbyHandler()
     : Renderable(WIDTH, HEIGHT)
-    , EventReceiver(dispatchEvent<LobbyHandler, KeyEvent, &LobbyHandler::getKeypress>)
+    , EventReceiver({dispatchEvent<LobbyHandler, KeyEvent, &LobbyHandler::getKeypress>})
     , selectedTeam(1)
     , selectedUnit(0)
     , selectedStation(0)

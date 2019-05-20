@@ -17,13 +17,17 @@ enum Net
 
 enum MockUIEvents
 {
-    Key
+    Key,
+    Text,
+    IgnoreKeypresses
 };
 
 enum Sim
 {
     SimStart,
     SimStartServer,
+    UnitState,
+    TextMessage,
 };
 
 enum Control

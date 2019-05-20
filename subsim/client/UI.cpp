@@ -15,6 +15,8 @@ UI* UI::singleton = nullptr;
 
 UI::UI()
     : shouldShutdown(false)
+    , shouldUpdateText(false)
+    , textStatus(false)
 {
     std::mutex startupMux;
     bool startupDone = false;
@@ -346,6 +348,17 @@ void UI::runSDLloop(bool& startupDone, std::mutex& startupMux)
 
 
         }
+        // Update text status if required
+        if (shouldUpdateText)
+        {
+            if (textStatus)
+            {
+                SDL_StartTextInput();
+            } else {
+                SDL_StopTextInput();
+            }
+            shouldUpdateText = false;
+        }
 
         // Get SDL events
         SDL_Event event;
@@ -389,6 +402,16 @@ void UI::runSDLloop(bool& startupDone, std::mutex& startupMux)
                     EventSystem::getGlobalInstance()->queueEvent(ke);
 
                 }
+                break;
+
+                case SDL_TEXTINPUT:
+                {
+                    TextInputEvent te;
+                    te.text = event.text.text;
+                    EventSystem::getGlobalInstance()->queueEvent(te);
+                }
+                break;
+
                 default:
                 break;
             }
@@ -424,5 +447,9 @@ void UI::runSDLloop(bool& startupDone, std::mutex& startupMux)
     }
 }
 
-
+void UI::changeTextInput(bool receiveText)
+{
+   textStatus =  receiveText;
+   shouldUpdateText = true;
+}
 

@@ -3,6 +3,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <atomic>
 
 #include <thread>
 #include <mutex>
@@ -119,6 +120,10 @@ class UI
     /// Triggers a redraw on the given renderer
     void triggerRedraw(SDL_Renderer* renderer);
 
+    /// Queues a text input change event.
+    void changeTextInput(bool receiveText);
+
+
 private:
     /**
      * This is the GUI loop thread function. This is capped at 60FPS,
@@ -171,6 +176,11 @@ private:
 
     /// Shutdown boolean
     bool shouldShutdown;
+
+    /// Stores if we should update the text input
+    std::atomic<bool> shouldUpdateText;
+
+    std::atomic<bool> textStatus;
 
     /// General state mutex
     std::mutex stateMux;

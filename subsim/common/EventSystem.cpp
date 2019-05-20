@@ -15,8 +15,8 @@ Event::Event(uint32_t category_, uint32_t id_)
 Event::~Event() {}
 
 
-EventReceiver::EventReceiver(HandleResult(*_dispatcher)(EventReceiver* handler, Event* event))
-    : dispatcher(_dispatcher)
+EventReceiver::EventReceiver(std::vector<HandleResult(*)(EventReceiver*,Event*)> dispatchers_)
+    : dispatchers(dispatchers_)
 {
     EventSystem::getGlobalInstance()->registerCallback(this);
 }
@@ -109,11 +109,14 @@ void EventSystem::deliverEvents()
 
                 for (EventReceiver* callback : callbacks)
                 {
-                    HandleResult result = callback->dispatcher(callback, top_event.get());
-
-                    if (result == HandleResult::Stop || result == HandleResult::Error)
+                    HandleResult result = HandleResult::Unhandled;
+                    for (auto dispatcher : callback->dispatchers)
                     {
-                        break;
+                        result = dispatcher(callback, top_event.get());
+                        if (result == HandleResult::Stop || result == HandleResult::Error)
+                        {
+                            break;
+                        }
                     }
                 }
             }

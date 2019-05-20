@@ -2,6 +2,7 @@
 
 #include <atomic>
 #include <cstdint>
+#include <vector>
 #include <deque>
 #include <set>
 #include <memory>
@@ -62,12 +63,13 @@ class EventReceiver
 {
 public:
     /// Hooks this class into the event system
-    EventReceiver(HandleResult(*_dispatcher)(EventReceiver* handler, Event* event));
+    EventReceiver(std::vector<HandleResult(*)(EventReceiver*,Event*)> dispatchers_);
 
     /// Removes this class from the event system
     virtual ~EventReceiver();
 
     /// Handles a given event. You can use the dispatchEvent template to implement this for your class.
+    std::vector<HandleResult(*)(EventReceiver*,Event*)> dispatchers;
     HandleResult(*dispatcher)(EventReceiver* handler, Event* event);
 };
 
@@ -79,31 +81,16 @@ public:
  * The expected type handler functions are member functions that take a pointer
  * to the event type, and return a HandleResult.
  */
- template <typename Handler, typename T, HandleResult(Handler::*hfunc)(T*), typename ...args>
+ template <typename Handler, typename T, HandleResult(Handler::*hfunc)(T*)>
  HandleResult dispatchEvent(EventReceiver* handler, Event* event)
  {
     if (event->i_category == T::category && event->i_id == T::id)
     {
         return (static_cast<Handler*>(handler)->*hfunc)((T*)event);
-    } else {
-        return dispatchEvent<Handler, args...>(handler, event);
     }
+    return HandleResult::Unhandled;
  }
  
- /*!
-  * Base case of dispatchEvent
-  */
-template <typename Handler>
-HandleResult dispatchEvent(EventReceiver* handler, Event* event)
-{
-    //base case, abort!
-    return HandleResult::Unhandled;
-}
-
-
-
-
-
 /*!
  * This class handles all of the "plumbing" between various modules.
  *

@@ -5,7 +5,7 @@
 
 SimulationMaster::SimulationMaster(Network* network_)
     : network(network_)
-    , EventReceiver(dispatchEvent<SimulationMaster, SimulationStartServer, &SimulationMaster::simStart>)
+    , EventReceiver({dispatchEvent<SimulationMaster, SimulationStartServer, &SimulationMaster::simStart>})
 {
     lobbyInit = std::unique_ptr<LobbyHandler>(new LobbyHandler());
     network->registerCallback(lobbyInit.get());

@@ -17,7 +17,7 @@ class TestHandler : public EventReceiver
 {
 public:
     TestHandler()
-        : EventReceiver(dispatchEvent<TestHandler, EventTest, &TestHandler::handleTest>)
+        : EventReceiver({dispatchEvent<TestHandler, EventTest, &TestHandler::handleTest>})
     {}
 
     HandleResult handleTest(EventTest* test)
