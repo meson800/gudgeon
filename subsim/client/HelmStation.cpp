@@ -72,8 +72,8 @@ HandleResult HelmStation::handleUnitState(UnitState* state)
 
 void HelmStation::redraw()
 {
-    //SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    //SDL_RenderClear(renderer);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
 
     Log::writeToLog(Log::L_DEBUG, "Renderer:", renderer, "Drawing updated speed:", lastState.speed);
     std::ostringstream sstream;
@@ -81,6 +81,5 @@ void HelmStation::redraw()
     drawText(sstream.str(), 20, 50, 50);
     //filledCircleColor(renderer, 100, 100, 50, 0xFFFFFFFF);
 
-    SDL_RenderPresent(renderer);
     SDL_RenderPresent(renderer);
 }

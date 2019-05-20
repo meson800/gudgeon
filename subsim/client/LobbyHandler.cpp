@@ -246,8 +246,6 @@ void LobbyHandler::redraw()
         }
         ++i;
     }
-        
 
-    SDL_RenderPresent(renderer);
     SDL_RenderPresent(renderer);
 }
