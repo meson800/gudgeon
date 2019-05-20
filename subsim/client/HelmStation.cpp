@@ -43,22 +43,68 @@ HandleResult HelmStation::handleKeypress(KeyEvent* keypress)
         ThrottleEvent event;
         event.team = team;
         event.unit = unit;
-        if (keypress->key == Key::LBracket)
+
+        switch (keypress->key)
         {
-            // increase throttle!
-            event.speed = lastState.speed + 1;
+            case Key::RBracket:
+            {
+                // increase throttle!
+                event.speed = lastState.speed + 1;
 
-            EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(event));
+                EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(event));
 
-            return HandleResult::Stop;
-        } else if (keypress->key == Key::RBracket) {
-            // decrease throttle
-            event.speed = lastState.speed == 0 ? 0 : lastState.speed - 1;
+                return HandleResult::Stop;
+            }
+            break;
 
-            EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(event));
-            return HandleResult::Stop;
+            case Key::LBracket:
+            {
+                // decrease throttle
+                event.speed = lastState.speed == 0 ? 0 : lastState.speed - 1;
+
+                EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(event));
+                return HandleResult::Stop;
+            }
+            break;
+
+            default:
+            break;
         }
     }
+
+    // handle events where we want both keyup and keydown
+    switch (keypress->key)
+    {
+        case Key::Left:
+        {
+            // Turn left
+            SteeringEvent event;
+            event.team = team;
+            event.unit = unit;
+            event.direction = SteeringEvent::Direction::Left;
+            event.isPressed = keypress->isDown;
+            EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(event));
+
+            return HandleResult::Stop;
+        }
+
+        case Key::Right:
+        {
+            // Turn right
+            SteeringEvent event;
+            event.team = team;
+            event.unit = unit;
+            event.direction = SteeringEvent::Direction::Right;
+            event.isPressed = keypress->isDown;
+            EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(event));
+
+            return HandleResult::Stop;
+        }
+        
+        default:
+        break;
+    }
+
     return HandleResult::Unhandled;
 }
 

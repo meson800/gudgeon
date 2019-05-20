@@ -148,13 +148,13 @@ void TacticalStation::renderSubmarine(int64_t x, int64_t y, int16_t heading) {
 int64_t TacticalStation::displayX(int64_t x, int64_t y) {
     return WIDTH/2
         - (x - lastState.x) * sin(lastState.heading * 2*M_PI/360.0)
-        - (y - lastState.y) * cos(lastState.heading * 2*M_PI/360.0);
+        + (y - lastState.y) * cos(lastState.heading * 2*M_PI/360.0);
 }
 
 int64_t TacticalStation::displayY(int64_t x, int64_t y) {
     return HEIGHT/2
         - (x - lastState.x) * cos(lastState.heading * 2*M_PI/360.0)
-        + (y - lastState.y) * sin(lastState.heading * 2*M_PI/360.0);
+        - (y - lastState.y) * sin(lastState.heading * 2*M_PI/360.0);
 }
 
 int16_t TacticalStation::displayHeading(int16_t heading) {

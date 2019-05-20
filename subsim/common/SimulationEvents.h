@@ -106,6 +106,14 @@ public:
         Mine
     };
 
+    /// Stores the different steering directions
+    enum SteeringDirection
+    {
+        Left,
+        Right,
+        Center,
+    };
+
     /// Stores the occupancy of the tubes
     std::vector<TubeStatus> tubeOccupancy;
 
@@ -121,6 +129,10 @@ public:
 
     /// Stores the current heading of the sub in degrees. This is also an integer for easy serialization
     uint16_t heading;
+
+    /// Stores the current steering direction
+    SteeringDirection direction;
+
 
     /// Stores the current pitch of the sub, also in degrees
     int16_t pitch;
