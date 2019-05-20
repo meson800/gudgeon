@@ -22,9 +22,12 @@ cd build
 cmake ../
 make
 
-After that, in the build directory, there should be two executables, at
+The build produces two executables, one for the server and one for the client.
+Run them in two separate terminals:
 
-game_master/subsim_gm
-client/subsim_client
+cd build/game_master
+./subsim_gm
 
-Make sure these both run!
+cd build/client
+./subsim_client -s localhost
+
