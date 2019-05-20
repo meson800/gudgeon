@@ -436,6 +436,8 @@ void UI::runSDLloop(bool& startupDone, std::mutex& startupMux)
         // Lock the redraw mutex and redraw any renders that have requested it
         {
             std::lock_guard<std::mutex> lock(redrawMux);
+            // lock the state mux as well, in case a client tries to deregister in the middle
+            std::lock_guard<std::mutex> lock2(stateMux);
 
             for (SDL_Renderer* renderer : toRedraw)
             {
