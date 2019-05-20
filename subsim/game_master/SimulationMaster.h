@@ -4,6 +4,31 @@
 #include "LobbyHandler.h"
 
 #include <memory>
+#include <thread>
+
+/*!
+ * Class that stores what information we need for torpedos
+ */
+struct TorpedoState
+{
+    /// Stores the location of the torpedo.
+    int64_t x, y, depth;
+
+    /// Stores the current heading of the torpedo in degrees.
+    uint16_t heading;
+
+    // All torpedos travel at the same speed; we don't have a speed entry here because of this
+};
+
+/*!
+ * Stores the location of mines.
+ */
+struct MineState
+{
+    /// Just store the location of mines; they don't move
+    int64_t x, y, depth;
+};
+
 
 /*!
  * This class controls the entire simulation from the server-side. It first spawns
@@ -16,10 +41,25 @@ public:
     /// Takes an initalized Network instance, in order to communicate with clients.
     SimulationMaster(Network* network);
 
+    /// Stops the game loop upon destruction
+    ~SimulationMaster();
+
     /// Handles the event spawned when the lobby is full, and the game is starting
     HandleResult simStart(SimulationStartServer* event);
 
 private:
+    /// Internal game simulation function. Runs continuously in its own thread
+    void runSimLoop();
+
+    /// Thread for the sim loop
+    std::thread simLoop;
+
+    /// Shutdown flag atomic
+    std::atomic<bool> shouldShutdown;
+
+    /// Mutex to protect internal stsate
+    std::mutex stateMux;
+
     /// Stores the internal pointer to the network subsystem
     Network* network;
 
@@ -28,5 +68,14 @@ private:
 
     /// Internal mapping of teams/units/stations
     std::map<uint32_t, std::vector<std::vector<std::pair<StationType, RakNet::RakNetGUID>>>> assignments;
+
+    /// Internal unit states
+    std::map<uint32_t, std::vector<UnitState>> unitStates;
+
+    /// Stores the current state of all torpedos
+    std::vector<TorpedoState> torpedos;
+
+    /// Stores the current location of all mines
+    std::vector<MineState> mines;
 };
 
