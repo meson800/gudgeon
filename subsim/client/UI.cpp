@@ -286,6 +286,7 @@ void UI::runSDLloop(bool& startupDone, std::mutex& startupMux)
             Log::writeToLog(Log::ERR, "Couldn't start SDL! SDL error:", SDL_GetError());
             throw SDLError("Error in SDL_Init");
         }
+        SDL_StopTextInput();
         startupDone = true;
     }
 
@@ -353,8 +354,10 @@ void UI::runSDLloop(bool& startupDone, std::mutex& startupMux)
         {
             if (textStatus)
             {
+                Log::writeToLog(Log::L_DEBUG, "Enabling SDL text input");
                 SDL_StartTextInput();
             } else {
+                Log::writeToLog(Log::L_DEBUG, "Disabling SDL text input");
                 SDL_StopTextInput();
             }
             shouldUpdateText = false;

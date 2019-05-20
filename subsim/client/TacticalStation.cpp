@@ -24,6 +24,9 @@ HandleResult TacticalStation::handleKeypress(KeyEvent* keypress)
         ignore.shouldIgnore = receivingText;
         // Inform other modules that we are receiving text
         EventSystem::getGlobalInstance()->queueEvent(ignore);
+
+        // And update the UI
+        UI::getGlobalUI()->changeTextInput(receivingText);
     }
     return HandleResult::Stop;
 }
