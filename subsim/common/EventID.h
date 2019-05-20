@@ -30,11 +30,13 @@ enum Sim
     SonarDisplay,
     TextMessage,
     Throttle,
+    TubeLoad,
+    TubeArm,
+    Steering,
+    Fire,
+    Range,
+    Power,
+    Sonar,
 };
 
-enum Control
-{
-    Power,
-    Weapon,
-};
-}
+} //namespace events
