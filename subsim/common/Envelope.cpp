@@ -63,6 +63,17 @@ void EnvelopeMessage::deserialize(RakNet::BitStream& source)
                     // inject event
                     EventSystem::getGlobalInstance()->queueEvent(simevent);
                 }
+
+                case Events::Sim::UnitState:
+                {
+                    UnitState us;
+                    source >> us.tubeIsArmed >> us.tubeOccupancy >> us.torpedoDistance
+                        >> us.x >> us.y >> us.depth >> us.heading >> us.speed >> us.powerAvailable >> us.powerUsage
+                        >> us.yawEnabled >> us.pitchEnabled >> us.engineEnabled >> us.commsEnabled >> us.sonarEnabled
+                        >> us.weaponsEnabled;
+
+                    EventSystem::getGlobalInstance()->queueEvent(us);
+                }
                 break;
 
                 default:
@@ -107,6 +118,17 @@ void EnvelopeMessage::serialize(RakNet::BitStream& source) const
                     {
                         source << station.team << station.unit << station.station;
                     }
+                }
+                break;
+
+                case Events::Sim::UnitState:
+                {
+                    UnitState* us = (UnitState*)event.get();
+
+                    source << us->tubeIsArmed << us->tubeOccupancy << us->torpedoDistance
+                        << us->x << us->y << us->depth << us->heading << us->speed << us->powerAvailable << us->powerUsage
+                        << us->yawEnabled << us->pitchEnabled << us->engineEnabled << us->commsEnabled << us->sonarEnabled
+                        << us->weaponsEnabled;
                 }
                 break;
 
