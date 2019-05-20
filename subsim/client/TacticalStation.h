@@ -16,7 +16,7 @@ class TacticalStation : public EventReceiver, public Renderable
 {
 public:
     /// Init internal state
-    TacticalStation(); 
+    TacticalStation(uint32_t team, uint32_t unit); 
 
     /// Receives a text message from the server
     HandleResult receiveTextMessage(TextMessage* message);
@@ -29,15 +29,27 @@ public:
 
     /// Gets our current UnitState
     HandleResult handleUnitState(UnitState* state);
-    
+
+    /// Gets our current sonar display state
+    HandleResult handleSonarDisplay(SonarDisplayState* sonar);
+
     /// Handles drawing the current state on the renderer.
     virtual void redraw() override;
 
 private:
+    uint32_t team;
+    uint32_t unit;
+
     /// Container for the last received text messages
     std::queue<std::string> lastMessages;
 
     /// Stores if we are receiving text
     bool receivingText;
+    
+    /// Last received unit state for our unit
+    UnitState lastState;
+    
+    /// Last received sonar state (shared across all units)
+    SonarDisplayState lastSonar;
 };
 

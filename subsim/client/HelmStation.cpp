@@ -64,9 +64,11 @@ HandleResult HelmStation::handleKeypress(KeyEvent* keypress)
 
 HandleResult HelmStation::handleUnitState(UnitState* state)
 {
-    Log::writeToLog(Log::L_DEBUG, "Got updated UnitState from server");
-    lastState = *state;
-    scheduleRedraw();
+    if (state->team == team && state->unit == unit) {
+        Log::writeToLog(Log::L_DEBUG, "Got updated UnitState from server");
+        lastState = *state;
+        scheduleRedraw();
+    }
     return HandleResult::Stop;
 }
 
