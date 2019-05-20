@@ -9,6 +9,11 @@
 ParseResult GenericParser::parse(const std::string& filename)
 {
     std::ifstream infile(filename);
+    if (infile.fail()) {
+      throw GenericParseError("GenericParser failed to open file '" +
+        filename + "'. Are you running the executable from the wrong "
+        "directory?");
+    }
     return parse(infile);
 }
 
