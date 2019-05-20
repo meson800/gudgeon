@@ -177,3 +177,135 @@ public:
     uint16_t speed;
 };
 
+/*!
+ * Stores when a tube is loaded with a torpedo or a mine
+ */
+class TubeLoadEvent : public Event
+{
+public:
+
+    TubeLoadEvent() : Event(category, id) {}
+    constexpr static uint32_t category = Events::Category::Simulation;
+    constexpr static uint32_t id = Events::Sim::TubeLoad;
+
+    enum AmmoType
+    {
+        Torpedo,
+        Mine
+    };
+
+    uint32_t team;
+    uint32_t unit;
+    uint16_t tube;
+    AmmoType type;
+};
+
+/*!
+ * Stores when a tube is armed/safed. You can only fire when armed
+ * and you can only reload when safed.
+ */
+class TubeArmEvent : public Event
+{
+public:
+    TubeArmEvent() : Event(category, id) {}
+    constexpr static uint32_t category = Events::Category::Simulation;
+    constexpr static uint32_t id = Events::Sim::TubeArm;
+
+    uint32_t team;
+    uint32_t unit;
+    uint16_t tube;
+    bool isArmed;
+};
+
+/*!
+ * Stores when a steering command is inputted. Currently only handles left/right steering.
+ */
+class SteeringEvent : public Event
+{
+public:
+    SteeringEvent() : Event(category, id) {}
+    constexpr static uint32_t category = Events::Category::Simulation;
+    constexpr static uint32_t id = Events::Sim::Steering;
+
+    enum Direction
+    {
+        Left,
+        Right
+    };
+
+    uint32_t team;
+    uint32_t unit;
+    uint16_t tube;
+    Direction direction;
+    bool isPressed;
+};
+
+/*! 
+ * Stores when the fire button is pressed.
+ */
+class FireEvent : public Event
+{
+public:
+    FireEvent() : Event(category, id) {}
+    constexpr static uint32_t category = Events::Category::Simulation;
+    constexpr static uint32_t id = Events::Sim::Fire;
+
+    uint32_t team;
+    uint32_t unit;
+};
+
+/*! 
+ * Stores when the torpedo range has been updated.
+ */
+class RangeEvent : public Event
+{
+public:
+    RangeEvent() : Event(category, id) {}
+    constexpr static uint32_t category = Events::Category::Simulation;
+    constexpr static uint32_t id = Events::Sim::Range;
+
+    uint32_t team;
+    uint32_t unit;
+    uint16_t range;
+};
+
+/*!
+ * Stores when the power state of a system has been updated.
+ */
+class PowerEvent : public Event
+{
+public:
+    PowerEvent() : Event(category, id) {}
+    constexpr static uint32_t category = Events::Category::Simulation;
+    constexpr static uint32_t id = Events::Sim::Power;
+
+    enum System
+    {
+        Yaw,
+        Pitch,
+        Engine,
+        Comms,
+        Sonar,
+        Weapons
+    };
+        
+    uint32_t team;
+    uint32_t unit;
+    System system;
+    bool isOn;
+};
+
+/*!
+ * Stores if the sonar is in active or passive mode
+ */
+class SonarEvent : public Event
+{
+public:
+    SonarEvent() : Event(category, id) {}
+    constexpr static uint32_t category = Events::Category::Simulation;
+    constexpr static uint32_t id = Events::Sim::Sonar;
+
+    uint32_t team;
+    uint32_t unit;
+    bool isActive;
+};

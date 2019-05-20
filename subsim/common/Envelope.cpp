@@ -100,7 +100,70 @@ void EnvelopeMessage::deserialize(RakNet::BitStream& source)
                     source >> te.team >> te.unit >> te.speed;
 
                     EventSystem::getGlobalInstance()->queueEvent(te);
-                };
+                }
+                break;
+
+                case Events::Sim::TubeLoad:
+                {
+                    TubeLoadEvent te;
+                    source >> te.team >> te.unit >> te.tube >> te.type;
+
+                    EventSystem::getGlobalInstance()->queueEvent(te);
+                }
+                break;
+
+                case Events::Sim::TubeArm:
+                {
+                    TubeArmEvent te;
+                    source >> te.team >> te.unit >> te.tube >> te.isArmed;
+
+                    EventSystem::getGlobalInstance()->queueEvent(te);
+                }
+                break;
+
+                case Events::Sim::Steering:
+                {
+                    SteeringEvent se;
+                    source >> se.team >> se.unit >> se.tube >> se.direction >> se.isPressed;
+
+                    EventSystem::getGlobalInstance()->queueEvent(se);
+                }
+                break;
+
+                case Events::Sim::Fire:
+                {
+                    FireEvent fe;
+                    source >> fe.team >> fe.unit;
+
+                    EventSystem::getGlobalInstance()->queueEvent(fe);
+                }
+                break;
+
+                case Events::Sim::Range:
+                {
+                    RangeEvent re;
+                    source >> re.team >> re.unit >> re.range;
+
+                    EventSystem::getGlobalInstance()->queueEvent(re);
+                }
+                break;
+
+                case Events::Sim::Power:
+                {
+                    PowerEvent pe;
+                    source >> pe.team >> pe.unit >> pe.system >> pe.isOn;
+
+                    EventSystem::getGlobalInstance()->queueEvent(pe);
+                }
+                break;
+
+                case Events::Sim::Sonar:
+                {
+                    SonarEvent se;
+                    source >> se.team >> se.unit >> se.isActive;
+
+                    EventSystem::getGlobalInstance()->queueEvent(se);
+                }
                 break;
 
                 default:
@@ -179,6 +242,57 @@ void EnvelopeMessage::serialize(RakNet::BitStream& source) const
                     ThrottleEvent* te = (ThrottleEvent*)event.get();
 
                     source << te->team << te->unit << te->speed;
+                }
+                break;
+
+                case Events::Sim::TubeLoad:
+                {
+                    TubeLoadEvent* te = (TubeLoadEvent*)event.get();
+
+                    source << te->team << te->unit << te->tube << te->type;
+                }
+                break;
+
+                case Events::Sim::TubeArm:
+                {
+                    TubeArmEvent* te = (TubeArmEvent*)event.get();
+
+                    source << te->team << te->unit << te->tube << te->isArmed;
+                }
+                break;
+
+                case Events::Sim::Steering:
+                {
+                    SteeringEvent* se = (SteeringEvent*)event.get();
+                    source << se->team << se->unit << se->tube << se->direction << se->isPressed;
+                }
+                break;
+
+                case Events::Sim::Fire:
+                {
+                    FireEvent* fe = (FireEvent*)event.get();
+                    source << fe->team << fe->unit;
+                }
+                break;
+
+                case Events::Sim::Range:
+                {
+                    RangeEvent* re = (RangeEvent*)event.get();
+                    source << re->team << re->unit << re->range;
+                }
+                break;
+
+                case Events::Sim::Power:
+                {
+                    PowerEvent* pe = (PowerEvent*)event.get();
+                    source << pe->team << pe->unit << pe->system << pe->isOn;
+                }
+                break;
+
+                case Events::Sim::Sonar:
+                {
+                    SonarEvent* se = (SonarEvent*)event.get();
+                    source << se->team << se->unit << se->isActive;
                 }
                 break;
 
