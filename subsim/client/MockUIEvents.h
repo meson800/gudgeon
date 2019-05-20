@@ -16,6 +16,7 @@ enum Key
     Enter,
     LBracket,
     RBracket,
+    Space,
 };
 
 class KeyEvent : public Event

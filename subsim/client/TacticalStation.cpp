@@ -23,6 +23,12 @@ TacticalStation::TacticalStation(uint32_t team, uint32_t unit)
 
 HandleResult TacticalStation::handleKeypress(KeyEvent* keypress)
 {
+    if (receivingText)
+    {
+        // we're in text entry mode, escape!
+        return HandleResult::Unhandled;
+    }
+
     if (keypress->isDown == false && keypress->key == Key::Enter)
     {
         // Swap text input status
@@ -34,6 +40,15 @@ HandleResult TacticalStation::handleKeypress(KeyEvent* keypress)
 
         // And update the UI
         UI::getGlobalUI()->changeTextInput(receivingText);
+    }
+
+    if (keypress->isDown == false && keypress->key == Key::Space)
+    {
+        FireEvent fire;
+        fire.team = team;
+        fire.unit = unit;
+
+        EventSystem::getGlobalInstance()->queueEvent(fire);
     }
     return HandleResult::Stop;
 }
