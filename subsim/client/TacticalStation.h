@@ -37,6 +37,11 @@ public:
     virtual void redraw() override;
 
 private:
+    /// display_x() and display_y() convert from world coordinates to display
+    /// coordinates based on the unit's current location
+    int64_t display_x(int64_t x, int64_t y);
+    int64_t display_y(int64_t x, int64_t y);
+
     uint32_t team;
     uint32_t unit;
 
