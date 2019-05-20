@@ -68,7 +68,8 @@ void EnvelopeMessage::deserialize(RakNet::BitStream& source)
                 {
                     UnitState us;
                     source >> us.tubeIsArmed >> us.tubeOccupancy >> us.torpedoDistance
-                        >> us.x >> us.y >> us.depth >> us.heading >> us.speed >> us.powerAvailable >> us.powerUsage
+                        >> us.x >> us.y >> us.depth >> us.heading >> us.pitch
+                        >> us.speed >> us.powerAvailable >> us.powerUsage
                         >> us.yawEnabled >> us.pitchEnabled >> us.engineEnabled >> us.commsEnabled >> us.sonarEnabled
                         >> us.weaponsEnabled;
 
@@ -126,7 +127,8 @@ void EnvelopeMessage::serialize(RakNet::BitStream& source) const
                     UnitState* us = (UnitState*)event.get();
 
                     source << us->tubeIsArmed << us->tubeOccupancy << us->torpedoDistance
-                        << us->x << us->y << us->depth << us->heading << us->speed << us->powerAvailable << us->powerUsage
+                        << us->x << us->y << us->depth << us->heading << us->pitch 
+                        << us->speed << us->powerAvailable << us->powerUsage
                         << us->yawEnabled << us->pitchEnabled << us->engineEnabled << us->commsEnabled << us->sonarEnabled
                         << us->weaponsEnabled;
                 }

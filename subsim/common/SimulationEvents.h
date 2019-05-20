@@ -115,6 +115,9 @@ public:
     /// Stores the current heading of the sub in degrees. This is also an integer for easy serialization
     uint16_t heading;
 
+    /// Stores the current pitch of the sub, also in degrees
+    int16_t pitch;
+
     /// Stores the current speed of the sub, as this affects power usage.
     uint16_t speed;
 
