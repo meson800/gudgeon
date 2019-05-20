@@ -27,6 +27,7 @@ enum Sim
     SimStart,
     SimStartServer,
     UnitState,
+    SonarDisplay,
     TextMessage,
     Throttle,
 };

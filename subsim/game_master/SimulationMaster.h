@@ -6,6 +6,9 @@
 #include <memory>
 #include <thread>
 
+typedef uint32_t TorpedoID;
+typedef uint32_t MineID;
+
 /*!
  * Class that stores what information we need for torpedos
  */
@@ -53,6 +56,9 @@ public:
 private:
     /// Internal game simulation function. Runs continuously in its own thread
     void runSimLoop();
+    
+    /// Helper function for runSimLoop
+    void runSimForUnit(UnitState *unitState);
 
     /// Thread for the sim loop
     std::thread simLoop;
@@ -71,14 +77,15 @@ private:
 
     /// Internal mapping of teams/units/stations
     std::map<uint32_t, std::vector<std::vector<std::pair<StationType, RakNet::RakNetGUID>>>> assignments;
+    std::set<RakNet::RakNetGUID> all_clients;
 
     /// Internal unit states
     std::map<uint32_t, std::vector<UnitState>> unitStates;
 
     /// Stores the current state of all torpedos
-    std::vector<TorpedoState> torpedos;
+    std::map<uint32_t, TorpedoState> torpedos;
 
     /// Stores the current location of all mines
-    std::vector<MineState> mines;
+    std::map<uint32_t, MineState> mines;
 };
 

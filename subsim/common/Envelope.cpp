@@ -80,6 +80,20 @@ void EnvelopeMessage::deserialize(RakNet::BitStream& source)
                 }
                 break;
 
+                case Events::Sim::SonarDisplay:
+                {
+                    SonarDisplayState sd;
+                    uint32_t len;
+                    source >> len;
+                    sd.dots.resize(len);
+                    for (int i = 0; i < len; ++i) {
+                      source >> sd.dots[i].x >> sd.dots[i].y;
+                    }
+
+                    EventSystem::getGlobalInstance()->queueEvent(sd);
+                }
+                break;
+
                 case Events::Sim::Throttle:
                 {
                     ThrottleEvent te;
@@ -145,6 +159,18 @@ void EnvelopeMessage::serialize(RakNet::BitStream& source) const
                         << us->speed << us->powerAvailable << us->powerUsage
                         << us->yawEnabled << us->pitchEnabled << us->engineEnabled << us->commsEnabled << us->sonarEnabled
                         << us->weaponsEnabled;
+                }
+                break;
+
+                case Events::Sim::SonarDisplay:
+                {
+                    SonarDisplayState* sd = (SonarDisplayState*)event.get();
+                    uint32_t len = sd->dots.size();
+
+                    source << len;
+                    for (auto dot : sd->dots) {
+                      source << dot.x << dot.y;
+                    }
                 }
                 break;
 

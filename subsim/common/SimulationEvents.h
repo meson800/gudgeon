@@ -138,6 +138,33 @@ public:
     bool yawEnabled, pitchEnabled, engineEnabled, commsEnabled, sonarEnabled, weaponsEnabled;
 };
 
+/*!
+ * Event that stores the complete state of every visible entity; essentially, a
+ * list of all the dots that should be displayed on the sonar screen.
+ */
+class SonarDisplayState : public Event
+{
+public:
+    SonarDisplayState() : Event(category, id) {}
+    constexpr static uint32_t category = Events::Category::Simulation;
+    constexpr static uint32_t id = Events::Sim::SonarDisplay;
+
+    class Dot
+    {
+    public:
+        int64_t x, y;
+    };
+    std::vector<Dot> dots;
+
+    void addDot(int64_t x, int64_t y)
+    {
+        Dot d;
+        d.x = x;
+        d.y = y;
+        dots.push_back(d);
+    }
+};
+
 class ThrottleEvent : public Event
 {
 public:
