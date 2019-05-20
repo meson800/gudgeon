@@ -10,7 +10,8 @@ TacticalStation::TacticalStation()
     , EventReceiver({
         dispatchEvent<TacticalStation, KeyEvent, &TacticalStation::handleKeypress>,
         dispatchEvent<TacticalStation, TextInputEvent, &TacticalStation::handleText>,
-        dispatchEvent<TacticalStation, TextMessage, &TacticalStation::receiveTextMessage>})
+        dispatchEvent<TacticalStation, TextMessage, &TacticalStation::receiveTextMessage>,
+        dispatchEvent<TacticalStation, UnitState, &TacticalStation::handleUnitState>})
     , receivingText(false)
 {}
 
@@ -41,6 +42,11 @@ HandleResult TacticalStation::receiveTextMessage(TextMessage* message)
 {
     Log::writeToLog(Log::L_DEBUG, "Received TextMessage from the server. Message:", message->message);
 
+    return HandleResult::Stop;
+}
+
+HandleResult TacticalStation::handleUnitState(UnitState* state)
+{
     return HandleResult::Stop;
 }
 

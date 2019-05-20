@@ -78,6 +78,15 @@ void EnvelopeMessage::deserialize(RakNet::BitStream& source)
                 }
                 break;
 
+                case Events::Sim::Throttle:
+                {
+                    ThrottleEvent te;
+                    source >> te.team >> te.unit >> te.speed;
+
+                    EventSystem::getGlobalInstance()->queueEvent(te);
+                };
+                break;
+
                 default:
                 Log::writeToLog(Log::ERR, "Attempted to deserialize a simulation event of id=", id, " from an envelope without deserialization code defined!");
                 throw EnvelopeError("Cannot deserialize a simulation event from an envelope.");
@@ -132,6 +141,14 @@ void EnvelopeMessage::serialize(RakNet::BitStream& source) const
                         << us->speed << us->powerAvailable << us->powerUsage
                         << us->yawEnabled << us->pitchEnabled << us->engineEnabled << us->commsEnabled << us->sonarEnabled
                         << us->weaponsEnabled;
+                }
+                break;
+
+                case Events::Sim::Throttle:
+                {
+                    ThrottleEvent* te = (ThrottleEvent*)event.get();
+
+                    source << te->team << te->unit << te->speed;
                 }
                 break;
 

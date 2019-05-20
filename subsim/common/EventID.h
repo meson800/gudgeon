@@ -28,6 +28,7 @@ enum Sim
     SimStartServer,
     UnitState,
     TextMessage,
+    Throttle,
 };
 
 enum Control

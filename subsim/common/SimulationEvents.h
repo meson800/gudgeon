@@ -134,3 +134,17 @@ public:
     /// Stores the enable/disable status of various power items
     bool yawEnabled, pitchEnabled, engineEnabled, commsEnabled, sonarEnabled, weaponsEnabled;
 };
+
+class ThrottleEvent : public Event
+{
+public:
+    ThrottleEvent() : Event(category, id) {}
+    constexpr static uint32_t category = Events::Category::Simulation;
+    constexpr static uint32_t id = Events::Sim::Throttle;
+
+    uint32_t team;
+    uint32_t unit;
+    uint16_t speed;
+};
+
+

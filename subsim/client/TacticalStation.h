@@ -26,6 +26,9 @@ public:
 
     /// Handles text inputs from SDL. This is how we accumulate our shitty IRC message
     HandleResult handleText(TextInputEvent* text);
+
+    /// Gets our current UnitState
+    HandleResult handleUnitState(UnitState* state);
     
     /// Handles drawing the current state on the renderer.
     virtual void redraw() override;
