@@ -13,7 +13,9 @@ enum Key
     Down,
     Left,
     Right,
-    Enter
+    Enter,
+    LBracket,
+    RBracket,
 };
 
 class KeyEvent : public Event

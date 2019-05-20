@@ -1,5 +1,5 @@
 # Make the client executable
-add_executable(subsim_client main.cpp UI.cpp LobbyHandler.cpp SimulationMaster.cpp TacticalStation.cpp ${COMMONSRC})
+add_executable(subsim_client main.cpp UI.cpp LobbyHandler.cpp SimulationMaster.cpp TacticalStation.cpp HelmStation.cpp ${COMMONSRC})
 
 # Require C++11
 set_property(TARGET subsim_client PROPERTY CXX_STANDARD 11)

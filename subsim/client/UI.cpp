@@ -398,6 +398,14 @@ void UI::runSDLloop(bool& startupDone, std::mutex& startupMux)
                         ke.key = Key::Enter;
                         break;
 
+                        case SDLK_LEFTBRACKET:
+                        ke.key = Key::LBracket;
+                        break;
+
+                        case SDLK_RIGHTBRACKET:
+                        ke.key = Key::RBracket;
+                        break;
+
                         default:
                         ke.key = Key::Other;
                     }
