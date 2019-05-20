@@ -106,6 +106,10 @@ public:
     /// Stores the occupancy of the tubes
     std::vector<TubeStatus> tubeOccupancy;
 
+    /// Number Torpedos/Mines remaining
+    uint_fast16_t num_remaining_torpedos
+    uint_fast16_t num_remaining_mines
+
     /// Stores the current maximum distance of the torpedos
     uint64_t torpedoDistance;
 
