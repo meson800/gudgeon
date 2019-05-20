@@ -38,6 +38,11 @@ void SimulationMaster::createStations()
         {
             tactical.push_back(std::shared_ptr<TacticalStation>(new TacticalStation()));
         }
+
+        if (station.station == StationType::Helm)
+        {
+            helm.push_back(std::shared_ptr<HelmStation>(new HelmStation(station.team, station.unit)));
+        }
     }
 }
 

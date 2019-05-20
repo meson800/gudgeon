@@ -5,6 +5,7 @@
 
 #include "LobbyHandler.h"
 #include "TacticalStation.h"
+#include "HelmStation.h"
 
 #include <memory>
 
@@ -43,6 +44,9 @@ private:
 
     /// Vector storing TacticalStations
     std::vector<std::shared_ptr<TacticalStation>> tactical;
+
+    /// Vector storing HelmStations
+    std::vector<std::shared_ptr<HelmStation>> helm;
 
     /// Internal mapping of teams/units/stations
     std::vector<SimulationStart::Station> stations;
