@@ -39,6 +39,9 @@ public:
     /// Gets our current sonar display state
     HandleResult handleSonarDisplay(SonarDisplayState* sonar);
 
+    /// Adds an explosion to the display
+    HandleResult handleExplosion(ExplosionEvent* explosion);
+
     /// Handles drawing the current state on the renderer.
     virtual void redraw() override;
 
@@ -88,6 +91,9 @@ private:
     
     /// Last received sonar state (shared across all units)
     SonarDisplayState lastSonar;
+
+    /// Active explosion events
+    std::vector<ExplosionEvent> explosions;
 
     /// Stores a pointer to the Config object we will use
     Config* config;

@@ -52,6 +52,9 @@ private:
     
     /// Helper function for runSimLoop
     void runSimForUnit(UnitState *unitState);
+    
+    /// Generates an explosion on every sonar display. This is purely cosmetic.
+    void explosion(int64_t x, int64_t y, int16_t size);
 
     /// Thread for the sim loop
     std::thread simLoop;

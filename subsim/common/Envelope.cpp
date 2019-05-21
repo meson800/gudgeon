@@ -184,6 +184,15 @@ void EnvelopeMessage::deserialize(RakNet::BitStream& source)
                 }
                 break;
 
+                case Events::Sim::Explosion:
+                {
+                    ExplosionEvent ee;
+                    source >> ee.x >> ee.y >> ee.size;
+
+                    EventSystem::getGlobalInstance()->queueEvent(ee);
+                }
+                break;
+
                 case Events::Sim::Config:
                 {
                     ConfigEvent ce;
@@ -342,6 +351,13 @@ void EnvelopeMessage::serialize(RakNet::BitStream& source) const
                 {
                     SonarEvent* se = (SonarEvent*)event.get();
                     source << se->team << se->unit << se->isActive;
+                }
+                break;
+
+                case Events::Sim::Explosion:
+                {
+                    ExplosionEvent* ee = (ExplosionEvent*)event.get();
+                    source << ee->x << ee->y << ee->size;
                 }
                 break;
 

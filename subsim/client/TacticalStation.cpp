@@ -23,7 +23,8 @@ TacticalStation::TacticalStation(uint32_t team_, uint32_t unit_, Config* config_
         dispatchEvent<TacticalStation, TextInputEvent, &TacticalStation::handleText>,
         dispatchEvent<TacticalStation, TextMessage, &TacticalStation::receiveTextMessage>,
         dispatchEvent<TacticalStation, UnitState, &TacticalStation::handleUnitState>,
-        dispatchEvent<TacticalStation, SonarDisplayState, &TacticalStation::handleSonarDisplay>
+        dispatchEvent<TacticalStation, SonarDisplayState, &TacticalStation::handleSonarDisplay>,
+        dispatchEvent<TacticalStation, ExplosionEvent, &TacticalStation::handleExplosion>
     })
     , team(team_)
     , unit(unit_)
@@ -241,6 +242,14 @@ HandleResult TacticalStation::handleSonarDisplay(SonarDisplayState* sonar)
     return HandleResult::Stop;
 }
 
+HandleResult TacticalStation::handleExplosion(ExplosionEvent* explosion)
+{
+    std::lock_guard<std::mutex> lock(UI::getGlobalUI()->redrawMux);
+    explosions.push_back(*explosion);
+    scheduleRedraw();
+    return HandleResult::Stop;
+}
+
 void TacticalStation::redraw()
 {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -269,6 +278,17 @@ void TacticalStation::redraw()
     {
         renderSDCircle(mine.x, mine.y, 20, rgba_to_color(255, 0, 0, 255));
     }
+
+    std::vector<ExplosionEvent> newExplosions;
+    for (ExplosionEvent &exp : explosions)
+    {
+        renderSDCircle(exp.x, exp.y, exp.size, rgba_to_color(255, 0, 0, 255));
+        exp.size -= 5;
+        if (exp.size > 0) {
+            newExplosions.push_back(exp);
+        }
+    }
+    explosions = std::move(newExplosions);
 
     renderTubeState();
     renderSonarState();

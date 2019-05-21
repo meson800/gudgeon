@@ -150,6 +150,7 @@ void SimulationMaster::runSimForUnit(UnitState *unitState)
     {
         // Terrain collision!
         unitState->speed = 0;
+        explosion(nextX, nextY, 30);
     } else {
         unitState->x = nextX;
         unitState->y = nextY;
@@ -171,6 +172,19 @@ void SimulationMaster::runSimForUnit(UnitState *unitState)
     for (TorpedoID torpedoHit : torpedosHit)
     {
         torpedos.erase(torpedoHit);
+    }
+}
+
+void SimulationMaster::explosion(int64_t x, int64_t y, int16_t size)
+{
+    ExplosionEvent exp;
+    exp.x = x;
+    exp.y = y;
+    exp.size = size;
+    for (const RakNet::RakNetGUID &client : all_clients)
+    {
+        EnvelopeMessage envelope(exp, client);
+        EventSystem::getGlobalInstance()->queueEvent(envelope);
     }
 }
 

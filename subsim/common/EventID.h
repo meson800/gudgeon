@@ -37,6 +37,7 @@ enum Sim
     Range,
     Power,
     Sonar,
+    Explosion,
     Config,
 };
 

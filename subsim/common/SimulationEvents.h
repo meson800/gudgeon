@@ -354,6 +354,20 @@ public:
 };
 
 /*!
+ * Tells client that an explosion has taken place
+ */
+class ExplosionEvent : public Event
+{
+public:
+    ExplosionEvent() : Event(category, id) {}
+    constexpr static uint32_t category = Events::Category::Simulation;
+    constexpr static uint32_t id = Events::Sim::Explosion;
+
+    int64_t x, y;
+    int16_t size;
+};
+
+/*!
  * Sends terrain data to the client
  */
 class ConfigEvent : public Event
