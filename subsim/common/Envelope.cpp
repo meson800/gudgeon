@@ -191,6 +191,7 @@ void EnvelopeMessage::deserialize(RakNet::BitStream& source)
                         >> ce.config.maxTorpedos >> ce.config.maxMines
                         >> ce.config.sonarRange
                         >> ce.config.torpedoSpread >> ce.config.torpedoSpeed >> ce.config.collisionRadius
+                        >> ce.config.startLocations
                         >> ce.config.terrain.map >> ce.config.terrain.width 
                         >> ce.config.terrain.height >> ce.config.terrain.scale;
 
@@ -351,6 +352,7 @@ void EnvelopeMessage::serialize(RakNet::BitStream& source) const
                         << ce->config.maxTorpedos << ce->config.maxMines
                         << ce->config.sonarRange
                         << ce->config.torpedoSpread << ce->config.torpedoSpeed << ce->config.sonarRange
+                        << ce->config.startLocations
                         << ce->config.terrain.map << ce->config.terrain.width << ce->config.terrain.height << ce->config.terrain.scale;
 
                 }

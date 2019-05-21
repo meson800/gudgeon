@@ -29,14 +29,41 @@ Config ConfigParser::parseConfig(const ParseResult& parse)
 
             if (key == "terrain")
             {
-                unsigned pngResult = lodepng::decode(result.terrain.map, result.terrain.width, result.terrain.height,
-                    values[0], LodePNGColorType::LCT_GREY, 8);
+                std::vector<uint8_t> colorData;
+                unsigned pngResult = lodepng::decode(colorData, result.terrain.width, result.terrain.height,
+                    values[0], LodePNGColorType::LCT_RGB, 8);
 
                 if (pngResult != 0)
                 {
                     Log::writeToLog(Log::ERR, "LodePNG load error:", lodepng_error_text(pngResult));
                     throw ConfigParseError("Invalid PNG file loaded as terrain.");
                 }
+
+                for (uint32_t i = 0; i < result.terrain.width; ++i)
+                {
+                    for (uint32_t j = 0; j < result.terrain.height; ++j)
+                    {
+                        uint8_t r = colorData[3 * (i + j * result.terrain.width)];
+                        uint8_t g = colorData[3 * (i + j * result.terrain.width) + 1];
+                        uint8_t b = colorData[3 * (i + j * result.terrain.width) + 2];
+
+                        // We have a terrain piece if the color is black
+                        result.terrain.map.push_back(r == 0 && g == 0 && b == 0);
+
+                        // Check if we have a team 1 starting location (red)
+                        if (r == 255 && g == 0 && b == 0)
+                        {
+                            result.startLocations[0].push_back(std::pair<int64_t, int64_t>(i, j));
+                        }
+
+                        // Check if we have a team 2 starting location (blue)
+                        if (r == 0 && g == 0 && b == 255)
+                        {
+                            result.startLocations[1].push_back(std::pair<int64_t, int64_t>(i, j));
+                        }
+                    }
+                }
+                        
             }
 
             std::istringstream sstream(values[0]);

@@ -200,8 +200,6 @@ HandleResult TacticalStation::receiveTextMessage(TextMessage* message)
 HandleResult TacticalStation::handleUnitState(UnitState* state)
 {
     if (state->team == team && state->unit == unit) {
-        Log::writeToLog(Log::L_DEBUG, "Got updated UnitState from server");
-        Log::writeToLog(Log::L_DEBUG, "Sub position: (", state->x, ",", state->y, ")");
         lastState = *state;
         scheduleRedraw();
     }
@@ -333,7 +331,7 @@ void TacticalStation::renderSDTerrain()
     {
         for (int32_t ty = ty_min; ty <= ty_max; ++ty)
         {
-            if (config->terrain.map[tx + ty * config->terrain.width] < 255)
+            if (config->terrain.map[tx + ty * config->terrain.width])
             {
                 int64_t xs[4] = {tx*s, (tx+1)*s, (tx+1)*s, tx*s};
                 int64_t ys[4] = {ty*s, ty*s, (ty+1)*s, (ty+1)*s};

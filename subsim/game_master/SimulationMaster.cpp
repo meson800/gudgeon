@@ -67,9 +67,7 @@ void SimulationMaster::runSimLoop()
         {
             for (UnitState &unitState : teamPair.second)
             {
-                Log::writeToLog(Log::L_DEBUG, "Position inside unit state:(", unitState.x, ",", unitState.y, ")");
                 runSimForUnit(&unitState);
-                Log::writeToLog(Log::L_DEBUG, "Position inside unit state:(", unitState.x, ",", unitState.y, ")");
 
                 UnitSonarState unitSonarState;
                 unitSonarState.team = unitState.team;
@@ -131,7 +129,7 @@ void SimulationMaster::runSimForUnit(UnitState *unitState)
 
     if (scaledX < 0 || scaledX > config.terrain.width
         || scaledY < 0 || scaledY > config.terrain.height
-        || config.terrain.map[scaledX + scaledY * config.terrain.width] < 255)
+        || config.terrain.map[scaledX + scaledY * config.terrain.width])
     {
         // Terrain collision!
         unitState->speed = 0;

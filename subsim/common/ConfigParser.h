@@ -8,7 +8,7 @@
 class Terrain
 {
 public:
-    std::vector<uint8_t> map;
+    std::vector<bool> map;
     uint32_t width;
     uint32_t height;
     uint32_t scale;
@@ -18,6 +18,8 @@ class Config
 {
 public:
     Terrain terrain;
+
+    std::map<uint32_t, std::vector<std::pair<int64_t, int64_t>>> startLocations;
 
     uint16_t subTurningSpeed;
     uint16_t subMaxSpeed;
