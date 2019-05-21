@@ -61,6 +61,14 @@ Config ConfigParser::parseConfig(const ParseResult& parse)
                         {
                             result.startLocations[2].push_back(std::pair<int64_t, int64_t>(tx, ty));
                         }
+                        else if (color == Terrain::FLAG1)
+                        {
+                            result.flags[1].push_back(std::pair<int64_t, int64_t>(tx, ty));
+                        } 
+                        else if (color ==  Terrain::FLAG2)
+                        {
+                            result.flags[2].push_back(std::pair<int64_t, int64_t>(tx, ty));
+                        }
                         else
                         {
                             if (color != Terrain::EMPTY && color != Terrain::WALL)

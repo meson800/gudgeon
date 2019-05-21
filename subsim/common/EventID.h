@@ -39,6 +39,7 @@ enum Sim
     Sonar,
     Explosion,
     Config,
+    Score,
 };
 
 } //namespace events

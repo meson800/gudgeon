@@ -42,6 +42,9 @@ public:
     /// Adds an explosion to the display
     HandleResult handleExplosion(ExplosionEvent* explosion);
 
+    /// Handles new incoming scores
+    HandleResult handleScores(ScoreEvent* event);
+
     /// Handles drawing the current state on the renderer.
     virtual void redraw() override;
 
@@ -59,6 +62,9 @@ private:
 
     /// Renders a submarine on the sonar screen
     void renderSDSubmarine(int64_t x, int64_t y, int16_t heading);
+
+    /// Renders a flag on the sonar screen with SD coordinates
+    void renderSDFlag(int64_t x, int64_t y, uint32_t color);
 
     /// Render various geometric primitives on the sonar screen. These are
     /// analogous to the corresponding SDL display primitives, but they convert
@@ -89,6 +95,9 @@ private:
     
     /// Last received unit state for our unit
     UnitState lastState;
+
+    /// Stores last received scores
+    std::map<uint32_t, uint32_t> scores;
     
     /// Last received sonar state (shared across all units)
     SonarDisplayState lastSonar;

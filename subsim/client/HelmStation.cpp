@@ -17,7 +17,9 @@ HelmStation::HelmStation(uint32_t team_, uint32_t unit_)
     , EventReceiver({
         dispatchEvent<HelmStation, KeyEvent, &HelmStation::handleKeypress>,
         dispatchEvent<HelmStation, UnitState, &HelmStation::handleUnitState>,
-        dispatchEvent<HelmStation, IgnoreKeypresses, &HelmStation::handleMockIgnore>})
+        dispatchEvent<HelmStation, IgnoreKeypresses, &HelmStation::handleMockIgnore>,
+        dispatchEvent<HelmStation, ScoreEvent, &HelmStation::handleScore>,
+        })
     , ignoringMocks(false)
     , team(team_)
     , unit(unit_)
@@ -29,7 +31,16 @@ HandleResult HelmStation::handleMockIgnore(IgnoreKeypresses* event)
 
     return HandleResult::Stop;
 }
-    
+
+HandleResult HelmStation::handleScore(ScoreEvent* event)
+{
+    std::lock_guard<std::mutex> lock(UI::getGlobalUI()->redrawMux);
+
+    Log::writeToLog(Log::L_DEBUG, "Got updated score event!");
+
+    scores = event->scores;
+    return HandleResult::Continue;
+}
 
 HandleResult HelmStation::handleKeypress(KeyEvent* keypress)
 {
@@ -190,6 +201,16 @@ void HelmStation::redraw()
     std::ostringstream sstream;
     sstream << "Speed:" << lastState.speed;
     drawText(sstream.str(), 20, 50, 50);
+
+    int x = 300;
+    int y = 0;
+    for (auto& scorePair : scores)
+    {
+        std::ostringstream ss;
+        ss << "Team " << scorePair.first << ": " << scorePair.second;
+        drawText(ss.str(), 20, x, y);
+        x += 150;
+    }
 
     if (lastState.yawEnabled)
     {

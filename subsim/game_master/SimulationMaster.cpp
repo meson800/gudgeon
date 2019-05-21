@@ -76,6 +76,9 @@ UnitState SimulationMaster::initialUnitState(uint32_t team, uint32_t unit)
     unitState.speed = 0;
     unitState.powerAvailable = 100;
     unitState.powerUsage = 0;
+    unitState.isActiveSonar = false;
+    unitState.hasFlag = false;
+    unitState.flag = Flag();
     unitState.yawEnabled = true;
     unitState.pitchEnabled = true;
     unitState.engineEnabled = true;
@@ -125,6 +128,12 @@ void SimulationMaster::runSimLoop()
             sonar.mines.push_back(minePair.second);
         }
 
+        for (const auto& flagPair : flags)
+        {
+            sonar.flags.push_back(flagPair.second);
+        }
+                
+
         for (auto& teamPair : unitStates)
         {
             for (UnitState &unitState : teamPair.second)
@@ -152,11 +161,16 @@ void SimulationMaster::runSimLoop()
             }
         }
 
-        // Deliver latest SonarDisplayState to every attached client
+        ScoreEvent score;
+        score.scores = scores;
+        // Deliver latest SonarDisplayState and ScoreEvent to every attached client
         for (const RakNet::RakNetGUID &client : all_clients)
         {
             EnvelopeMessage envelope(sonar, client);
             EventSystem::getGlobalInstance()->queueEvent(envelope);
+
+            EnvelopeMessage scoreEnvelope(score, client);
+            EventSystem::getGlobalInstance()->queueEvent(scoreEnvelope);
         }
     }
 }
@@ -232,6 +246,66 @@ void SimulationMaster::runSimForUnit(UnitState *unitState)
         unitStates,
         &unitState->targetTeam,
         &unitState->targetUnit);
+    
+    // Check for collision with every mine
+    std::vector<MineID> minesHit;
+    for (auto &minePair : mines)
+    {
+        if (didCollide(
+                unitState->x, unitState->y,
+                minePair.second.x, minePair.second.y,
+                config.collisionRadius))
+        {
+            Log::writeToLog(Log::INFO, "Mine struck submarine");
+            damage(unitState->team, unitState->unit, 50);
+            explosion(minePair.second.x, minePair.second.y, 50);
+            minesHit.push_back(minePair.first);
+        }
+    }
+    for (MineID mineHit : minesHit)
+    {
+        mines.erase(mineHit);
+    }
+
+    // Check for collisions with flags if we don't currently have a flag
+    if (!unitState->hasFlag)
+    {
+        for (auto &flagPair : flags)
+        {
+            // Check to make sure if we can pick up this flag
+            if (flagPair.second.team != unitState->team
+                && !flagPair.second.isTaken
+                && didCollide(unitState->x, unitState->y,
+                    flagPair.second.x, flagPair.second.y, config.collisionRadius))
+            {
+                unitState->hasFlag = true;
+                unitState->flag.team = flagPair.second.team;
+                unitState->flag.index = flagPair.first;
+
+                flagPair.second.isTaken = true;
+            }
+        }
+    }
+    else
+    {
+        // Otherwise, check if we have delivered the flag back to the spawn location
+        auto startLoc = config.startLocations[unitState->team].at(0);
+        startLoc.first *= config.terrain.scale;
+        startLoc.first += config.terrain.scale;
+        startLoc.second *= config.terrain.scale;
+        startLoc.second += config.terrain.scale;
+
+        if (didCollide(unitState->x, unitState->y,
+            startLoc.first, startLoc.second, config.collisionRadius))
+        {
+            Log::writeToLog(Log::L_DEBUG, "Team ", unitState->team, " unit ", unitState->unit, " returned a flag");
+            ++scores[unitState->team];
+            // remove flag, restoring it to its position on the map
+            
+            unitState->hasFlag = false;
+            flags[unitState->flag.index].isTaken = false;
+        }
+    }
 }
 
 void SimulationMaster::damage(uint32_t team, uint32_t unit, int16_t amount)
@@ -245,6 +319,13 @@ void SimulationMaster::damage(uint32_t team, uint32_t unit, int16_t amount)
     if (u->powerAvailable < 0) {
         explosion(u->x, u->y, 50);
         Log::writeToLog(Log::INFO, "Team ", team, " unit ", unit, " destroyed!");
+
+        // Check if we were holding a flag, resetting it if needed
+        if (u->hasFlag)
+        {
+            flags[u->flag.index].isTaken = false;
+        }
+            
         *u = initialUnitState(team, unit);
     }
 }
@@ -301,20 +382,28 @@ HandleResult SimulationMaster::simStart(SimulationStartServer* event)
         }
     }
 
-    nextTorpedoID = nextMineID = 1;
+    nextTorpedoID = nextMineID = nextFlagID = 1;
 
-    TorpedoState torp;
-    torp.x = 80;
-    torp.y = 80;
-    torp.depth = 0;
-    torp.heading = 0;
-    torpedos[nextTorpedoID++] = torp;
+    // Push flag locations
+    for (auto& teamFlags : config.flags)
+    {
+        for (auto flagLocation : teamFlags.second)
+        {
+            FlagState flag;
+            flag.team = teamFlags.first;
+            flag.x = flagLocation.first * config.terrain.scale;
+            flag.x += config.terrain.scale / 2;
+            flag.y = flagLocation.second * config.terrain.scale;
+            flag.y += config.terrain.scale / 2;
+            flag.depth = 0;
+            flag.isTaken = false;
 
-    MineState mine;
-    mine.x = 200;
-    mine.y = 200;
-    mine.depth = 0;
-    mines[nextMineID++] = mine;
+            flags[nextFlagID++] = flag;
+
+            // Initalize zero scores
+            scores[flag.team] = 0;
+        }
+    }
 
     Log::writeToLog(Log::INFO, "Starting server-side simulation. Final assignments:", sstream.str());
     // Unhook the lobby handler and destroy it
@@ -329,7 +418,6 @@ HandleResult SimulationMaster::simStart(SimulationStartServer* event)
     {
         EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(configEvent, client));
     }
-
 
     // Start the game loop
     Log::writeToLog(Log::L_DEBUG, "Simulation master attempting to start simulation thread...");

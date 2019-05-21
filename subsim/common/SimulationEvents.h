@@ -80,6 +80,15 @@ public:
 };
 
 /*!
+ * Struct that stores a flag
+ */
+struct Flag
+{
+    uint32_t team;
+    uint32_t index;
+};
+
+/*!
  * Event that stores the complete state of a Unit. The game master sends
  * these messages out to the clients after every simulation time step.
  */
@@ -157,11 +166,17 @@ public:
     bool targetIsLocked;
     uint32_t targetTeam;
     uint32_t targetUnit;
+
+    /// Stores if we have a flag
+    bool hasFlag;
+
+    Flag flag;
 };
 
 
 typedef uint32_t TorpedoID;
 typedef uint32_t MineID;
+typedef uint32_t FlagID;
 
 /*!
  * Class that stores what information we need for torpedos
@@ -187,6 +202,21 @@ struct MineState
 };
 
 /*!
+ * Stores the status of a flag, including team owner and if it has been taken
+ *
+ */
+struct FlagState
+{
+    uint32_t team;
+
+    /// Store location of flags
+    int64_t x, y, depth;
+
+    /// Stores if the flag has been taken
+    bool isTaken;
+};
+
+/*!
  * Stores the subset of UnitState that should be visible to other units on sonar
  */
 struct UnitSonarState
@@ -196,7 +226,10 @@ struct UnitSonarState
 
     int64_t x, y, depth;
     uint16_t heading;
+
+    bool hasFlag;
 };
+
 
 /*!
  * Event that stores the complete state of every visible entity; essentially, a
@@ -212,6 +245,7 @@ public:
     std::vector<UnitSonarState> units;
     std::vector<TorpedoState> torpedos;
     std::vector<MineState> mines;
+    std::vector<FlagState> flags;
 };
 
 class ThrottleEvent : public Event
@@ -383,4 +417,17 @@ public:
     constexpr static uint32_t id = Events::Sim::Config;
 
     Config config;
+};
+
+/*!
+ * Sends the current team scores
+ */
+class ScoreEvent : public Event
+{
+public:
+    ScoreEvent() : Event(category, id) {}
+    constexpr static uint32_t category = Events::Category::Simulation;
+    constexpr static uint32_t id = Events::Sim::Score;
+    
+    std::map<uint32_t, uint32_t> scores;
 };

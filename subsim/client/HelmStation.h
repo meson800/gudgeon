@@ -27,12 +27,18 @@ public:
     /// Handles the case where we should ignore mocks for keyboard input
     HandleResult handleMockIgnore(IgnoreKeypresses* event);
 
+    /// Handles a score update
+    HandleResult handleScore(ScoreEvent* event);
+
     /// Handles drawing the current state on the renderer.
     virtual void redraw() override;
 
 private:
     /// Stores the last received UnitState
     UnitState lastState; 
+
+    /// Stores the last score update we got
+    std::map<uint32_t, uint32_t> scores;
 
     /// Stores if we are ignoring key input because text entry is happening
     bool ignoringMocks;

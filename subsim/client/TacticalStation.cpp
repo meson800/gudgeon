@@ -25,7 +25,8 @@ TacticalStation::TacticalStation(uint32_t team_, uint32_t unit_, Config* config_
         dispatchEvent<TacticalStation, TextMessage, &TacticalStation::receiveTextMessage>,
         dispatchEvent<TacticalStation, UnitState, &TacticalStation::handleUnitState>,
         dispatchEvent<TacticalStation, SonarDisplayState, &TacticalStation::handleSonarDisplay>,
-        dispatchEvent<TacticalStation, ExplosionEvent, &TacticalStation::handleExplosion>
+        dispatchEvent<TacticalStation, ExplosionEvent, &TacticalStation::handleExplosion>,
+        dispatchEvent<TacticalStation, ScoreEvent, &TacticalStation::handleScores>,
     })
     , team(team_)
     , unit(unit_)
@@ -243,6 +244,13 @@ HandleResult TacticalStation::handleSonarDisplay(SonarDisplayState* sonar)
     return HandleResult::Stop;
 }
 
+HandleResult TacticalStation::handleScores(ScoreEvent* event)
+{
+    std::lock_guard<std::mutex> lock(UI::getGlobalUI()->redrawMux);
+    scores = event->scores;
+    return HandleResult::Continue;
+}
+
 HandleResult TacticalStation::handleExplosion(ExplosionEvent* explosion)
 {
     std::lock_guard<std::mutex> lock(UI::getGlobalUI()->redrawMux);
@@ -310,8 +318,39 @@ void TacticalStation::redraw()
     }
     explosions = std::move(newExplosions);
 
+    for (const FlagState &flag : lastSonar.flags)
+    {
+        Log::writeToLog(Log::L_DEBUG, "Got flag state at ", flag.x, ",", flag.y);
+        if (!flag.isTaken)
+        {
+            uint32_t ourColor = rgba_to_color(255, 0, 0, 255);
+            uint32_t theirColor = rgba_to_color(0, 255, 0, 255);
+
+            uint32_t color = flag.team == team ? ourColor : theirColor;
+            renderSDFlag(flag.x, flag.y, color);
+        }
+    }
+
+    // render our starting location
+    auto startLoc = config->startLocations[team].at(0);
+    startLoc.first *= config->terrain.scale;
+    startLoc.first += config->terrain.scale;
+    startLoc.second *= config->terrain.scale;
+    startLoc.second += config->terrain.scale;
+    renderSDCircle(startLoc.first, startLoc.second, 20, rgba_to_color(255, 255, 255, 255));
+
     renderTubeState();
     renderSonarState();
+
+    int x = 300;
+    int y = 0;
+    for (auto& scorePair : scores)
+    {
+        std::ostringstream ss;
+        ss << "Team " << scorePair.first << ": " << scorePair.second;
+        drawText(ss.str(), 20, x, y);
+        x += 150;
+    }
 
     SDL_RenderPresent(renderer);
 }
@@ -475,6 +514,15 @@ void TacticalStation::renderSDSubmarine(int64_t x, int64_t y, int16_t heading)
     renderSDLine(x+u*10-v*10, y+v*10+u*10, x-u*10-v*10, y-v*10+u*10, color);
     renderSDCircle(x+u*7, y+v*7, 4, color);
 }
+
+void TacticalStation::renderSDFlag(int64_t x, int64_t y, uint32_t color)
+{
+    
+    int64_t x_locs [6] = {x, x, x + 20, x + 20, x + 3, x + 3};
+    int64_t y_locs [6] = {y, y + 20, y + 20, y + 9, y + 9, y};
+    renderSDFilledPolygon(x_locs, y_locs, 6, color);
+}
+    
 
 void TacticalStation::renderSDCircle(int64_t x, int64_t y, int16_t r, uint32_t color)
 {
