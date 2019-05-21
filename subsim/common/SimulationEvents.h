@@ -354,12 +354,12 @@ public:
 /*!
  * Sends terrain data to the client
  */
-class TerrainDataEvent : public Event
+class ConfigEvent : public Event
 {
 public:
-    TerrainDataEvent() : Event(category, id) {}
+    ConfigEvent() : Event(category, id) {}
     constexpr static uint32_t category = Events::Category::Simulation;
-    constexpr static uint32_t id = Events::Sim::TerrainData;
+    constexpr static uint32_t id = Events::Sim::Config;
 
-    Terrain terrain;
+    Config config;
 };

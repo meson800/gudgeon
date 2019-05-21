@@ -15,7 +15,7 @@ static constexpr uint32_t rgba_to_color(uint8_t r, uint8_t g, uint8_t b, uint8_t
     return ((uint32_t)a << 24) | ((uint32_t)b << 16) | ((uint32_t)g << 8) | ((uint32_t)r);
 }
 
-TacticalStation::TacticalStation(uint32_t team_, uint32_t unit_, Terrain* terrain_)
+TacticalStation::TacticalStation(uint32_t team_, uint32_t unit_, Config* config_)
     : Renderable(WIDTH, HEIGHT)
     , EventReceiver({
         dispatchEvent<TacticalStation, KeyEvent, &TacticalStation::handleKeypress>,
@@ -27,7 +27,7 @@ TacticalStation::TacticalStation(uint32_t team_, uint32_t unit_, Terrain* terrai
     , team(team_)
     , unit(unit_)
     , receivingText(false)
-    , terrain(terrain_)
+    , config(config_)
 {}
 
 HandleResult TacticalStation::handleKeypress(KeyEvent* keypress)
@@ -311,18 +311,18 @@ void TacticalStation::renderTubeState()
 
 void TacticalStation::renderSDTerrain()
 {
-    uint32_t s = terrain->scale; //scale of map
+    uint32_t s = config->terrain.scale; //scale of map
     int32_t tx_min = std::max<int64_t>((lastState.x - WIDTH) / s, 0);
-    int32_t tx_max = std::min<int64_t>((lastState.x + WIDTH) / s, terrain->width-1);
+    int32_t tx_max = std::min<int64_t>((lastState.x + WIDTH) / s, config->terrain.width-1);
     int32_t ty_min = std::max<int64_t>((lastState.y - WIDTH) / s, 0);
-    int32_t ty_max = std::min<int64_t>((lastState.y + WIDTH) / s, terrain->height-1);
+    int32_t ty_max = std::min<int64_t>((lastState.y + WIDTH) / s, config->terrain.height-1);
     uint32_t terrain_color = rgba_to_color(100, 100, 100, 255);
 
     for (int32_t tx = tx_min; tx <= tx_max; ++tx)
     {
         for (int32_t ty = ty_min; ty <= ty_max; ++ty)
         {
-            if (terrain->map[tx + ty * terrain->width] < 255)
+            if (config->terrain.map[tx + ty * config->terrain.width] < 255)
             {
                 int64_t xs[4] = {tx*s, (tx+1)*s, (tx+1)*s, tx*s};
                 int64_t ys[4] = {ty*s, ty*s, (ty+1)*s, (ty+1)*s};

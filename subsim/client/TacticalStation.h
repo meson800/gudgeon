@@ -9,7 +9,7 @@
 #include <queue>
 
 /// forward declaration
-class Terrain;
+class Config;
 
 /*!
  * Class that handles the tactical station. This includes "shitty IRC",
@@ -19,7 +19,7 @@ class TacticalStation : public EventReceiver, public Renderable
 {
 public:
     /// Init internal state, with team/unit plus pointer to a terrain object
-    TacticalStation(uint32_t team, uint32_t unit, Terrain* terrain_);
+    TacticalStation(uint32_t team, uint32_t unit, Config* config_);
 
     /// Receives a text message from the server
     HandleResult receiveTextMessage(TextMessage* message);
@@ -80,7 +80,7 @@ private:
     /// Last received sonar state (shared across all units)
     SonarDisplayState lastSonar;
 
-    /// Stores a pointer to the Terrain object we will use
-    Terrain* terrain;
+    /// Stores a pointer to the Config object we will use
+    Config* config;
 };
 

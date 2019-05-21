@@ -10,7 +10,7 @@ SimulationMaster::SimulationMaster(Network* network_)
     : network(network_)
     , EventReceiver({
         dispatchEvent<SimulationMaster, SimulationStart, &SimulationMaster::simStart>,
-        dispatchEvent<SimulationMaster, TerrainDataEvent, &SimulationMaster::terrainData>,
+        dispatchEvent<SimulationMaster, ConfigEvent, &SimulationMaster::configData>,
         })
 {
 }
@@ -33,11 +33,11 @@ HandleResult SimulationMaster::simStart(SimulationStart* event)
     return HandleResult::Stop;
 }
 
-HandleResult SimulationMaster::terrainData(TerrainDataEvent* event)
+HandleResult SimulationMaster::configData(ConfigEvent* event)
 {
-    Log::writeToLog(Log::L_DEBUG, "Received terrain data of size (",
-        event->terrain.width, " x ", event->terrain.height, ")");
-    terrain = event->terrain;
+    Log::writeToLog(Log::L_DEBUG, "Received config data with terrain of size (",
+        event->config.terrain.width, " x ", event->config.terrain.height, ")");
+    config = event->config;
     return HandleResult::Stop;
 }
     
@@ -49,7 +49,7 @@ void SimulationMaster::createStations()
         if (station.station == StationType::Tactical)
         {
             tactical.push_back(
-                std::shared_ptr<TacticalStation>(new TacticalStation(station.team, station.unit, &terrain)));
+                std::shared_ptr<TacticalStation>(new TacticalStation(station.team, station.unit, &config)));
         }
 
         if (station.station == StationType::Helm)

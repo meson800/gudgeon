@@ -184,12 +184,15 @@ void EnvelopeMessage::deserialize(RakNet::BitStream& source)
                 }
                 break;
 
-                case Events::Sim::TerrainData:
+                case Events::Sim::Config:
                 {
-                    TerrainDataEvent te;
-                    source >> te.terrain.map >> te.terrain.width >> te.terrain.height >> te.terrain.scale;
+                    ConfigEvent ce;
+                    source >> ce.config.subTurningSpeed >> ce.config.subMaxSpeed >> ce.config.sonarRange
+                        >> ce.config.torpedoSpread >> ce.config.torpedoSpeed >> ce.config.collisionRadius
+                        >> ce.config.terrain.map >> ce.config.terrain.width 
+                        >> ce.config.terrain.height >> ce.config.terrain.scale;
 
-                    EventSystem::getGlobalInstance()->queueEvent(te);
+                    EventSystem::getGlobalInstance()->queueEvent(ce);
                 }
                 break;
 
@@ -339,10 +342,13 @@ void EnvelopeMessage::serialize(RakNet::BitStream& source) const
                 }
                 break;
 
-                case Events::Sim::TerrainData:
+                case Events::Sim::Config:
                 {
-                    TerrainDataEvent* te = (TerrainDataEvent*)event.get();
-                    source << te->terrain.map << te->terrain.width << te->terrain.height << te->terrain.scale;
+                    ConfigEvent* ce = (ConfigEvent*)event.get();
+                    source << ce->config.subTurningSpeed << ce->config.subMaxSpeed << ce->config.sonarRange
+                        << ce->config.torpedoSpread << ce->config.torpedoSpeed << ce->config.sonarRange
+                        << ce->config.terrain.map << ce->config.terrain.width << ce->config.terrain.height << ce->config.terrain.scale;
+
                 }
                 break;
 

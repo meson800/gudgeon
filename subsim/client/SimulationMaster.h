@@ -25,7 +25,7 @@ public:
     HandleResult simStart(SimulationStart* event);
 
     /// Handles incoming terrain data
-    HandleResult terrainData(TerrainDataEvent* event);
+    HandleResult configData(ConfigEvent* event);
 
     /// Connection callback that is spawned when we have succesfully connected to a server. Spawns a Lobby instance
     virtual bool ConnectionEstablished(RakNet::RakNetGUID other) override;
@@ -55,7 +55,7 @@ private:
     /// Internal mapping of teams/units/stations
     std::vector<SimulationStart::Station> stations;
 
-    /// Stores the terrain for this game
-    Terrain terrain;
+    /// Stores the config for this game
+    Config config;
 };
 

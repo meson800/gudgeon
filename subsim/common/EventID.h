@@ -37,7 +37,7 @@ enum Sim
     Range,
     Power,
     Sonar,
-    TerrainData,
+    Config,
 };
 
 } //namespace events

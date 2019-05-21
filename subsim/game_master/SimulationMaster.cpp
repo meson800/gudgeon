@@ -240,12 +240,13 @@ HandleResult SimulationMaster::simStart(SimulationStartServer* event)
     network->deregisterCallback(lobbyInit.get());
     lobbyInit.reset();
 
-    // Send terrain data to all connected clients
-    TerrainDataEvent terrainEvent;
-    terrainEvent.terrain = config.terrain;
+    // Send config data to all connected clients
+    ConfigEvent configEvent;
+    configEvent.config = config;
+
     for (auto& client : all_clients)
     {
-        EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(terrainEvent, client));
+        EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(configEvent, client));
     }
 
 
