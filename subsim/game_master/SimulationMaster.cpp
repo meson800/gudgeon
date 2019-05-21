@@ -69,7 +69,9 @@ void SimulationMaster::runSimLoop()
         {
             for (UnitState &unitState : teamPair.second)
             {
+                Log::writeToLog(Log::L_DEBUG, "Position inside unit state:(", unitState.x, ",", unitState.y, ")");
                 runSimForUnit(&unitState);
+                Log::writeToLog(Log::L_DEBUG, "Position inside unit state:(", unitState.x, ",", unitState.y, ")");
 
                 UnitSonarState unitSonarState;
                 unitSonarState.team = unitState.team;
@@ -122,9 +124,24 @@ void SimulationMaster::runSimForUnit(UnitState *unitState)
     }
 
     // Update submarine position
-    unitState->x += unitState->speed * cos(unitState->heading * 2*M_PI/360.0);
-    unitState->y += unitState->speed * sin(unitState->heading * 2*M_PI/360.0);
+    int64_t nextX = unitState->x + unitState->speed * cos(unitState->heading * 2*M_PI/360.0);
+    int64_t nextY = unitState->y + unitState->speed * sin(unitState->heading * 2*M_PI/360.0);
 
+    // Check for collision versus terrain
+    int64_t scaledX = nextX / config.terrain.scale;
+    int64_t scaledY = nextY / config.terrain.scale;
+
+    if (scaledX < 0 || scaledX > config.terrain.width
+        || scaledY < 0 || scaledY > config.terrain.height
+        || config.terrain.map[scaledX + scaledY * config.terrain.width] < 255)
+    {
+        // Terrain collision!
+        unitState->speed = 0;
+    } else {
+        unitState->x = nextX;
+        unitState->y = nextY;
+    }
+        
     // Check for collision with every torpedo
     std::vector<TorpedoID> torpedosHit;
     for (auto &torpedoPair : torpedos)
@@ -187,8 +204,8 @@ HandleResult SimulationMaster::simStart(SimulationStartServer* event)
             unitState.remainingTorpedos = 10;
             unitState.remainingMines = 10;
             unitState.torpedoDistance = 100;
-            unitState.x = 0;
-            unitState.y = 0;
+            unitState.x = 200;
+            unitState.y = 200;
             unitState.depth = 0;
             unitState.heading = 0;
             unitState.direction = UnitState::SteeringDirection::Center;

@@ -200,6 +200,7 @@ HandleResult TacticalStation::handleUnitState(UnitState* state)
 {
     if (state->team == team && state->unit == unit) {
         Log::writeToLog(Log::L_DEBUG, "Got updated UnitState from server");
+        Log::writeToLog(Log::L_DEBUG, "Sub position: (", state->x, ",", state->y, ")");
         lastState = *state;
         scheduleRedraw();
     }
