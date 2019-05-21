@@ -49,6 +49,8 @@ public:
     virtual void redraw() override;
 
 private:
+    void initializeRendering();
+
     /// Renders the tube status in the upper right corner
     void renderTubeState();
 
@@ -106,4 +108,7 @@ private:
 
     /// Stores a pointer to the Config object we will use
     Config* config;
+
+    /// Stores the SDL texture we will use to draw terrain
+    SDL_Texture* terrainTexture;
 };
