@@ -20,14 +20,15 @@ Config ConfigParser::parseConfig(const ParseResult& parse)
             const std::string& key = keyValIt->first;
             const std::vector<std::string>& values = keyValIt->second;
 
+            if (values.size() != 1)
+            {
+                Log::writeToLog(Log::ERR, "Unexpected number of values in config key:", key,
+                    "! Number of values:", values.size());
+                throw ConfigParseError("Invalid number of values in config key");
+            }
+
             if (key == "terrain")
             {
-                if (values.size() != 1)
-                {
-                    Log::writeToLog(Log::ERR, "Unexpected number of values in terrain config key! Number of values:", values.size());
-                    throw ConfigParseError("Invalid number of values in terrain config");
-                }
-
                 unsigned pngResult = lodepng::decode(result.terrain.map, result.terrain.width, result.terrain.height,
                     values[0], LodePNGColorType::LCT_GREY, 8);
 
@@ -38,16 +39,40 @@ Config ConfigParser::parseConfig(const ParseResult& parse)
                 }
             }
 
+            std::istringstream sstream(values[0]);
             if (key == "terrain_scale")
             {
-                if (values.size() != 1)
-                {
-                    Log::writeToLog(Log::ERR, "Unexpected number of values in terrain scale config key! Number of values:", values.size());
-                    throw ConfigParseError("Invalid number of values in terrain scale key");
-                }
-                std::istringstream sstream(values[0]);
-
                 sstream >> result.terrain.scale;
+            }
+
+            if (key == "sub_turning_speed")
+            {
+                sstream >> result.subTurningSpeed;
+            }
+
+            if (key == "sub_max_speed")
+            {
+                sstream >> result.subMaxSpeed;
+            }
+
+            if (key == "sonar_range")
+            {
+                sstream >> result.sonarRange;
+            }
+
+            if (key == "torpedo_spread")
+            {
+                sstream >> result.torpedoSpread;
+            }
+
+            if (key == "torpedo_speed")
+            {
+                sstream >> result.torpedoSpeed;
+            }
+
+            if (key == "collision_radius")
+            {
+                sstream >> result.collisionRadius;
             }
         }
     }

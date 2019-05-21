@@ -18,6 +18,16 @@ class Config
 {
 public:
     Terrain terrain;
+
+    uint16_t subTurningSpeed;
+    uint16_t subMaxSpeed;
+
+    uint16_t sonarRange;
+
+    uint16_t torpedoSpread;
+    uint16_t torpedoSpeed;
+    uint16_t collisionRadius;
+
 };
 
 /**

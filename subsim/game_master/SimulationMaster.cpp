@@ -4,7 +4,6 @@
 
 #include "../common/Log.h"
 
-constexpr static int32_t STEERING_RATE = 2;
 
 SimulationMaster::SimulationMaster(Network* network_, const std::string& filename)
     : shouldShutdown(false)
@@ -54,9 +53,8 @@ void SimulationMaster::runSimLoop()
         for (auto& torpedoPair : torpedos)
         {
             TorpedoState *torpedo = &torpedoPair.second;
-            constexpr int torpedo_speed = 10;
-            torpedo->x += torpedo_speed * cos(torpedo->heading * 2*M_PI/360.0);
-            torpedo->y += torpedo_speed * sin(torpedo->heading * 2*M_PI/360.0);
+            torpedo->x += config.torpedoSpeed * cos(torpedo->heading * 2*M_PI/360.0);
+            torpedo->y += config.torpedoSpeed * sin(torpedo->heading * 2*M_PI/360.0);
             sonar.torpedos.push_back(*torpedo);
         }
 
@@ -113,13 +111,13 @@ void SimulationMaster::runSimForUnit(UnitState *unitState)
     // Update submarine heading
     if (unitState->direction == UnitState::SteeringDirection::Left)
     {
-        int32_t newHeading = static_cast<int32_t>(unitState->heading) - STEERING_RATE;
+        int32_t newHeading = static_cast<int32_t>(unitState->heading) - config.subTurningSpeed;
         unitState->heading = newHeading < 0 ? newHeading + 360 : newHeading;
     }
 
     if (unitState->direction == UnitState::SteeringDirection::Right)
     {
-        int32_t newHeading = static_cast<int32_t>(unitState->heading) + STEERING_RATE;
+        int32_t newHeading = static_cast<int32_t>(unitState->heading) + config.subTurningSpeed;
         unitState->heading = newHeading > 360 ? newHeading - 360 : newHeading;
     }
 
@@ -146,11 +144,10 @@ void SimulationMaster::runSimForUnit(UnitState *unitState)
     std::vector<TorpedoID> torpedosHit;
     for (auto &torpedoPair : torpedos)
     {
-        constexpr int collisionRadius = 10;
         if (didCollide(
                 unitState->x, unitState->y,
                 torpedoPair.second.x, torpedoPair.second.y,
-                collisionRadius))
+                config.collisionRadius))
         {
             Log::writeToLog(Log::INFO, "Torpedo struck submarine");
             torpedosHit.push_back(torpedoPair.first);
@@ -264,7 +261,8 @@ HandleResult SimulationMaster::throttle(ThrottleEvent *event)
 {
     {
         std::lock_guard<std::mutex> lock(stateMux);
-        unitStates[event->team][event->unit].speed = event->speed;
+        unitStates[event->team][event->unit].speed =
+            event->speed > config.subMaxSpeed ? config.subMaxSpeed : event->speed;
     }
 
     return HandleResult::Stop;
@@ -300,8 +298,8 @@ HandleResult SimulationMaster::fire(FireEvent *event)
                 && unit.tubeOccupancy[i] == UnitState::TubeStatus::Torpedo)
             {
                 TorpedoState torp;
-                torp.x = unit.x + 30 * cos(unit.heading * 2*M_PI/360.0);
-                torp.y = unit.y + 30 * sin(unit.heading * 2*M_PI/360.0);
+                torp.x = unit.x + 1.5 * config.collisionRadius * cos(unit.heading * 2*M_PI/360.0);
+                torp.y = unit.y + 1.5 * config.collisionRadius * sin(unit.heading * 2*M_PI/360.0);
                 torp.depth = unit.depth;
                 torp.heading = unit.heading;
                 torpedos[nextTorpedoID++] = torp;
