@@ -135,7 +135,6 @@ public:
     /// Stores the current steering direction
     SteeringDirection direction;
 
-
     /// Stores the current pitch of the sub, also in degrees
     int16_t pitch;
 
@@ -147,6 +146,9 @@ public:
 
     /// Stores the current power usage
     uint16_t powerUsage;
+
+    /// Stores if we are using active/passive sonar
+    bool isActiveSonar;
 
     /// Stores the enable/disable status of various power items
     bool yawEnabled, pitchEnabled, engineEnabled, commsEnabled, sonarEnabled, weaponsEnabled;

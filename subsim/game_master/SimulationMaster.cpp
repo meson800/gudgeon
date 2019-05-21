@@ -17,6 +17,7 @@ SimulationMaster::SimulationMaster(Network* network_, const std::string& filenam
         dispatchEvent<SimulationMaster, TubeLoadEvent, &SimulationMaster::tubeLoad>,
         dispatchEvent<SimulationMaster, TubeArmEvent, &SimulationMaster::tubeArm>,
         dispatchEvent<SimulationMaster, PowerEvent, &SimulationMaster::power>,
+        dispatchEvent<SimulationMaster, SonarEvent, &SimulationMaster::sonar>,
     })
 {
     ParseResult result = GenericParser::parse(filename);
@@ -423,3 +424,13 @@ HandleResult SimulationMaster::power(PowerEvent* event)
     }
     return HandleResult::Stop;
 }
+
+HandleResult SimulationMaster::sonar(SonarEvent* event)
+{
+    {
+        std::lock_guard<std::mutex> lock(stateMux);
+        unitStates[event->team][event->unit].isActiveSonar = event->isActive;
+    }
+    return HandleResult::Stop;
+}
+

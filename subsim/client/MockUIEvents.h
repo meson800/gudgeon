@@ -16,6 +16,7 @@ enum Key
     Enter,
     LBracket,
     RBracket,
+    Backslash,
     Space,
     One,
     Two,

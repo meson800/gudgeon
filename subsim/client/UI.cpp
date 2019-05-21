@@ -492,6 +492,10 @@ void UI::runSDLloop(bool& startupDone, std::mutex& startupMux)
                         ke.key = Key::L;
                         break;
 
+                        case SDLK_BACKSLASH:
+                        ke.key = Key::Backslash;
+                        break;
+
                         default:
                         ke.key = Key::Other;
                     }

@@ -72,7 +72,7 @@ void EnvelopeMessage::deserialize(RakNet::BitStream& source)
                         >> us.team >> us.unit
                         >> us.tubeIsArmed >> us.tubeOccupancy >> us.remainingTorpedos >> us.remainingMines >> us.torpedoDistance
                         >> us.x >> us.y >> us.depth >> us.heading >> us.direction >> us.pitch
-                        >> us.speed >> us.powerAvailable >> us.powerUsage
+                        >> us.speed >> us.powerAvailable >> us.powerUsage >> us.isActiveSonar
                         >> us.yawEnabled >> us.pitchEnabled >> us.engineEnabled >> us.commsEnabled >> us.sonarEnabled
                         >> us.weaponsEnabled;
 
@@ -252,7 +252,7 @@ void EnvelopeMessage::serialize(RakNet::BitStream& source) const
                         << us->team << us->unit
                         << us->tubeIsArmed << us->tubeOccupancy << us->remainingTorpedos << us->remainingMines << us->torpedoDistance
                         << us->x << us->y << us->depth << us->heading << us->direction << us->pitch 
-                        << us->speed << us->powerAvailable << us->powerUsage
+                        << us->speed << us->powerAvailable << us->powerUsage << us->isActiveSonar
                         << us->yawEnabled << us->pitchEnabled << us->engineEnabled << us->commsEnabled << us->sonarEnabled
                         << us->weaponsEnabled;
                 }

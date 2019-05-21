@@ -43,6 +43,9 @@ public:
     /// Handles when clients update power status
     HandleResult power(PowerEvent* event);
 
+    /// Handles when clients use active/passive sonar
+    HandleResult sonar(SonarEvent* event);
+
 private:
     /// Internal game simulation function. Runs continuously in its own thread
     void runSimLoop();

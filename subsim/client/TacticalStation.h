@@ -46,6 +46,9 @@ private:
     /// Renders the tube status in the upper right corner
     void renderTubeState();
 
+    /// Renders the sonar state next to the tube state
+    void renderSonarState();
+
     /// Renders the terrain
     void renderSDTerrain();
 

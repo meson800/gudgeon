@@ -71,6 +71,18 @@ HandleResult TacticalStation::handleKeypress(KeyEvent* keypress)
         return HandleResult::Stop;
     }
 
+    if (keypress->isDown == false && keypress->key == Key::Backslash)
+    {
+        SonarEvent event;
+        event.team = team;
+        event.unit = unit;
+        event.isActive = !lastState.isActiveSonar;
+
+        EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(event));
+        return HandleResult::Stop;
+    }
+        
+
     // Perform tube mocks
     if (keypress->isDown == false)
     {
@@ -259,9 +271,22 @@ void TacticalStation::redraw()
     }
 
     renderTubeState();
+    renderSonarState();
 
     SDL_RenderPresent(renderer);
 }
+
+void TacticalStation::renderSonarState()
+{
+    boxRGBA(renderer, 120, 0, 240, 20, 0, 0, 0, 255);
+    if (lastState.isActiveSonar)
+    {
+        drawText("Active sonar", 18, 125, 0);
+    } else {
+        drawText("Passive sonar", 18, 125, 0);
+    }
+}
+    
 
 void TacticalStation::renderTubeState()
 {
