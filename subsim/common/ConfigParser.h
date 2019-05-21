@@ -22,6 +22,9 @@ public:
     uint16_t subTurningSpeed;
     uint16_t subMaxSpeed;
 
+    uint16_t maxTorpedos;
+    uint16_t maxMines;
+
     uint16_t sonarRange;
 
     uint16_t torpedoSpread;

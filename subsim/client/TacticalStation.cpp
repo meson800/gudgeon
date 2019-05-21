@@ -6,6 +6,7 @@
 
 #include "UI.h"
 #include <SDL2_gfxPrimitives.h>
+#include <sstream>
 
 #define WIDTH 1280
 #define HEIGHT 960
@@ -273,12 +274,22 @@ void TacticalStation::renderTubeState()
     uint32_t openColor = rgba_to_color(0, 255, 0, 255);
     uint32_t armedColor = rgba_to_color(255, 0, 0, 255);
     
+    std::ostringstream t_sstream, m_sstream;
+    t_sstream << "Torpedos:" << lastState.remainingTorpedos;
+    m_sstream << "Mines:" << lastState.remainingMines;
+
+    boxRGBA(renderer, 0, 0, 120, 60, 0, 0, 0, 255);
+
+    drawText(t_sstream.str(), 18, 5, 0);
+    drawText(m_sstream.str(), 18, 5, 17);
+
+
     for (int i = 0; i < lastState.tubeOccupancy.size(); ++i)
     {
         uint32_t color = lastState.tubeIsArmed[i] ? armedColor : openColor;
 
         int x = 10 + 25 * i;
-        int y = 10;
+        int y = 50;
 
         switch(lastState.tubeOccupancy[i])
         {

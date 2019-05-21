@@ -198,8 +198,8 @@ HandleResult SimulationMaster::simStart(SimulationStartServer* event)
             unitState.unit = unit;
             unitState.tubeIsArmed = std::vector<bool>(5, false);
             unitState.tubeOccupancy = std::vector<UnitState::TubeStatus>(5, UnitState::Empty);
-            unitState.remainingTorpedos = 10;
-            unitState.remainingMines = 10;
+            unitState.remainingTorpedos = config.maxTorpedos;
+            unitState.remainingMines = config.maxMines;
             unitState.torpedoDistance = 100;
             unitState.x = 200;
             unitState.y = 200;
@@ -342,14 +342,27 @@ HandleResult SimulationMaster::tubeLoad(TubeLoadEvent *event)
 
         UnitState & unit = unitStates[event->team][event->unit];
 
-        if (unit.tubeIsArmed[event->tube] == false
-            && unit.tubeOccupancy[event->tube] == UnitState::TubeStatus::Empty)
+        if (unit.tubeIsArmed[event->tube] == false)
         {
-            if (event->type == TubeLoadEvent::AmmoType::Torpedo)
+            // Give a credit if there is already a loaded weapon in the tube
+            if (unit.tubeOccupancy[event->tube] == UnitState::TubeStatus::Torpedo)
+            {
+                ++unit.remainingTorpedos;
+            }
+
+            if (unit.tubeOccupancy[event->tube] == UnitState::TubeStatus::Mine)
+            {
+                ++unit.remainingMines;
+            }
+
+            // Reload the tube
+            if (event->type == TubeLoadEvent::AmmoType::Torpedo && unit.remainingTorpedos > 0)
             {
                 unit.tubeOccupancy[event->tube] = UnitState::TubeStatus::Torpedo;
-            } else if (event->type == TubeLoadEvent::AmmoType::Mine) {
+                --unit.remainingTorpedos;
+            } else if (event->type == TubeLoadEvent::AmmoType::Mine && unit.remainingMines > 0) {
                 unit.tubeOccupancy[event->tube] = UnitState::TubeStatus::Mine;
+                --unit.remainingMines;
             }
         }
     }
