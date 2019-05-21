@@ -33,6 +33,8 @@ TacticalStation::TacticalStation(uint32_t team_, uint32_t unit_, Config* config_
 
 HandleResult TacticalStation::handleKeypress(KeyEvent* keypress)
 {
+    std::lock_guard<std::mutex> lock(UI::getGlobalUI()->redrawMux);
+
     if (receivingText)
     {
         // we're in text entry mode, escape!
@@ -186,12 +188,16 @@ HandleResult TacticalStation::handleKeypress(KeyEvent* keypress)
 
 HandleResult TacticalStation::handleText(TextInputEvent* text)
 {
+    std::lock_guard<std::mutex> lock(UI::getGlobalUI()->redrawMux);
+
     Log::writeToLog(Log::L_DEBUG, "Received TextInput from the server. Text:", text->text);
     return HandleResult::Stop;
 }
 
 HandleResult TacticalStation::receiveTextMessage(TextMessage* message)
 {
+    std::lock_guard<std::mutex> lock(UI::getGlobalUI()->redrawMux);
+
     Log::writeToLog(Log::L_DEBUG, "Received TextMessage from the server. Message:", message->message);
 
     return HandleResult::Stop;
@@ -199,6 +205,8 @@ HandleResult TacticalStation::receiveTextMessage(TextMessage* message)
 
 HandleResult TacticalStation::handleUnitState(UnitState* state)
 {
+    std::lock_guard<std::mutex> lock(UI::getGlobalUI()->redrawMux);
+
     if (state->team == team && state->unit == unit) {
         lastState = *state;
         scheduleRedraw();
@@ -208,6 +216,8 @@ HandleResult TacticalStation::handleUnitState(UnitState* state)
 
 HandleResult TacticalStation::handleSonarDisplay(SonarDisplayState* sonar)
 {
+    std::lock_guard<std::mutex> lock(UI::getGlobalUI()->redrawMux);
+
     Log::writeToLog(Log::L_DEBUG, "Got updated SonarDisplay from server");
     lastSonar = *sonar;
     scheduleRedraw();

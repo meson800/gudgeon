@@ -26,7 +26,7 @@ public:
 
     /// Handles the case where we should ignore mocks for keyboard input
     HandleResult handleMockIgnore(IgnoreKeypresses* event);
-    
+
     /// Handles drawing the current state on the renderer.
     virtual void redraw() override;
 

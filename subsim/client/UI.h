@@ -123,6 +123,9 @@ class UI
     /// Queues a text input change event.
     void changeTextInput(bool receiveText);
 
+    /// Protection mutex for the toRedraw set
+    std::mutex redrawMux;
+
 
 private:
     /**
@@ -168,11 +171,11 @@ private:
     /// Stores the list of renderers that should be redrawn on the next pass
     std::set<SDL_Renderer*> toRedraw;
 
-    /// Protection mutex for the toRedraw set
-    std::mutex redrawMux;
-
     /// Protection mutex for shutdown
     std::mutex shutdownMux;
+
+    /// Protection mutex for redraw requests
+    std::mutex redrawRequestMux;
 
     /// Shutdown boolean
     bool shouldShutdown;

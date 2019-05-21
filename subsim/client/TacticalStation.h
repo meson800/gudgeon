@@ -86,4 +86,3 @@ private:
     /// Stores a pointer to the Config object we will use
     Config* config;
 };
-

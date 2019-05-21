@@ -264,7 +264,7 @@ void UI::deregisterRenderable(SDL_Renderer* renderer, Renderable* renderable)
 void UI::triggerRedraw(SDL_Renderer* renderer)
 {
     Log::writeToLog(Log::L_DEBUG, "Scheduling redraw for renderer ", renderer);
-    std::lock_guard<std::mutex> guard(redrawMux);
+    std::lock_guard<std::mutex> guard(redrawRequestMux);
     toRedraw.insert(renderer);
 }
 
@@ -499,7 +499,15 @@ void UI::runSDLloop(bool& startupDone, std::mutex& startupMux)
             // lock the state mux as well, in case a client tries to deregister in the middle
             std::lock_guard<std::mutex> lock2(stateMux);
 
-            for (SDL_Renderer* renderer : toRedraw)
+            std::set<SDL_Renderer*> redrawSet;
+
+            {
+                std::lock_guard<std::mutex> requestLock(redrawRequestMux);
+                redrawSet = toRedraw;
+                toRedraw.clear();
+            }
+
+            for (SDL_Renderer* renderer : redrawSet)
             {
 
                 if (renderStack.count(renderer) == 0)
@@ -514,8 +522,6 @@ void UI::runSDLloop(bool& startupDone, std::mutex& startupMux)
                     renderable->redraw();
                 }
             }
-            // Clear the redraw queue; we're done!
-            toRedraw.clear();
         }
                 
 

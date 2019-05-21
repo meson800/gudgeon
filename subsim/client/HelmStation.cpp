@@ -33,6 +33,7 @@ HandleResult HelmStation::handleMockIgnore(IgnoreKeypresses* event)
 
 HandleResult HelmStation::handleKeypress(KeyEvent* keypress)
 {
+    std::lock_guard<std::mutex> lock(UI::getGlobalUI()->redrawMux);
     if (ignoringMocks)
     {
         return HandleResult::Unhandled;
@@ -110,6 +111,8 @@ HandleResult HelmStation::handleKeypress(KeyEvent* keypress)
 
 HandleResult HelmStation::handleUnitState(UnitState* state)
 {
+    std::lock_guard<std::mutex> lock(UI::getGlobalUI()->redrawMux);
+
     if (state->team == team && state->unit == unit) {
         Log::writeToLog(Log::L_DEBUG, "Got updated UnitState from server");
         lastState = *state;

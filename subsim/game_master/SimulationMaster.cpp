@@ -16,6 +16,7 @@ SimulationMaster::SimulationMaster(Network* network_, const std::string& filenam
         dispatchEvent<SimulationMaster, FireEvent, &SimulationMaster::fire>,
         dispatchEvent<SimulationMaster, TubeLoadEvent, &SimulationMaster::tubeLoad>,
         dispatchEvent<SimulationMaster, TubeArmEvent, &SimulationMaster::tubeArm>,
+        dispatchEvent<SimulationMaster, PowerEvent, &SimulationMaster::power>,
     })
 {
     ParseResult result = GenericParser::parse(filename);
@@ -378,6 +379,46 @@ HandleResult SimulationMaster::tubeLoad(TubeLoadEvent *event)
                 unit.tubeOccupancy[event->tube] = UnitState::TubeStatus::Mine;
                 --unit.remainingMines;
             }
+        }
+    }
+    return HandleResult::Stop;
+}
+
+HandleResult SimulationMaster::power(PowerEvent* event)
+{
+    {
+        std::lock_guard<std::mutex> lock(stateMux);
+
+        UnitState& unit = unitStates[event->team][event->unit];
+
+        switch (event->system)
+        {
+            case PowerEvent::System::Yaw:
+                unit.yawEnabled = event->isOn;
+            break;
+
+            case PowerEvent::System::Pitch:
+                unit.pitchEnabled = event->isOn;
+            break;
+
+            case PowerEvent::System::Engine:
+                unit.engineEnabled = event->isOn;
+            break;
+
+            case PowerEvent::System::Comms:
+                unit.commsEnabled = event->isOn;
+            break;
+
+            case PowerEvent::System::Sonar:
+                unit.sonarEnabled = event->isOn;
+            break;
+
+            case PowerEvent::System::Weapons:
+                unit.weaponsEnabled = event->isOn;
+            break;
+            
+            default:
+            break;
         }
     }
     return HandleResult::Stop;

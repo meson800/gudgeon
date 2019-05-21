@@ -40,6 +40,9 @@ public:
     /// Handles when clients reload tubes
     HandleResult tubeLoad(TubeLoadEvent *event);
 
+    /// Handles when clients update power status
+    HandleResult power(PowerEvent* event);
+
 private:
     /// Internal game simulation function. Runs continuously in its own thread
     void runSimLoop();
