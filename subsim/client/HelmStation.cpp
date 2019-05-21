@@ -176,7 +176,6 @@ HandleResult HelmStation::handleUnitState(UnitState* state)
     std::lock_guard<std::mutex> lock(UI::getGlobalUI()->redrawMux);
 
     if (state->team == team && state->unit == unit) {
-        Log::writeToLog(Log::L_DEBUG, "Got updated UnitState from server");
         lastState = *state;
         scheduleRedraw();
     }
@@ -188,7 +187,6 @@ void HelmStation::redraw()
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 
-    Log::writeToLog(Log::L_DEBUG, "Renderer:", renderer, "Drawing updated speed:", lastState.speed);
     std::ostringstream sstream;
     sstream << "Speed:" << lastState.speed;
     drawText(sstream.str(), 20, 50, 50);

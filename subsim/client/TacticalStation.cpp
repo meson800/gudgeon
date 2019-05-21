@@ -3,6 +3,7 @@
 #include "../common/Messages.h"
 #include "../common/Log.h"
 #include "../common/ConfigParser.h"
+#include "../common/Exceptions.h"
 
 #include "UI.h"
 #include <SDL2_gfxPrimitives.h>
@@ -30,6 +31,7 @@ TacticalStation::TacticalStation(uint32_t team_, uint32_t unit_, Config* config_
     , unit(unit_)
     , receivingText(false)
     , config(config_)
+    , terrainTexture(NULL)
 {}
 
 TacticalStation::~TacticalStation()
@@ -236,7 +238,6 @@ HandleResult TacticalStation::handleSonarDisplay(SonarDisplayState* sonar)
 {
     std::lock_guard<std::mutex> lock(UI::getGlobalUI()->redrawMux);
 
-    Log::writeToLog(Log::L_DEBUG, "Got updated SonarDisplay from server");
     lastSonar = *sonar;
     scheduleRedraw();
     return HandleResult::Stop;
@@ -252,6 +253,8 @@ HandleResult TacticalStation::handleExplosion(ExplosionEvent* explosion)
 
 void TacticalStation::redraw()
 {
+    initializeRendering();
+
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 
@@ -311,6 +314,47 @@ void TacticalStation::redraw()
     renderSonarState();
 
     SDL_RenderPresent(renderer);
+}
+
+void TacticalStation::initializeRendering() {
+    /* This code should only run once */
+    if (terrainTexture != NULL) {
+        return;
+    }
+
+    /* Dump rendering info to the log file */
+    SDL_RendererInfo info;
+    if (SDL_GetRendererInfo(renderer, &info) != 0) {
+        throw SDLError("Error in SDL_GetRendererInfo");
+    }
+    Log::writeToLog(Log::L_DEBUG, "Renderer name ", info.name);
+    Log::writeToLog(Log::L_DEBUG, "SDL_RENDERER_SOFTWARE? ", info.flags & SDL_RENDERER_SOFTWARE);
+    Log::writeToLog(Log::L_DEBUG, "SDL_RENDERER_ACCELERATED? ", info.flags & SDL_RENDERER_ACCELERATED);
+    Log::writeToLog(Log::L_DEBUG, "SDL_RENDERER_PRESENTVSYNC? ", info.flags & SDL_RENDERER_PRESENTVSYNC);
+    Log::writeToLog(Log::L_DEBUG, "SDL_RENDERER_TARGETTEXTURE? ", info.flags & SDL_RENDERER_TARGETTEXTURE);
+
+    /* Initialize terrainTexture */
+    terrainTexture = SDL_CreateTexture(
+        renderer,
+        SDL_PIXELFORMAT_ABGR8888,
+        SDL_TEXTUREACCESS_STATIC,
+        1, // width
+        1  // height
+    );
+    if (!terrainTexture)
+    {
+        throw SDLError("SDL_UpdateTexture");
+    }
+    uint8_t pixel[4] = {100, 100, 100, 255};
+    SDL_Rect rect;
+    rect.x = 0;
+    rect.y = 0;
+    rect.w = 1;
+    rect.h = 1;
+    if (SDL_UpdateTexture(terrainTexture, &rect, &pixel, 4) != 0)
+    {
+        throw SDLError("SDL_UpdateTexture");
+    }
 }
 
 void TacticalStation::renderSonarState()
@@ -384,7 +428,6 @@ void TacticalStation::renderSDTerrain()
     int32_t tx_max = (lastState.x + 2*config->sonarRange) / s;
     int32_t ty_min = (lastState.y - 2*config->sonarRange) / s;
     int32_t ty_max = (lastState.y + 2*config->sonarRange) / s;
-    uint32_t terrainColor = rgba_to_color(100, 100, 100, 255);
 
     for (int32_t tx = tx_min; tx <= tx_max; ++tx)
     {
@@ -392,9 +435,20 @@ void TacticalStation::renderSDTerrain()
         {
             if (config->terrain.colorAt(tx, ty) == Terrain::WALL)
             {
-                int64_t xs[4] = {tx*s, (tx+1)*s, (tx+1)*s, tx*s};
-                int64_t ys[4] = {ty*s, ty*s, (ty+1)*s, (ty+1)*s};
-                renderSDFilledPolygon(xs, ys, 4, terrainColor);
+                int16_t centerX = sdX(tx*s + s/2, ty*s + s/2);
+                int16_t centerY = sdY(tx*s + s/2, ty*s + s/2);
+                SDL_Rect dstRect;
+                dstRect.w = dstRect.h = sdRadius(s) + 3;
+                dstRect.x = centerX - dstRect.w / 2;
+                dstRect.y = centerY - dstRect.h / 2;
+                SDL_RenderCopyEx(
+                    renderer,
+                    terrainTexture,
+                    NULL,
+                    &dstRect,
+                    sdHeading(0),
+                    NULL,
+                    SDL_FLIP_NONE);
             }
         }
     }
@@ -435,16 +489,6 @@ void TacticalStation::renderSDLine(int64_t x1, int64_t y1, int64_t x2, int64_t y
 void TacticalStation::renderSDArc(int64_t x, int64_t y, int16_t r, int16_t a1, int16_t a2, uint32_t color)
 {
     arcColor(renderer, sdX(x, y), sdY(x, y), sdRadius(r), sdHeading(a1), sdHeading(a2), color);
-}
-
-void TacticalStation::renderSDFilledPolygon(const int64_t *xs, const int64_t *ys, int count, uint32_t color) {
-    std::vector<int16_t> transformed_xs(count);
-    std::vector<int16_t> transformed_ys(count);
-    for (int i = 0; i < count; ++i) {
-      transformed_xs[i] = sdX(xs[i], ys[i]);
-      transformed_ys[i] = sdY(xs[i], ys[i]);
-    }
-    filledPolygonColor(renderer, transformed_xs.data(), transformed_ys.data(), count, color);
 }
 
 int64_t TacticalStation::sdX(int64_t x, int64_t y)

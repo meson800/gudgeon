@@ -74,7 +74,7 @@ SDL_Renderer* UI::getFreeRenderer(uint16_t minWidth, uint16_t minHeight)
     SDL_Window * newWindow;
     SDL_Renderer * newRenderer;
     
-    if (SDL_CreateWindowAndRenderer(minWidth, minHeight, 0, &newWindow, &newRenderer) != 0)
+    if (SDL_CreateWindowAndRenderer(minWidth, minHeight, SDL_WINDOW_OPENGL, &newWindow, &newRenderer) != 0)
     {
         Log::writeToLog(Log::ERR, "Couldn't create a new window and renderer of size (", minWidth, ",", minHeight, ")");
         throw SDLError("Error in SDL_CreateWindowAndRenderer");
@@ -137,7 +137,6 @@ Renderable::~Renderable()
 
 void Renderable::scheduleRedraw()
 {
-    Log::writeToLog(Log::L_DEBUG, "Redraw requested from renderable ", this);
     if (renderer != nullptr)
     {
         UI::getGlobalUI()->triggerRedraw(renderer);
@@ -269,7 +268,6 @@ void UI::deregisterRenderable(SDL_Renderer* renderer, Renderable* renderable)
 
 void UI::triggerRedraw(SDL_Renderer* renderer)
 {
-    Log::writeToLog(Log::L_DEBUG, "Scheduling redraw for renderer ", renderer);
     std::lock_guard<std::mutex> guard(redrawRequestMux);
     toRedraw.insert(renderer);
 }
@@ -292,6 +290,11 @@ void UI::runSDLloop(bool& startupDone, std::mutex& startupMux)
             Log::writeToLog(Log::ERR, "Couldn't start SDL! SDL error:", SDL_GetError());
             throw SDLError("Error in SDL_Init");
         }
+        
+        if (!SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl")) {
+            throw SDLError("Error in SDL_SetHint");
+        }
+        
         SDL_StopTextInput();
         startupDone = true;
     }
@@ -541,7 +544,6 @@ void UI::runSDLloop(bool& startupDone, std::mutex& startupMux)
                     Log::writeToLog(Log::WARN, "Redraw requested for nonexistent renderer ", renderer, "!");
                     continue;
                 }
-                Log::writeToLog(Log::L_DEBUG, "Redrawing renderer ", renderer);
 
                 for (Renderable* renderable : renderStack[renderer])
                 {
@@ -551,7 +553,7 @@ void UI::runSDLloop(bool& startupDone, std::mutex& startupMux)
         }
                 
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
 
     }
 }
