@@ -9,6 +9,8 @@
 
 #include "RakNetTypes.h" // For RakNetGUID
 
+#include "ConfigParser.h" // for Terrain
+
 namespace RakNet
 {
     /// Forward declaration
@@ -347,4 +349,17 @@ public:
     uint32_t team;
     uint32_t unit;
     bool isActive;
+};
+
+/*!
+ * Sends terrain data to the client
+ */
+class TerrainDataEvent : public Event
+{
+public:
+    TerrainDataEvent() : Event(category, id) {}
+    constexpr static uint32_t category = Events::Category::Simulation;
+    constexpr static uint32_t id = Events::Sim::TerrainData;
+
+    Terrain terrain;
 };

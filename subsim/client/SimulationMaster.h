@@ -2,6 +2,7 @@
 #include "../common/Network.h"
 #include "../common/SimulationEvents.h"
 #include "../common/Network.h"
+#include "../common/ConfigParser.h" // for Terrain
 
 #include "LobbyHandler.h"
 #include "TacticalStation.h"
@@ -22,6 +23,9 @@ public:
 
     /// Handles the event spawned when the lobby is full, and the game is starting
     HandleResult simStart(SimulationStart* event);
+
+    /// Handles incoming terrain data
+    HandleResult terrainData(TerrainDataEvent* event);
 
     /// Connection callback that is spawned when we have succesfully connected to a server. Spawns a Lobby instance
     virtual bool ConnectionEstablished(RakNet::RakNetGUID other) override;
@@ -50,5 +54,8 @@ private:
 
     /// Internal mapping of teams/units/stations
     std::vector<SimulationStart::Station> stations;
+
+    /// Stores the terrain for this game
+    Terrain terrain;
 };
 

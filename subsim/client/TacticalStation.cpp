@@ -1,8 +1,8 @@
 #include "TacticalStation.h"
 
 #include "../common/Messages.h"
-
 #include "../common/Log.h"
+#include "../common/ConfigParser.h"
 
 #include "UI.h"
 #include <SDL2_gfxPrimitives.h>
@@ -15,7 +15,7 @@ static constexpr uint32_t rgba_to_color(uint8_t r, uint8_t g, uint8_t b, uint8_t
     return ((uint32_t)a << 24) | ((uint32_t)b << 16) | ((uint32_t)g << 8) | ((uint32_t)r);
 }
 
-TacticalStation::TacticalStation(uint32_t team, uint32_t unit)
+TacticalStation::TacticalStation(uint32_t team_, uint32_t unit_, Terrain* terrain_)
     : Renderable(WIDTH, HEIGHT)
     , EventReceiver({
         dispatchEvent<TacticalStation, KeyEvent, &TacticalStation::handleKeypress>,
@@ -24,9 +24,10 @@ TacticalStation::TacticalStation(uint32_t team, uint32_t unit)
         dispatchEvent<TacticalStation, UnitState, &TacticalStation::handleUnitState>,
         dispatchEvent<TacticalStation, SonarDisplayState, &TacticalStation::handleSonarDisplay>
     })
-    , team(team)
-    , unit(unit)
+    , team(team_)
+    , unit(unit_)
     , receivingText(false)
+    , terrain(terrain_)
 {}
 
 HandleResult TacticalStation::handleKeypress(KeyEvent* keypress)
@@ -236,6 +237,8 @@ void TacticalStation::redraw()
         renderSDLine(gridMinX, y, gridMaxX, y, gridColor);
     }
 
+    renderSDTerrain();
+
     renderSDSubmarine(lastState.x, lastState.y, lastState.heading);
 
     for (const UnitSonarState &u : lastSonar.units)
@@ -303,7 +306,29 @@ void TacticalStation::renderTubeState()
             break;
         }
     }
-        
+}
+
+void TacticalStation::renderSDTerrain()
+{
+    uint32_t s = terrain->scale; //scale of map
+    int32_t tx_min = std::max<int64_t>((lastState.x - WIDTH) / s, 0);
+    int32_t tx_max = std::min<int64_t>((lastState.x + WIDTH) / s, terrain->width-1);
+    int32_t ty_min = std::max<int64_t>((lastState.y - WIDTH) / s, 0);
+    int32_t ty_max = std::min<int64_t>((lastState.y + WIDTH) / s, terrain->height-1);
+    uint32_t terrain_color = rgba_to_color(100, 100, 100, 255);
+
+    for (int32_t tx = tx_min; tx <= tx_max; ++tx)
+    {
+        for (int32_t ty = ty_min; ty <= ty_max; ++ty)
+        {
+            if (terrain->map[tx + ty * terrain->width] < 255)
+            {
+                int64_t xs[4] = {tx*s, (tx+1)*s, (tx+1)*s, tx*s};
+                int64_t ys[4] = {ty*s, ty*s, (ty+1)*s, (ty+1)*s};
+                renderSDFilledPolygon(xs, ys, 4, terrain_color);
+            }
+        }
+    }
 }
 
 void TacticalStation::renderSDSubmarine(int64_t x, int64_t y, int16_t heading)
@@ -330,6 +355,16 @@ void TacticalStation::renderSDLine(int64_t x1, int64_t y1, int64_t x2, int64_t y
 void TacticalStation::renderSDArc(int64_t x, int64_t y, int16_t r, int16_t a1, int16_t a2, uint32_t color)
 {
     arcColor(renderer, sdX(x, y), sdY(x, y), r, sdHeading(a1), sdHeading(a2), color);
+}
+
+void TacticalStation::renderSDFilledPolygon(const int64_t *xs, const int64_t *ys, int count, uint32_t color) {
+    std::vector<int16_t> transformed_xs(count);
+    std::vector<int16_t> transformed_ys(count);
+    for (int i = 0; i < count; ++i) {
+      transformed_xs[i] = sdX(xs[i], ys[i]);
+      transformed_ys[i] = sdY(xs[i], ys[i]);
+    }
+    filledPolygonColor(renderer, transformed_xs.data(), transformed_ys.data(), count, color);
 }
 
 int64_t TacticalStation::sdX(int64_t x, int64_t y) {

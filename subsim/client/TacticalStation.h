@@ -8,6 +8,9 @@
 
 #include <queue>
 
+/// forward declaration
+class Terrain;
+
 /*!
  * Class that handles the tactical station. This includes "shitty IRC",
  * sonar, weapons, and repair
@@ -15,8 +18,8 @@
 class TacticalStation : public EventReceiver, public Renderable
 {
 public:
-    /// Init internal state
-    TacticalStation(uint32_t team, uint32_t unit); 
+    /// Init internal state, with team/unit plus pointer to a terrain object
+    TacticalStation(uint32_t team, uint32_t unit, Terrain* terrain_);
 
     /// Receives a text message from the server
     HandleResult receiveTextMessage(TextMessage* message);
@@ -40,6 +43,9 @@ private:
     /// Renders the tube status in the upper right corner
     void renderTubeState();
 
+    /// Renders the terrain
+    void renderSDTerrain();
+
     /// Renders a submarine on the sonar screen
     void renderSDSubmarine(int64_t x, int64_t y, int16_t heading);
 
@@ -49,6 +55,7 @@ private:
     void renderSDCircle(int64_t x, int64_t y, int16_t r, uint32_t color);
     void renderSDLine(int64_t x1, int64_t y1, int64_t x2, int64_t y2, uint32_t color);
     void renderSDArc(int64_t x, int64_t y, int16_t r, int16_t a1, int16_t a2, uint32_t color);
+    void renderSDFilledPolygon(const int64_t *xs, const int64_t *ys, int count, uint32_t color);
 
     /// sdX() and sdY() convert from world coordinates to SDL display
     /// coordinates based on the unit's current location
@@ -72,5 +79,8 @@ private:
     
     /// Last received sonar state (shared across all units)
     SonarDisplayState lastSonar;
+
+    /// Stores a pointer to the Terrain object we will use
+    Terrain* terrain;
 };
 

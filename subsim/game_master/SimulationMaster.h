@@ -3,6 +3,8 @@
 #include "../common/SimulationEvents.h"
 #include "LobbyHandler.h"
 
+#include "../common/ConfigParser.h"
+
 #include <memory>
 #include <thread>
 
@@ -14,8 +16,8 @@
 class SimulationMaster : public EventReceiver
 {
 public:
-    /// Takes an initalized Network instance, in order to communicate with clients.
-    SimulationMaster(Network* network);
+    /// Takes an initalized Network instance, in order to communicate with clients, plus a filename
+    SimulationMaster(Network* network, const std::string& filename);
 
     /// Stops the game loop upon destruction
     ~SimulationMaster();
@@ -76,5 +78,8 @@ private:
 
     /// Stores the current location of all mines
     std::map<MineID, MineState> mines;
+
+    /// Stores the game configuration
+    Config config;
 };
 

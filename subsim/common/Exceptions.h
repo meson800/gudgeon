@@ -30,6 +30,15 @@ public:
 };
 
 /**
+ * Exception representing a ConfigParser error.
+ */
+class ConfigParseError : public GenericParseError
+{
+public:
+    ConfigParseError(const std::string& err) : GenericParseError(err) {}
+};
+
+/**
  * Exception representing a lobby error
  */
 class LobbyError : public std::runtime_error
