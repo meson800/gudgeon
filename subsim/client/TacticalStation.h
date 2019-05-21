@@ -72,6 +72,7 @@ private:
     void renderSDCircle(int64_t x, int64_t y, int16_t r, uint32_t color);
     void renderSDLine(int64_t x1, int64_t y1, int64_t x2, int64_t y2, uint32_t color);
     void renderSDArc(int64_t x, int64_t y, int16_t r, int16_t a1, int16_t a2, uint32_t color);
+    void renderSDFilledPolygon(const int64_t *xs, const int64_t *ys, int count, uint32_t color);
 
     /// sdX() and sdY() convert from world coordinates to SDL pixel
     /// coordinates based on the unit's current location

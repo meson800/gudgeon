@@ -539,6 +539,16 @@ void TacticalStation::renderSDArc(int64_t x, int64_t y, int16_t r, int16_t a1, i
     arcColor(renderer, sdX(x, y), sdY(x, y), sdRadius(r), sdHeading(a1), sdHeading(a2), color);
 }
 
+void TacticalStation::renderSDFilledPolygon(const int64_t *xs, const int64_t *ys, int count, uint32_t color) {
+    std::vector<int16_t> transformed_xs(count);
+    std::vector<int16_t> transformed_ys(count);
+    for (int i = 0; i < count; ++i) {
+      transformed_xs[i] = sdX(xs[i], ys[i]);
+      transformed_ys[i] = sdY(xs[i], ys[i]);
+    }
+    filledPolygonColor(renderer, transformed_xs.data(), transformed_ys.data(), count, color);
+}
+
 int64_t TacticalStation::sdX(int64_t x, int64_t y)
 {
     float xx = (x - lastState.x) * sin(lastState.heading * 2*M_PI/360.0)
