@@ -309,31 +309,62 @@ HandleResult SimulationMaster::fire(FireEvent *event)
         std::lock_guard<std::mutex> lock(stateMux);
         UnitState& unit = unitStates[event->team][event->unit];
 
+        uint8_t mineCount = 0;
+        uint8_t torpedoCount = 0;
         for (int i = 0; i < unit.tubeOccupancy.size(); ++i)
         {
             if (unit.tubeIsArmed[i]
                 && unit.tubeOccupancy[i] == UnitState::TubeStatus::Torpedo)
             {
-                TorpedoState torp;
-                torp.x = unit.x + 1.5 * config.collisionRadius * cos(unit.heading * 2*M_PI/360.0);
-                torp.y = unit.y + 1.5 * config.collisionRadius * sin(unit.heading * 2*M_PI/360.0);
-                torp.depth = unit.depth;
-                torp.heading = unit.heading;
-                torpedos[nextTorpedoID++] = torp;
-
-                Log::writeToLog(Log::L_DEBUG, "Fired torpedo from team ",
-                    unit.team, " unit ", unit.unit, " from tube ", i);
-
+                ++torpedoCount;
                 unit.tubeOccupancy[i] = UnitState::TubeStatus::Empty;
             }
 
             if (unit.tubeIsArmed[i]
                 && unit.tubeOccupancy[i] == UnitState::TubeStatus::Mine)
             {
-                Log::writeToLog(Log::L_DEBUG, "Laid mine from team ",
-                    unit.team, " unit ", unit.unit, " from tube ", i);
+                ++mineCount;
                 unit.tubeOccupancy[i] = UnitState::TubeStatus::Empty;
             }
+        }
+
+        if (torpedoCount > 0)
+        {
+            int16_t maxOffset = (torpedoCount - 1) * config.torpedoSpread / 2;
+            for (int16_t offset = -maxOffset; offset <= maxOffset; offset += config.torpedoSpread)
+            {
+                int16_t newHeading = unit.heading + offset;
+                if (newHeading < 0)
+                {
+                    newHeading += 360;
+                }
+                if (newHeading > 360)
+                {
+                    newHeading -= 360;
+                }
+
+                TorpedoState torp;
+                torp.x = unit.x + 1.5 * config.collisionRadius * cos(newHeading * 2*M_PI/360.0);
+                torp.y = unit.y + 1.5 * config.collisionRadius * sin(newHeading * 2*M_PI/360.0);
+                torp.depth = unit.depth;
+                torp.heading = newHeading;
+                torpedos[nextTorpedoID++] = torp;
+
+                Log::writeToLog(Log::L_DEBUG, "Fired torpedo from team ",
+                    unit.team, " unit ", unit.unit);
+            }
+        }
+
+        if (mineCount > 0)
+        {
+            MineState mine;
+            mine.x = unit.x - 1.5 * config.collisionRadius * cos(unit.heading * 2*M_PI/360.0);
+            mine.y = unit.y - 1.5 * config.collisionRadius * sin(unit.heading * 2*M_PI/360.0);
+            mine.depth = unit.depth;
+
+            mines[nextMineID++] = mine;
+            Log::writeToLog(Log::L_DEBUG, "Laid mine from team ",
+                unit.team, " unit ", unit.unit);
         }
     }
     return HandleResult::Stop;
