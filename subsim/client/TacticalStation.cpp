@@ -267,6 +267,20 @@ void TacticalStation::redraw()
             continue;
         }
         renderSDSubmarine(u.x, u.y, u.heading);
+
+        // Draw targeting reticule
+        if (lastState.targetIsLocked &&
+            u.team == lastState.targetTeam &&
+            u.unit == lastState.targetUnit)
+        {
+            int16_t x = sdX(u.x, u.y), y = sdY(u.x, u.y);
+            uint32_t color = rgba_to_color(255, 255, 255, 255);
+            circleColor(renderer, x, y, 30, color);
+            lineColor(renderer, x+20, y, x+35, y, color);
+            lineColor(renderer, x, y+20, x, y+35, color);
+            lineColor(renderer, x-20, y, x-35, y, color);
+            lineColor(renderer, x, y-20, x, y-35, color);
+        }
     }
 
     for (const TorpedoState &torp : lastSonar.torpedos)

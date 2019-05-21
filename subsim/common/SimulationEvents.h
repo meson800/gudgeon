@@ -152,6 +152,11 @@ public:
 
     /// Stores the enable/disable status of various power items
     bool yawEnabled, pitchEnabled, engineEnabled, commsEnabled, sonarEnabled, weaponsEnabled;
+
+    /// Stores the team/unit of the sub we are currently targeting, if any
+    bool targetIsLocked;
+    uint32_t targetTeam;
+    uint32_t targetUnit;
 };
 
 
