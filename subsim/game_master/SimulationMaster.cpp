@@ -232,6 +232,26 @@ void SimulationMaster::runSimForUnit(UnitState *unitState)
         unitStates,
         &unitState->targetTeam,
         &unitState->targetUnit);
+    
+    // Check for collision with every mine
+    std::vector<MineID> minesHit;
+    for (auto &minePair : mines)
+    {
+        if (didCollide(
+                unitState->x, unitState->y,
+                minePair.second.x, minePair.second.y,
+                config.collisionRadius))
+        {
+            Log::writeToLog(Log::INFO, "Mine struck submarine");
+            damage(unitState->team, unitState->unit, 50);
+            explosion(minePair.second.x, minePair.second.y, 50);
+            minesHit.push_back(minePair.first);
+        }
+    }
+    for (MineID mineHit : minesHit)
+    {
+        mines.erase(mineHit);
+    }
 }
 
 void SimulationMaster::damage(uint32_t team, uint32_t unit, int16_t amount)
