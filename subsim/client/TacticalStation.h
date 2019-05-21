@@ -21,6 +21,9 @@ public:
     /// Init internal state, with team/unit plus pointer to a terrain object
     TacticalStation(uint32_t team, uint32_t unit, Config* config_);
 
+    /// Deregisters ourself from the GUI
+    ~TacticalStation();
+
     /// Receives a text message from the server
     HandleResult receiveTextMessage(TextMessage* message);
 

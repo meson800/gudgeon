@@ -25,6 +25,7 @@ LobbyHandler::LobbyHandler()
 LobbyHandler::~LobbyHandler()
 {
     Log::writeToLog(Log::L_DEBUG, "LobbyHandler ", this, " shutting down.");
+    deregister();
 }
 
 void LobbyHandler::joinLobby(RakNet::RakNetGUID server, uint8_t numStations)

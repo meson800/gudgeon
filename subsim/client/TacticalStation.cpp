@@ -31,6 +31,11 @@ TacticalStation::TacticalStation(uint32_t team_, uint32_t unit_, Config* config_
     , config(config_)
 {}
 
+TacticalStation::~TacticalStation()
+{
+    deregister();
+}
+
 HandleResult TacticalStation::handleKeypress(KeyEvent* keypress)
 {
     std::lock_guard<std::mutex> lock(UI::getGlobalUI()->redrawMux);

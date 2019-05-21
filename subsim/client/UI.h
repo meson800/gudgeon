@@ -55,6 +55,9 @@ class Renderable
     /// Schedules a redraw of the linked renderer
     void scheduleRedraw();
 
+    /// Deregisters this renderable (called automatically in the deconstuctor if not down manually)
+    void deregister();
+
     protected:
     /// Drawing renderer variable
     SDL_Renderer* renderer;

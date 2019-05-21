@@ -106,13 +106,19 @@ Renderable::Renderable(uint16_t width, uint16_t height)
     UI::getGlobalUI()->requestRenderer(width, height, &renderer, this);
 }
 
-Renderable::~Renderable()
+void Renderable::deregister()
 {
-    Log::writeToLog(Log::L_DEBUG, "Renderable deconstructor called for ", this);
     if (renderer != nullptr)
     {
         UI::getGlobalUI()->deregisterRenderable(renderer, this);
     }
+    renderer = nullptr;
+}
+
+Renderable::~Renderable()
+{
+    Log::writeToLog(Log::L_DEBUG, "Renderable deconstructor called for ", this);
+    deregister();
 
     // Cleanup the font and texture caches
     for (auto font_pair : fontCache)
