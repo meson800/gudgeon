@@ -410,6 +410,66 @@ void UI::runSDLloop(bool& startupDone, std::mutex& startupMux)
                         ke.key = Key::Space;
                         break;
 
+                        case SDLK_1:
+                        ke.key = Key::One;
+                        break;
+
+                        case SDLK_2:
+                        ke.key = Key::Two;
+                        break;
+
+                        case SDLK_3:
+                        ke.key = Key::Three;
+                        break;
+
+                        case SDLK_4:
+                        ke.key = Key::Four;
+                        break;
+
+                        case SDLK_5:
+                        ke.key = Key::Five;
+                        break;
+
+                        case SDLK_q:
+                        ke.key = Key::Q;
+                        break;
+
+                        case SDLK_w:
+                        ke.key = Key::W;
+                        break;
+
+                        case SDLK_e:
+                        ke.key = Key::E;
+                        break;
+
+                        case SDLK_r:
+                        ke.key = Key::R;
+                        break;
+
+                        case SDLK_t:
+                        ke.key = Key::T;
+                        break;
+
+                        case SDLK_a:
+                        ke.key = Key::A;
+                        break;
+
+                        case SDLK_s:
+                        ke.key = Key::S;
+                        break;
+
+                        case SDLK_d:
+                        ke.key = Key::D;
+                        break;
+
+                        case SDLK_f:
+                        ke.key = Key::F;
+                        break;
+
+                        case SDLK_g:
+                        ke.key = Key::G;
+                        break;
+
                         default:
                         ke.key = Key::Other;
                     }

@@ -17,6 +17,21 @@ enum Key
     LBracket,
     RBracket,
     Space,
+    One,
+    Two,
+    Three,
+    Four,
+    Five,
+    Q,
+    W,
+    E,
+    R,
+    T,
+    A,
+    S,
+    D,
+    F,
+    G,
 };
 
 class KeyEvent : public Event

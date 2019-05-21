@@ -13,7 +13,9 @@ SimulationMaster::SimulationMaster(Network* network_)
         dispatchEvent<SimulationMaster, SimulationStartServer, &SimulationMaster::simStart>,
         dispatchEvent<SimulationMaster, ThrottleEvent, &SimulationMaster::throttle>,
         dispatchEvent<SimulationMaster, SteeringEvent, &SimulationMaster::steering>,
-        dispatchEvent<SimulationMaster, FireEvent, &SimulationMaster::fire>
+        dispatchEvent<SimulationMaster, FireEvent, &SimulationMaster::fire>,
+        dispatchEvent<SimulationMaster, TubeLoadEvent, &SimulationMaster::tubeLoad>,
+        dispatchEvent<SimulationMaster, TubeArmEvent, &SimulationMaster::tubeArm>,
     })
 {
     lobbyInit = std::unique_ptr<LobbyHandler>(new LobbyHandler());
@@ -262,16 +264,67 @@ HandleResult SimulationMaster::fire(FireEvent *event)
 {
     {
         std::lock_guard<std::mutex> lock(stateMux);
-        UnitState *unit = &unitStates[event->team][event->unit];
+        UnitState& unit = unitStates[event->team][event->unit];
 
-        TorpedoState torp;
-        torp.x = unit->x + 30 * cos(unit->heading * 2*M_PI/360.0);
-        torp.y = unit->y + 30 * sin(unit->heading * 2*M_PI/360.0);
-        torp.depth = unit->depth;
-        torp.heading = unit->heading;
-        torpedos[nextTorpedoID++] = torp;
+        for (int i = 0; i < unit.tubeOccupancy.size(); ++i)
+        {
+            if (unit.tubeIsArmed[i]
+                && unit.tubeOccupancy[i] == UnitState::TubeStatus::Torpedo)
+            {
+                TorpedoState torp;
+                torp.x = unit.x + 30 * cos(unit.heading * 2*M_PI/360.0);
+                torp.y = unit.y + 30 * sin(unit.heading * 2*M_PI/360.0);
+                torp.depth = unit.depth;
+                torp.heading = unit.heading;
+                torpedos[nextTorpedoID++] = torp;
 
-        Log::writeToLog(Log::L_DEBUG, "Fired torpedos/mines");
+                Log::writeToLog(Log::L_DEBUG, "Fired torpedo from team ",
+                    unit.team, " unit ", unit.unit, " from tube ", i);
+
+                unit.tubeOccupancy[i] = UnitState::TubeStatus::Empty;
+            }
+
+            if (unit.tubeIsArmed[i]
+                && unit.tubeOccupancy[i] == UnitState::TubeStatus::Mine)
+            {
+                Log::writeToLog(Log::L_DEBUG, "Laid mine from team ",
+                    unit.team, " unit ", unit.unit, " from tube ", i);
+                unit.tubeOccupancy[i] = UnitState::TubeStatus::Empty;
+            }
+        }
+    }
+    return HandleResult::Stop;
+}
+
+HandleResult SimulationMaster::tubeArm(TubeArmEvent *event)
+{
+    {
+        std::lock_guard<std::mutex> lock(stateMux);
+        unitStates[event->team][event->unit].tubeIsArmed[event->tube] = event->isArmed;
+        Log::writeToLog(Log::L_DEBUG, "Team ", event->team, " unit ", event->unit,
+            event->isArmed ? " armed tube " : " disarmed tube ", event->tube);
+    }
+    return HandleResult::Stop;
+
+}
+
+HandleResult SimulationMaster::tubeLoad(TubeLoadEvent *event)
+{
+    {
+        std::lock_guard<std::mutex> lock(stateMux);
+
+        UnitState & unit = unitStates[event->team][event->unit];
+
+        if (unit.tubeIsArmed[event->tube] == false
+            && unit.tubeOccupancy[event->tube] == UnitState::TubeStatus::Empty)
+        {
+            if (event->type == TubeLoadEvent::AmmoType::Torpedo)
+            {
+                unit.tubeOccupancy[event->tube] = UnitState::TubeStatus::Torpedo;
+            } else if (event->type == TubeLoadEvent::AmmoType::Mine) {
+                unit.tubeOccupancy[event->tube] = UnitState::TubeStatus::Mine;
+            }
+        }
     }
     return HandleResult::Stop;
 }

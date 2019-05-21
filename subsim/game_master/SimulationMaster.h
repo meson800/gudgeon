@@ -32,6 +32,12 @@ public:
     /// Handles the event when the submarine fires its armed torpedos/mines
     HandleResult fire(FireEvent *event);
 
+    /// Handles when clients arm/dearm tubes
+    HandleResult tubeArm(TubeArmEvent *event);
+
+    /// Handles when clients reload tubes
+    HandleResult tubeLoad(TubeLoadEvent *event);
+
 private:
     /// Internal game simulation function. Runs continuously in its own thread
     void runSimLoop();

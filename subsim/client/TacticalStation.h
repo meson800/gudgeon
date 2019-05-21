@@ -37,6 +37,10 @@ public:
     virtual void redraw() override;
 
 private:
+    /// Renders the tube status in the upper right corner
+    void renderTubeState();
+
+    /// Renders the submarine at a given position, at a given heading
     void renderSubmarine(int64_t x, int64_t y, int16_t heading);
 
     /// displayX() and displayY() convert from world coordinates to SDL display

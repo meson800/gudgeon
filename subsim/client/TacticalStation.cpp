@@ -43,6 +43,7 @@ HandleResult TacticalStation::handleKeypress(KeyEvent* keypress)
 
         // And update the UI
         UI::getGlobalUI()->changeTextInput(receivingText);
+        return HandleResult::Stop;
     }
 
     if (keypress->isDown == false && keypress->key == Key::Space)
@@ -53,8 +54,127 @@ HandleResult TacticalStation::handleKeypress(KeyEvent* keypress)
 
         EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(fire));
         Log::writeToLog(Log::L_DEBUG, "Fired torpedos/mines");
+        return HandleResult::Stop;
     }
-    return HandleResult::Stop;
+
+    // Perform tube mocks
+    if (keypress->isDown == false)
+    {
+        TubeLoadEvent tubeLoad;
+        TubeArmEvent tubeArm;
+        tubeLoad.team = team;
+        tubeLoad.unit = unit;
+        tubeArm.team = team;
+        tubeArm.unit = unit;
+
+        bool loaded = false;
+        bool armed = false;
+        switch (keypress->key)
+        {
+            case Key::One:
+                tubeArm.tube = 0;
+                armed = true;
+            break;
+
+            case Key::Two:
+                tubeArm.tube = 1;
+                armed = true;
+            break;
+
+            case Key::Three:
+                tubeArm.tube = 2;
+                armed = true;
+            break;
+
+            case Key::Four:
+                tubeArm.tube = 3;
+                armed = true;
+            break;
+
+            case Key::Five:
+                tubeArm.tube = 4;
+                armed = true;
+            break;
+
+            case Key::Q:
+                tubeLoad.tube = 0;
+                tubeLoad.type = TubeLoadEvent::AmmoType::Torpedo;
+                loaded = true;
+            break;
+
+            case Key::W:
+                tubeLoad.tube = 1;
+                tubeLoad.type = TubeLoadEvent::AmmoType::Torpedo;
+                loaded = true;
+            break;
+
+            case Key::E:
+                tubeLoad.tube = 2;
+                tubeLoad.type = TubeLoadEvent::AmmoType::Torpedo;
+                loaded = true;
+            break;
+
+            case Key::R:
+                tubeLoad.tube = 3;
+                tubeLoad.type = TubeLoadEvent::AmmoType::Torpedo;
+                loaded = true;
+            break;
+
+            case Key::T:
+                tubeLoad.tube = 4;
+                tubeLoad.type = TubeLoadEvent::AmmoType::Torpedo;
+                loaded = true;
+            break;
+
+            case Key::A:
+                tubeLoad.tube = 0;
+                tubeLoad.type = TubeLoadEvent::AmmoType::Mine;
+                loaded = true;
+            break;
+
+            case Key::S:
+                tubeLoad.tube = 1;
+                tubeLoad.type = TubeLoadEvent::AmmoType::Mine;
+                loaded = true;
+            break;
+
+            case Key::D:
+                tubeLoad.tube = 2;
+                tubeLoad.type = TubeLoadEvent::AmmoType::Mine;
+                loaded = true;
+            break;
+
+            case Key::F:
+                tubeLoad.tube = 3;
+                tubeLoad.type = TubeLoadEvent::AmmoType::Mine;
+                loaded = true;
+            break;
+
+            case Key::G:
+                tubeLoad.tube = 4;
+                tubeLoad.type = TubeLoadEvent::AmmoType::Mine;
+                loaded = true;
+            break;
+
+            default:
+            break;
+        }
+        if (armed)
+        {
+            // we armed one of the tubes, send mock along after updating state
+            tubeArm.isArmed = !lastState.tubeIsArmed[tubeArm.tube];
+            EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(tubeArm));
+            return HandleResult::Stop;
+        }
+
+        if (loaded)
+        {
+            EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(tubeLoad));
+            return HandleResult::Stop;
+        }
+    }
+
+    return HandleResult::Unhandled;
 }
 
 HandleResult TacticalStation::handleText(TextInputEvent* text)
@@ -138,7 +258,57 @@ void TacticalStation::redraw()
         circleRGBA(renderer, displayX(mine.x, mine.y), displayY(mine.x, mine.y), 20, 255, 0, 0, 255);
     }
 
+    renderTubeState();
+
     SDL_RenderPresent(renderer);
+}
+
+static constexpr uint32_t rgba_to_color(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+{
+    return ((uint32_t)a << 24) | ((uint32_t)b << 16) | ((uint32_t)g << 8) | ((uint32_t)r);
+}
+
+void TacticalStation::renderTubeState()
+{
+    // Use green for open tubes, red for armed tubes
+    uint32_t openColor = rgba_to_color(0, 255, 0, 255);
+    uint32_t armedColor = rgba_to_color(255, 0, 0, 255);
+    
+    for (int i = 0; i < lastState.tubeOccupancy.size(); ++i)
+    {
+        uint32_t color = lastState.tubeIsArmed[i] ? armedColor : openColor;
+
+        int x = 10 + 25 * i;
+        int y = 10;
+
+        switch(lastState.tubeOccupancy[i])
+        {
+            case UnitState::TubeStatus::Empty:
+                filledCircleColor(renderer, x, y, 8, color);
+            break;
+
+            case UnitState::TubeStatus::Torpedo:
+                boxColor(renderer, x - 6, y - 5, x + 6, y + 7, color);
+                filledPieColor(renderer, x, y - 5, 6, 180, 360, color);
+            break;
+
+            case UnitState::TubeStatus::Mine:
+                filledCircleColor(renderer, x, y, 5, color);
+                // draw spokes, because this is a mine
+                for (int i = 0; i < 360; i += 60)
+                {
+                    thickLineColor(renderer, x, y
+                        , x + cos(i * 2 * M_PI / 360.0) * 10
+                        , y + sin(i * 2 * M_PI / 360.0) * 10
+                        , 1, color);
+                }
+            break;
+
+            default:
+            break;
+        }
+    }
+        
 }
 
 void TacticalStation::renderSubmarine(int64_t x, int64_t y, int16_t heading) {
