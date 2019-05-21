@@ -29,14 +29,53 @@ Config ConfigParser::parseConfig(const ParseResult& parse)
 
             if (key == "terrain")
             {
-                unsigned pngResult = lodepng::decode(result.terrain.map, result.terrain.width, result.terrain.height,
-                    values[0], LodePNGColorType::LCT_GREY, 8);
+                std::vector<uint8_t> colorData;
+                unsigned pngResult = lodepng::decode(colorData, result.terrain.width, result.terrain.height,
+                    values[0], LodePNGColorType::LCT_RGB, 8);
 
                 if (pngResult != 0)
                 {
                     Log::writeToLog(Log::ERR, "LodePNG load error:", lodepng_error_text(pngResult));
                     throw ConfigParseError("Invalid PNG file loaded as terrain.");
                 }
+                result.terrain.map.reserve(result.terrain.width * result.terrain.height);
+                for (int i = 0; i < result.terrain.width * result.terrain.height; ++i)
+                {
+                    result.terrain.map.push_back(
+                      (colorData[3*i + 0] << 24) +
+                      (colorData[3*i + 1] << 16) +
+                      (colorData[3*i + 2] << 8) +
+                      0xFF);
+                }
+
+                for (uint32_t tx = 0; tx < result.terrain.width; ++tx)
+                {
+                    for (uint32_t ty = 0; ty < result.terrain.height; ++ty)
+                    {
+                        uint32_t color = result.terrain.colorAt(tx, ty);
+                        if (color == Terrain::START1)
+                        {
+                            result.startLocations[0].push_back(std::pair<int64_t, int64_t>(tx, ty));
+                        }
+                        else if (color == Terrain::START2)
+                        {
+                            result.startLocations[1].push_back(std::pair<int64_t, int64_t>(tx, ty));
+                        }
+                        else
+                        {
+                            if (color != Terrain::EMPTY && color != Terrain::WALL)
+                            {
+                                Log::writeToLog(Log::ERR,
+                                    "Invalid pixel at (", tx, ",", ty, "): ",
+                                    "color is r=", ((color >> 24) & 0xFF),
+                                    " g=", ((color >> 16) & 0xFF),
+                                    " b=", ((color >> 8) & 0xFF), ".");
+                                throw ConfigParseError("Terrain PNG has unexpected color.");
+                            }
+                        }
+                    }
+                }
+                        
             }
 
             std::istringstream sstream(values[0]);
@@ -73,6 +112,16 @@ Config ConfigParser::parseConfig(const ParseResult& parse)
             if (key == "collision_radius")
             {
                 sstream >> result.collisionRadius;
+            }
+
+            if (key == "max_mines")
+            {
+                sstream >> result.maxMines;
+            }
+
+            if (key == "max_torpedos")
+            {
+                sstream >> result.maxTorpedos;
             }
         }
     }

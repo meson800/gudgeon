@@ -3,6 +3,7 @@
 #include <math.h>
 
 #include "../common/Log.h"
+#include "../common/Exceptions.h"
 
 
 SimulationMaster::SimulationMaster(Network* network_, const std::string& filename)
@@ -67,9 +68,7 @@ void SimulationMaster::runSimLoop()
         {
             for (UnitState &unitState : teamPair.second)
             {
-                Log::writeToLog(Log::L_DEBUG, "Position inside unit state:(", unitState.x, ",", unitState.y, ")");
                 runSimForUnit(&unitState);
-                Log::writeToLog(Log::L_DEBUG, "Position inside unit state:(", unitState.x, ",", unitState.y, ")");
 
                 UnitSonarState unitSonarState;
                 unitSonarState.team = unitState.team;
@@ -129,7 +128,8 @@ void SimulationMaster::runSimForUnit(UnitState *unitState)
     int64_t scaledX = nextX / config.terrain.scale;
     int64_t scaledY = nextY / config.terrain.scale;
 
-    if (config.terrain.wallAt(scaledX, scaledY))
+
+    if (config.terrain.colorAt(scaledX, scaledY) == Terrain::WALL)
     {
         // Terrain collision!
         unitState->speed = 0;
@@ -190,17 +190,33 @@ HandleResult SimulationMaster::simStart(SimulationStartServer* event)
     for (auto& teamPair : assignments)
     {
         unitStates[teamPair.first] = std::vector<UnitState>();
+
+        // Make sure we have a starting position
+        if (config.startLocations[teamPair.first].size() == 0)
+        {
+            Log::writeToLog(Log::ERR, "Team ", teamPair.first, " had no starting position in the map!");
+            throw ConfigParseError("Not enough start positions defined");
+        }
+
+        std::pair<int64_t, int64_t> start = config.startLocations[teamPair.first][0];
+        start.first *= config.terrain.scale;
+        start.first += config.terrain.scale / 2;
+        start.second *= config.terrain.scale;
+        start.second += config.terrain.scale / 2;
+
         for (uint32_t unit = 0; unit < teamPair.second.size(); ++unit) {
             UnitState unitState;
             unitState.team = teamPair.first;
             unitState.unit = unit;
             unitState.tubeIsArmed = std::vector<bool>(5, false);
             unitState.tubeOccupancy = std::vector<UnitState::TubeStatus>(5, UnitState::Empty);
-            unitState.remainingTorpedos = 10;
-            unitState.remainingMines = 10;
+            unitState.remainingTorpedos = config.maxTorpedos;
+            unitState.remainingMines = config.maxMines;
             unitState.torpedoDistance = 100;
-            unitState.x = 250;
-            unitState.y = 250;
+            unitState.x = start.first
+                + config.collisionRadius * 2
+                    * (unit - 0.5 * (teamPair.second.size() - 1));
+            unitState.y = start.second;
             unitState.depth = 0;
             unitState.heading = 90;
             unitState.direction = UnitState::SteeringDirection::Center;
@@ -340,14 +356,27 @@ HandleResult SimulationMaster::tubeLoad(TubeLoadEvent *event)
 
         UnitState & unit = unitStates[event->team][event->unit];
 
-        if (unit.tubeIsArmed[event->tube] == false
-            && unit.tubeOccupancy[event->tube] == UnitState::TubeStatus::Empty)
+        if (unit.tubeIsArmed[event->tube] == false)
         {
-            if (event->type == TubeLoadEvent::AmmoType::Torpedo)
+            // Give a credit if there is already a loaded weapon in the tube
+            if (unit.tubeOccupancy[event->tube] == UnitState::TubeStatus::Torpedo)
+            {
+                ++unit.remainingTorpedos;
+            }
+
+            if (unit.tubeOccupancy[event->tube] == UnitState::TubeStatus::Mine)
+            {
+                ++unit.remainingMines;
+            }
+
+            // Reload the tube
+            if (event->type == TubeLoadEvent::AmmoType::Torpedo && unit.remainingTorpedos > 0)
             {
                 unit.tubeOccupancy[event->tube] = UnitState::TubeStatus::Torpedo;
-            } else if (event->type == TubeLoadEvent::AmmoType::Mine) {
+                --unit.remainingTorpedos;
+            } else if (event->type == TubeLoadEvent::AmmoType::Mine && unit.remainingMines > 0) {
                 unit.tubeOccupancy[event->tube] = UnitState::TubeStatus::Mine;
+                --unit.remainingMines;
             }
         }
     }

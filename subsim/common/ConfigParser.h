@@ -8,16 +8,22 @@
 class Terrain
 {
 public:
-    std::vector<uint8_t> map;
+    static constexpr uint32_t EMPTY  = 0xFFFFFFFF; // white
+    static constexpr uint32_t WALL   = 0x000000FF; // black
+    static constexpr uint32_t START1 = 0xFF0000FF; // red
+    static constexpr uint32_t START2 = 0x0000FFFF; // blue
+
+    std::vector<uint32_t> map;
     uint32_t width;
     uint32_t height;
     uint32_t scale;
-    bool wallAt(int32_t tx, int32_t ty) const
+
+    uint32_t colorAt(int32_t tx, int32_t ty) const
     {
         if (tx < 0 || tx >= width || ty < 0 || ty >= height) {
-            return true;
+            return WALL;
         }
-        return (map[tx+(height-1-ty)*width] < 255);
+        return map[tx+(height-1-ty)*width];
     }
 };
 
@@ -26,8 +32,13 @@ class Config
 public:
     Terrain terrain;
 
+    std::map<uint32_t, std::vector<std::pair<int64_t, int64_t>>> startLocations;
+
     uint16_t subTurningSpeed;
     uint16_t subMaxSpeed;
+
+    uint16_t maxTorpedos;
+    uint16_t maxMines;
 
     uint16_t sonarRange;
 

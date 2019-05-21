@@ -187,8 +187,11 @@ void EnvelopeMessage::deserialize(RakNet::BitStream& source)
                 case Events::Sim::Config:
                 {
                     ConfigEvent ce;
-                    source >> ce.config.subTurningSpeed >> ce.config.subMaxSpeed >> ce.config.sonarRange
+                    source >> ce.config.subTurningSpeed >> ce.config.subMaxSpeed 
+                        >> ce.config.maxTorpedos >> ce.config.maxMines
+                        >> ce.config.sonarRange
                         >> ce.config.torpedoSpread >> ce.config.torpedoSpeed >> ce.config.collisionRadius
+                        >> ce.config.startLocations
                         >> ce.config.terrain.map >> ce.config.terrain.width 
                         >> ce.config.terrain.height >> ce.config.terrain.scale;
 
@@ -345,8 +348,11 @@ void EnvelopeMessage::serialize(RakNet::BitStream& source) const
                 case Events::Sim::Config:
                 {
                     ConfigEvent* ce = (ConfigEvent*)event.get();
-                    source << ce->config.subTurningSpeed << ce->config.subMaxSpeed << ce->config.sonarRange
+                    source << ce->config.subTurningSpeed << ce->config.subMaxSpeed 
+                        << ce->config.maxTorpedos << ce->config.maxMines
+                        << ce->config.sonarRange
                         << ce->config.torpedoSpread << ce->config.torpedoSpeed << ce->config.sonarRange
+                        << ce->config.startLocations
                         << ce->config.terrain.map << ce->config.terrain.width << ce->config.terrain.height << ce->config.terrain.scale;
 
                 }
