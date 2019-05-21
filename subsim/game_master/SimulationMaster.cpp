@@ -108,20 +108,17 @@ inline bool didCollide(int64_t x1, int64_t y1, int64_t x2, int64_t y2, int32_t r
 
 void SimulationMaster::runSimForUnit(UnitState *unitState)
 {
-    // Update submarine heading, only if we are moving
-    if (unitState->speed > 0)
+    // Update submarine heading
+    if (unitState->direction == UnitState::SteeringDirection::Left)
     {
-        if (unitState->direction == UnitState::SteeringDirection::Left)
-        {
-            int32_t newHeading = static_cast<int32_t>(unitState->heading) - STEERING_RATE;
-            unitState->heading = newHeading < 0 ? newHeading + 360 : newHeading;
-        }
+        int32_t newHeading = static_cast<int32_t>(unitState->heading) - STEERING_RATE;
+        unitState->heading = newHeading < 0 ? newHeading + 360 : newHeading;
+    }
 
-        if (unitState->direction == UnitState::SteeringDirection::Right)
-        {
-            int32_t newHeading = static_cast<int32_t>(unitState->heading) + STEERING_RATE;
-            unitState->heading = newHeading > 360 ? newHeading - 360 : newHeading;
-        }
+    if (unitState->direction == UnitState::SteeringDirection::Right)
+    {
+        int32_t newHeading = static_cast<int32_t>(unitState->heading) + STEERING_RATE;
+        unitState->heading = newHeading > 360 ? newHeading - 360 : newHeading;
     }
 
     // Update submarine position
