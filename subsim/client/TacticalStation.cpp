@@ -433,8 +433,8 @@ void TacticalStation::renderSDSubmarine(int64_t x, int64_t y, int16_t heading)
 void TacticalStation::renderSDFlag(int64_t x, int64_t y, uint32_t color)
 {
     
-    int64_t x_locs [6] = {x, x, x + 20, x + 20, x + 8, x + 8};
-    int64_t y_locs [6] = {y, y + 20, y + 20, y + 12, y + 12, y};
+    int64_t x_locs [6] = {x, x, x + 20, x + 20, x + 3, x + 3};
+    int64_t y_locs [6] = {y, y + 20, y + 20, y + 9, y + 9, y};
     renderSDFilledPolygon(x_locs, y_locs, 6, color);
 }
     
