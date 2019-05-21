@@ -1,8 +1,8 @@
 #include "TacticalStation.h"
 
 #include "../common/Messages.h"
-
 #include "../common/Log.h"
+#include "../common/ConfigParser.h"
 
 #include "UI.h"
 #include <SDL2_gfxPrimitives.h>
@@ -10,7 +10,7 @@
 #define WIDTH 640
 #define HEIGHT 480
 
-TacticalStation::TacticalStation(uint32_t team, uint32_t unit)
+TacticalStation::TacticalStation(uint32_t team_, uint32_t unit_, Terrain* terrain_)
     : Renderable(WIDTH, HEIGHT)
     , EventReceiver({
         dispatchEvent<TacticalStation, KeyEvent, &TacticalStation::handleKeypress>,
@@ -19,9 +19,10 @@ TacticalStation::TacticalStation(uint32_t team, uint32_t unit)
         dispatchEvent<TacticalStation, UnitState, &TacticalStation::handleUnitState>,
         dispatchEvent<TacticalStation, SonarDisplayState, &TacticalStation::handleSonarDisplay>
     })
-    , team(team)
-    , unit(unit)
+    , team(team_)
+    , unit(unit_)
     , receivingText(false)
+    , terrain(terrain_)
 {}
 
 HandleResult TacticalStation::handleKeypress(KeyEvent* keypress)
@@ -236,6 +237,8 @@ void TacticalStation::redraw()
             100, 100, 100, 255);
     }
 
+    renderTerrain();
+
     renderSubmarine(lastState.x, lastState.y, lastState.heading);
 
     for (const UnitSonarState &u : lastSonar.units)
@@ -266,6 +269,66 @@ void TacticalStation::redraw()
 static constexpr uint32_t rgba_to_color(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 {
     return ((uint32_t)a << 24) | ((uint32_t)b << 16) | ((uint32_t)g << 8) | ((uint32_t)r);
+}
+
+bool TacticalStation::inBounds(int64_t x, int64_t y)
+{
+    return (x > lastState.x - WIDTH && x < lastState.x + WIDTH
+        && y > lastState.y - WIDTH && y < lastState.y + WIDTH);
+}
+
+void TacticalStation::renderTerrain()
+{
+    int64_t x_points[4];
+    int64_t y_points[4];
+    uint32_t s = terrain->scale; //scale of map
+    for (uint32_t i = 0; i < terrain->width; ++i)
+    {
+        for (uint32_t j = 0; j < terrain->height; ++j)
+        {
+            if (terrain->map[i + j * terrain->width] < 255)
+            {
+                x_points[0] = displayX(i * s, j * s);
+                y_points[0] = displayY(i * s, j * s);
+
+                x_points[1] = displayX((i + 1) * s, j * s);
+                y_points[1] = displayY((i + 1) * s, j * s);
+
+                x_points[2] = displayX((i + 1) * s, (j + 1) * s);
+                y_points[2] = displayY((i + 1) * s, (j + 1) * s);
+            
+                x_points[3] = displayX(i * s, (j + 1) * s);
+                y_points[3] = displayY(i * s, (j + 1) * s);
+
+                // skip blocks that are completetly outside our view
+                /*
+                if (!inBounds(x_points[0], y_points[0])
+                    && !inBounds(x_points[1], y_points[1])
+                    && !inBounds(x_points[2], y_points[2])
+                    && !inBounds(x_points[3], y_points[3]))
+                {
+                    continue;
+                }
+                */
+                
+                // SDL wants int16's to draw, even though we calculate at higher precision
+                int16_t drawX [4];
+                int16_t drawY [4];
+
+                drawX[0] = static_cast<int16_t>(x_points[0]);
+                drawX[1] = static_cast<int16_t>(x_points[1]);
+                drawX[2] = static_cast<int16_t>(x_points[2]);
+                drawX[3] = static_cast<int16_t>(x_points[3]);
+
+                drawY[0] = static_cast<int16_t>(y_points[0]);
+                drawY[1] = static_cast<int16_t>(y_points[1]);
+                drawY[2] = static_cast<int16_t>(y_points[2]);
+                drawY[3] = static_cast<int16_t>(y_points[3]);
+
+                filledPolygonRGBA(renderer, drawX, drawY, 4, 100, 100, 100, 255);
+            }
+        }
+    }
 }
 
 void TacticalStation::renderTubeState()

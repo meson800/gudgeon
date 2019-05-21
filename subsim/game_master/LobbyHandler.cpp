@@ -6,10 +6,10 @@
 
 #include "../common/SimulationEvents.h"
 
-LobbyHandler::LobbyHandler()
+LobbyHandler::LobbyHandler(const ParseResult& parse)
 {
     std::vector<std::pair<uint16_t, StationType>> requestedStations;
-    std::map<uint16_t, Team_t> parsedStations = TeamParser::parseStations(GenericParser::parse("data/test_game.cfg"));
+    std::map<uint16_t, Team_t> parsedStations = TeamParser::parseStations(parse);
 
 using Unit_owner_t = std::pair<std::string, std::vector<std::pair<StationType, RakNet::RakNetGUID>>>;
 using Team_owner_t = std::pair<std::string, std::vector<Unit_owner_t>>;

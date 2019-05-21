@@ -6,7 +6,7 @@
 
 constexpr static int32_t STEERING_RATE = 2;
 
-SimulationMaster::SimulationMaster(Network* network_)
+SimulationMaster::SimulationMaster(Network* network_, const std::string& filename)
     : shouldShutdown(false)
     , network(network_)
     , EventReceiver({
@@ -18,7 +18,11 @@ SimulationMaster::SimulationMaster(Network* network_)
         dispatchEvent<SimulationMaster, TubeArmEvent, &SimulationMaster::tubeArm>,
     })
 {
-    lobbyInit = std::unique_ptr<LobbyHandler>(new LobbyHandler());
+    ParseResult result = GenericParser::parse(filename);
+    config = ConfigParser::parseConfig(result);
+
+    
+    lobbyInit = std::unique_ptr<LobbyHandler>(new LobbyHandler(result));
     network->registerCallback(lobbyInit.get());
 
 }
@@ -223,6 +227,15 @@ HandleResult SimulationMaster::simStart(SimulationStartServer* event)
     // Unhook the lobby handler and destroy it
     network->deregisterCallback(lobbyInit.get());
     lobbyInit.reset();
+
+    // Send terrain data to all connected clients
+    TerrainDataEvent terrainEvent;
+    terrainEvent.terrain = config.terrain;
+    for (auto& client : all_clients)
+    {
+        EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(terrainEvent, client));
+    }
+
 
     // Start the game loop
     Log::writeToLog(Log::L_DEBUG, "Simulation master attempting to start simulation thread...");

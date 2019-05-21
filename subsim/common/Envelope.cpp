@@ -184,6 +184,15 @@ void EnvelopeMessage::deserialize(RakNet::BitStream& source)
                 }
                 break;
 
+                case Events::Sim::TerrainData:
+                {
+                    TerrainDataEvent te;
+                    source >> te.terrain.map >> te.terrain.width >> te.terrain.height >> te.terrain.scale;
+
+                    EventSystem::getGlobalInstance()->queueEvent(te);
+                }
+                break;
+
                 default:
                 Log::writeToLog(Log::ERR, "Attempted to deserialize a simulation event of id=", id, " from an envelope without deserialization code defined!");
                 throw EnvelopeError("Cannot deserialize a simulation event from an envelope.");
@@ -327,6 +336,13 @@ void EnvelopeMessage::serialize(RakNet::BitStream& source) const
                 {
                     SonarEvent* se = (SonarEvent*)event.get();
                     source << se->team << se->unit << se->isActive;
+                }
+                break;
+
+                case Events::Sim::TerrainData:
+                {
+                    TerrainDataEvent* te = (TerrainDataEvent*)event.get();
+                    source << te->terrain.map << te->terrain.width << te->terrain.height << te->terrain.scale;
                 }
                 break;
 

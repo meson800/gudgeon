@@ -8,6 +8,9 @@
 
 #include <queue>
 
+/// forward declaration
+class Terrain;
+
 /*!
  * Class that handles the tactical station. This includes "shitty IRC",
  * sonar, weapons, and repair
@@ -15,8 +18,8 @@
 class TacticalStation : public EventReceiver, public Renderable
 {
 public:
-    /// Init internal state
-    TacticalStation(uint32_t team, uint32_t unit); 
+    /// Init internal state, with team/unit plus pointer to a terrain object
+    TacticalStation(uint32_t team, uint32_t unit, Terrain* terrain_);
 
     /// Receives a text message from the server
     HandleResult receiveTextMessage(TextMessage* message);
@@ -43,6 +46,12 @@ private:
     /// Renders the submarine at a given position, at a given heading
     void renderSubmarine(int64_t x, int64_t y, int16_t heading);
 
+    /// Renders the terrain
+    void renderTerrain();
+
+    /// Returns if a given x/y point is in bounds of the screen
+    bool inBounds(int64_t x, int64_t y);
+
     /// displayX() and displayY() convert from world coordinates to SDL display
     /// coordinates based on the unit's current location
     int64_t displayX(int64_t x, int64_t y);
@@ -65,5 +74,8 @@ private:
     
     /// Last received sonar state (shared across all units)
     SonarDisplayState lastSonar;
+
+    /// Stores a pointer to the Terrain object we will use
+    Terrain* terrain;
 };
 
