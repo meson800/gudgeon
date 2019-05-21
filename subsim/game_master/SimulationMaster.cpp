@@ -109,13 +109,13 @@ inline bool didCollide(int64_t x1, int64_t y1, int64_t x2, int64_t y2, int32_t r
 void SimulationMaster::runSimForUnit(UnitState *unitState)
 {
     // Update submarine heading
-    if (unitState->direction == UnitState::SteeringDirection::Left)
+    if (unitState->direction == UnitState::SteeringDirection::Right)
     {
         int32_t newHeading = static_cast<int32_t>(unitState->heading) - config.subTurningSpeed;
         unitState->heading = newHeading < 0 ? newHeading + 360 : newHeading;
     }
 
-    if (unitState->direction == UnitState::SteeringDirection::Right)
+    if (unitState->direction == UnitState::SteeringDirection::Left)
     {
         int32_t newHeading = static_cast<int32_t>(unitState->heading) + config.subTurningSpeed;
         unitState->heading = newHeading > 360 ? newHeading - 360 : newHeading;
@@ -129,9 +129,7 @@ void SimulationMaster::runSimForUnit(UnitState *unitState)
     int64_t scaledX = nextX / config.terrain.scale;
     int64_t scaledY = nextY / config.terrain.scale;
 
-    if (scaledX < 0 || scaledX > config.terrain.width
-        || scaledY < 0 || scaledY > config.terrain.height
-        || config.terrain.map[scaledX + scaledY * config.terrain.width] < 255)
+    if (config.terrain.wallAt(scaledX, scaledY))
     {
         // Terrain collision!
         unitState->speed = 0;
@@ -201,10 +199,10 @@ HandleResult SimulationMaster::simStart(SimulationStartServer* event)
             unitState.remainingTorpedos = 10;
             unitState.remainingMines = 10;
             unitState.torpedoDistance = 100;
-            unitState.x = 200;
-            unitState.y = 200;
+            unitState.x = 250;
+            unitState.y = 250;
             unitState.depth = 0;
-            unitState.heading = 0;
+            unitState.heading = 90;
             unitState.direction = UnitState::SteeringDirection::Center;
             unitState.pitch = 0;
             unitState.speed = 0;

@@ -12,6 +12,13 @@ public:
     uint32_t width;
     uint32_t height;
     uint32_t scale;
+    bool wallAt(int32_t tx, int32_t ty) const
+    {
+        if (tx < 0 || tx >= width || ty < 0 || ty >= height) {
+            return true;
+        }
+        return (map[tx+(height-1-ty)*width] < 255);
+    }
 };
 
 class Config

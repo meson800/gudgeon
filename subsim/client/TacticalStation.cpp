@@ -220,24 +220,6 @@ void TacticalStation::redraw()
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 
-    // Draw a grid. We want to give the impression of an infinite grid without
-    // actually drawing infinitely many lines. So we actually just draw the part
-    // of the grid that's at the unit's position plus or minus WIDTH.
-    constexpr int gridSize = 100;
-    int64_t gridMinX = ((lastState.x - WIDTH) / gridSize) * gridSize;
-    int64_t gridMaxX = ((lastState.x + WIDTH) / gridSize) * gridSize;
-    int64_t gridMinY = ((lastState.y - WIDTH) / gridSize) * gridSize;
-    int64_t gridMaxY = ((lastState.y + WIDTH) / gridSize) * gridSize;
-    uint32_t gridColor = rgba_to_color(100, 100, 100, 255);
-    for (int64_t x = gridMinX; x < gridMaxX; x += gridSize)
-    {
-        renderSDLine(x, gridMinY, x, gridMaxY, gridColor);
-    }
-    for (int64_t y = gridMinY; y < gridMaxY; y += gridSize)
-    {
-        renderSDLine(gridMinX, y, gridMaxX, y, gridColor);
-    }
-
     renderSDTerrain();
 
     renderSDSubmarine(lastState.x, lastState.y, lastState.heading);
@@ -311,24 +293,34 @@ void TacticalStation::renderTubeState()
 
 void TacticalStation::renderSDTerrain()
 {
-    uint32_t s = config->terrain.scale; //scale of map
-    int32_t tx_min = std::max<int64_t>((lastState.x - WIDTH) / s, 0);
-    int32_t tx_max = std::min<int64_t>((lastState.x + WIDTH) / s, config->terrain.width-1);
-    int32_t ty_min = std::max<int64_t>((lastState.y - WIDTH) / s, 0);
-    int32_t ty_max = std::min<int64_t>((lastState.y + WIDTH) / s, config->terrain.height-1);
-    uint32_t terrain_color = rgba_to_color(100, 100, 100, 255);
+    int32_t s = config->terrain.scale; //scale of map
+    int32_t tx_min = (lastState.x - 2*config->sonarRange) / s;
+    int32_t tx_max = (lastState.x + 2*config->sonarRange) / s;
+    int32_t ty_min = (lastState.y - 2*config->sonarRange) / s;
+    int32_t ty_max = (lastState.y + 2*config->sonarRange) / s;
+    uint32_t terrainColor = rgba_to_color(100, 100, 100, 255);
 
     for (int32_t tx = tx_min; tx <= tx_max; ++tx)
     {
         for (int32_t ty = ty_min; ty <= ty_max; ++ty)
         {
-            if (config->terrain.map[tx + ty * config->terrain.width] < 255)
+            if (config->terrain.wallAt(tx, ty))
             {
                 int64_t xs[4] = {tx*s, (tx+1)*s, (tx+1)*s, tx*s};
                 int64_t ys[4] = {ty*s, ty*s, (ty+1)*s, (ty+1)*s};
-                renderSDFilledPolygon(xs, ys, 4, terrain_color);
+                renderSDFilledPolygon(xs, ys, 4, terrainColor);
             }
         }
+    }
+
+    uint32_t gridColor = rgba_to_color(100, 100, 100, 255);
+    for (int64_t tx = tx_min; tx <= tx_max; ++tx)
+    {
+        renderSDLine(tx*s, ty_min*s, tx*s, ty_max*s, gridColor);
+    }
+    for (int64_t ty = ty_min; ty < ty_max; ++ty)
+    {
+        renderSDLine(ty_min*s, ty*s, ty_max*s, ty*s, gridColor);
     }
 }
 
@@ -370,8 +362,8 @@ void TacticalStation::renderSDFilledPolygon(const int64_t *xs, const int64_t *ys
 
 int64_t TacticalStation::sdX(int64_t x, int64_t y)
 {
-    float xx = - (x - lastState.x) * sin(lastState.heading * 2*M_PI/360.0)
-               + (y - lastState.y) * cos(lastState.heading * 2*M_PI/360.0);
+    float xx = (x - lastState.x) * sin(lastState.heading * 2*M_PI/360.0)
+             - (y - lastState.y) * cos(lastState.heading * 2*M_PI/360.0);
     xx = xx / config->sonarRange * (WIDTH/2);
     return WIDTH/2 + xx;
 }
@@ -391,7 +383,7 @@ int16_t TacticalStation::sdRadius(int16_t r)
 
 int16_t TacticalStation::sdHeading(int16_t heading)
 {
-    return heading - lastState.heading + 90;
+    return 270 - (heading - lastState.heading);
 }
 
 
