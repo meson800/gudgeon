@@ -142,7 +142,7 @@ public:
     uint16_t speed;
 
     /// Stores the current power available (used as health)
-    uint16_t powerAvailable;
+    int16_t powerAvailable;
 
     /// Stores the current power usage
     uint16_t powerUsage;

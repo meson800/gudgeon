@@ -41,6 +41,49 @@ SimulationMaster::~SimulationMaster()
     Log::writeToLog(Log::INFO, "Simulation thread shutdown successfully.");
 }
 
+UnitState SimulationMaster::initialUnitState(uint32_t team, uint32_t unit)
+{
+    // Make sure we have a starting position
+    if (config.startLocations[team].size() == 0)
+    {
+        Log::writeToLog(Log::ERR, "Team ", team, " had no starting position in the map!");
+        throw ConfigParseError("Not enough start positions defined");
+    }
+
+    std::pair<int64_t, int64_t> start = config.startLocations[team][0];
+    start.first *= config.terrain.scale;
+    start.first += config.terrain.scale / 2;
+    start.second *= config.terrain.scale;
+    start.second += config.terrain.scale / 2;
+
+    UnitState unitState;
+    unitState.team = team;
+    unitState.unit = unit;
+    unitState.tubeIsArmed = std::vector<bool>(5, false);
+    unitState.tubeOccupancy = std::vector<UnitState::TubeStatus>(5, UnitState::Empty);
+    unitState.remainingTorpedos = config.maxTorpedos;
+    unitState.remainingMines = config.maxMines;
+    unitState.torpedoDistance = 100;
+    unitState.x = start.first
+        + config.collisionRadius * 2
+            * (unit - 0.5 * (assignments[team].size() - 1));
+    unitState.y = start.second;
+    unitState.depth = 0;
+    unitState.heading = 90;
+    unitState.direction = UnitState::SteeringDirection::Center;
+    unitState.pitch = 0;
+    unitState.speed = 0;
+    unitState.powerAvailable = 100;
+    unitState.powerUsage = 0;
+    unitState.yawEnabled = true;
+    unitState.pitchEnabled = true;
+    unitState.engineEnabled = true;
+    unitState.commsEnabled = true;
+    unitState.sonarEnabled = true;
+    unitState.weaponsEnabled = true;
+    return unitState;
+}
+
 void SimulationMaster::runSimLoop()
 {
     Log::writeToLog(Log::INFO, "Main simulation loop started!");
@@ -149,8 +192,10 @@ void SimulationMaster::runSimForUnit(UnitState *unitState)
     if (config.terrain.colorAt(scaledX, scaledY) == Terrain::WALL)
     {
         // Terrain collision!
+        Log::writeToLog(Log::INFO, "Submarine struck terrain");
+        damage(unitState->team, unitState->unit, unitState->speed * 2);
+        explosion(nextX, nextY, unitState->speed * 2);
         unitState->speed = 0;
-        explosion(nextX, nextY, 30);
     } else {
         unitState->x = nextX;
         unitState->y = nextY;
@@ -166,12 +211,29 @@ void SimulationMaster::runSimForUnit(UnitState *unitState)
                 config.collisionRadius))
         {
             Log::writeToLog(Log::INFO, "Torpedo struck submarine");
+            damage(unitState->team, unitState->unit, 50);
+            explosion(torpedoPair.second.x, torpedoPair.second.y, 50);
             torpedosHit.push_back(torpedoPair.first);
         }
     }
     for (TorpedoID torpedoHit : torpedosHit)
     {
         torpedos.erase(torpedoHit);
+    }
+}
+
+void SimulationMaster::damage(uint32_t team, uint32_t unit, int16_t amount)
+{
+    UnitState *u = &unitStates[team][unit];
+    u->powerAvailable -= amount;
+
+    Log::writeToLog(Log::INFO, "Team ", team, " unit ", unit,
+        " damaged for ", amount, "; remaining power is ", u->powerAvailable);
+
+    if (u->powerAvailable < 0) {
+        explosion(u->x, u->y, 50);
+        Log::writeToLog(Log::INFO, "Team ", team, " unit ", unit, " destroyed!");
+        *u = initialUnitState(team, unit);
     }
 }
 
@@ -221,47 +283,9 @@ HandleResult SimulationMaster::simStart(SimulationStartServer* event)
     for (auto& teamPair : assignments)
     {
         unitStates[teamPair.first] = std::vector<UnitState>();
-
-        // Make sure we have a starting position
-        if (config.startLocations[teamPair.first].size() == 0)
-        {
-            Log::writeToLog(Log::ERR, "Team ", teamPair.first, " had no starting position in the map!");
-            throw ConfigParseError("Not enough start positions defined");
-        }
-
-        std::pair<int64_t, int64_t> start = config.startLocations[teamPair.first][0];
-        start.first *= config.terrain.scale;
-        start.first += config.terrain.scale / 2;
-        start.second *= config.terrain.scale;
-        start.second += config.terrain.scale / 2;
-
         for (uint32_t unit = 0; unit < teamPair.second.size(); ++unit) {
-            UnitState unitState;
-            unitState.team = teamPair.first;
-            unitState.unit = unit;
-            unitState.tubeIsArmed = std::vector<bool>(5, false);
-            unitState.tubeOccupancy = std::vector<UnitState::TubeStatus>(5, UnitState::Empty);
-            unitState.remainingTorpedos = config.maxTorpedos;
-            unitState.remainingMines = config.maxMines;
-            unitState.torpedoDistance = 100;
-            unitState.x = start.first
-                + config.collisionRadius * 2
-                    * (unit - 0.5 * (teamPair.second.size() - 1));
-            unitState.y = start.second;
-            unitState.depth = 0;
-            unitState.heading = 90;
-            unitState.direction = UnitState::SteeringDirection::Center;
-            unitState.pitch = 0;
-            unitState.speed = 0;
-            unitState.powerAvailable = 100;
-            unitState.powerUsage = 0;
-            unitState.yawEnabled = true;
-            unitState.pitchEnabled = true;
-            unitState.engineEnabled = true;
-            unitState.commsEnabled = true;
-            unitState.sonarEnabled = true;
-            unitState.weaponsEnabled = true;
-            unitStates[teamPair.first].push_back(unitState);
+            UnitState u = initialUnitState(teamPair.first, unit);
+            unitStates[teamPair.first].push_back(u);
         }
     }
 

@@ -47,12 +47,19 @@ public:
     HandleResult sonar(SonarEvent* event);
 
 private:
+    /// Calculates initial state for a submarine, when first spawning or when
+    /// respawning
+    UnitState initialUnitState(uint32_t team, uint32_t unit);
+
     /// Internal game simulation function. Runs continuously in its own thread
     void runSimLoop();
     
     /// Helper function for runSimLoop
     void runSimForUnit(UnitState *unitState);
-    
+
+    /// Applies damage to a submarine, handling destruction if necessary
+    void damage(uint32_t team, uint32_t unit, int16_t amount);
+
     /// Generates an explosion on every sonar display. This is purely cosmetic.
     void explosion(int64_t x, int64_t y, int16_t size);
 
