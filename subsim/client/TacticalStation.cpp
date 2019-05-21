@@ -320,7 +320,11 @@ void TacticalStation::redraw()
         Log::writeToLog(Log::L_DEBUG, "Got flag state at ", flag.x, ",", flag.y);
         if (!flag.isTaken)
         {
-            renderSDFlag(flag.x, flag.y, rgba_to_color(0, 255, 0, 255));
+            uint32_t ourColor = rgba_to_color(255, 0, 0, 255);
+            uint32_t theirColor = rgba_to_color(0, 255, 0, 255);
+
+            uint32_t color = flag.team == team ? ourColor : theirColor;
+            renderSDFlag(flag.x, flag.y, color);
         }
     }
 
