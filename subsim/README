@@ -26,7 +26,7 @@ The build produces two executables, one for the server and one for the client.
 Run them in two separate terminals:
 
 cd build/game_master
-./subsim_gm
+./subsim_gm -f test/test_game.cfg
 
 cd build/client
 ./subsim_client -s localhost
