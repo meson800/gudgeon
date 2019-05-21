@@ -186,6 +186,7 @@ struct UnitSonarState
     uint32_t unit;
 
     int64_t x, y, depth;
+    uint16_t heading;
 };
 
 /*!

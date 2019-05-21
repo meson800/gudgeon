@@ -40,16 +40,23 @@ private:
     /// Renders the tube status in the upper right corner
     void renderTubeState();
 
-    /// Renders the submarine at a given position, at a given heading
-    void renderSubmarine(int64_t x, int64_t y, int16_t heading);
+    /// Renders a submarine on the sonar screen
+    void renderSDSubmarine(int64_t x, int64_t y, int16_t heading);
 
-    /// displayX() and displayY() convert from world coordinates to SDL display
+    /// Render various geometric primitives on the sonar screen. These are
+    /// analogous to the corresponding SDL display primitives, but they convert
+    /// to sonar display coordinates automatically.
+    void renderSDCircle(int64_t x, int64_t y, int16_t r, uint32_t color);
+    void renderSDLine(int64_t x1, int64_t y1, int64_t x2, int64_t y2, uint32_t color);
+    void renderSDArc(int64_t x, int64_t y, int16_t r, int16_t a1, int16_t a2, uint32_t color);
+
+    /// sdX() and sdY() convert from world coordinates to SDL display
     /// coordinates based on the unit's current location
-    int64_t displayX(int64_t x, int64_t y);
-    int64_t displayY(int64_t x, int64_t y);
+    int64_t sdX(int64_t x, int64_t y);
+    int64_t sdY(int64_t x, int64_t y);
 
-    // displayHeading() converts from a global heading to a SDL angle number
-    int16_t displayHeading(int16_t heading);
+    // sdHeading() converts from a global heading to a SDL angle number
+    int16_t sdHeading(int16_t heading);
 
     uint32_t team;
     uint32_t unit;

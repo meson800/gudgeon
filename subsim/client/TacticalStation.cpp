@@ -10,6 +10,11 @@
 #define WIDTH 640
 #define HEIGHT 480
 
+static constexpr uint32_t rgba_to_color(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+{
+    return ((uint32_t)a << 24) | ((uint32_t)b << 16) | ((uint32_t)g << 8) | ((uint32_t)r);
+}
+
 TacticalStation::TacticalStation(uint32_t team, uint32_t unit)
     : Renderable(WIDTH, HEIGHT)
     , EventReceiver({
@@ -221,22 +226,17 @@ void TacticalStation::redraw()
     int64_t gridMaxX = ((lastState.x + WIDTH) / gridSize) * gridSize;
     int64_t gridMinY = ((lastState.y - WIDTH) / gridSize) * gridSize;
     int64_t gridMaxY = ((lastState.y + WIDTH) / gridSize) * gridSize;
+    uint32_t gridColor = rgba_to_color(100, 100, 100, 255);
     for (int64_t x = gridMinX; x < gridMaxX; x += gridSize)
     {
-        lineRGBA(renderer,
-            displayX(x, gridMinY), displayY(x, gridMinY),
-            displayX(x, gridMaxY), displayY(x, gridMaxY),
-            100, 100, 100, 255);
+        renderSDLine(x, gridMinY, x, gridMaxY, gridColor);
     }
     for (int64_t y = gridMinY; y < gridMaxY; y += gridSize)
     {
-        lineRGBA(renderer,
-            displayX(gridMinX, y), displayY(gridMinX, y),
-            displayX(gridMaxX, y), displayY(gridMaxX, y),
-            100, 100, 100, 255);
+        renderSDLine(gridMinX, y, gridMaxX, y, gridColor);
     }
 
-    renderSubmarine(lastState.x, lastState.y, lastState.heading);
+    renderSDSubmarine(lastState.x, lastState.y, lastState.heading);
 
     for (const UnitSonarState &u : lastSonar.units)
     {
@@ -245,27 +245,22 @@ void TacticalStation::redraw()
             // Don't draw ourself this way
             continue;
         }
-        circleRGBA(renderer, displayX(u.x, u.y), displayY(u.x, u.y), 30, 255, 0, 0, 255);
+        renderSDSubmarine(u.x, u.y, u.heading);
     }
 
     for (const TorpedoState &torp : lastSonar.torpedos)
     {
-        circleRGBA(renderer, displayX(torp.x, torp.y), displayY(torp.x, torp.y), 10, 255, 0, 0, 255);
+        renderSDCircle(torp.x, torp.y, 10, rgba_to_color(255, 0, 0, 255));
     }
 
     for (const MineState &mine : lastSonar.mines)
     {
-        circleRGBA(renderer, displayX(mine.x, mine.y), displayY(mine.x, mine.y), 20, 255, 0, 0, 255);
+        renderSDCircle(mine.x, mine.y, 20, rgba_to_color(255, 0, 0, 255));
     }
 
     renderTubeState();
 
     SDL_RenderPresent(renderer);
-}
-
-static constexpr uint32_t rgba_to_color(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
-{
-    return ((uint32_t)a << 24) | ((uint32_t)b << 16) | ((uint32_t)g << 8) | ((uint32_t)r);
 }
 
 void TacticalStation::renderTubeState()
@@ -311,42 +306,45 @@ void TacticalStation::renderTubeState()
         
 }
 
-void TacticalStation::renderSubmarine(int64_t x, int64_t y, int16_t heading) {
+void TacticalStation::renderSDSubmarine(int64_t x, int64_t y, int16_t heading)
+{
     float u = cos(heading * 2*M_PI/360.0);
     float v = sin(heading * 2*M_PI/360.0);
-    arcRGBA(renderer,
-        displayX(x+u*10, y+v*10), displayY(x+u*10, y+v*10),
-        10,
-        displayHeading(heading + 90), displayHeading(heading - 90),
-        255, 0, 0, 255);
-    arcRGBA(renderer,
-        displayX(x-u*10, y-v*10), displayY(x-u*10, y-v*10),
-        10,
-        displayHeading(heading - 90), displayHeading(heading + 90),
-        255, 0, 0, 255);
-    lineRGBA(renderer,
-        displayX(x+u*10+v*10, y+v*10-u*10), displayY(x+u*10+v*10, y+v*10-u*10),
-        displayX(x-u*10+v*10, y-v*10-u*10), displayY(x-u*10+v*10, y-v*10-u*10),
-        255, 0, 0, 255);
-    lineRGBA(renderer,
-        displayX(x+u*10-v*10, y+v*10+u*10), displayY(x+u*10-v*10, y+v*10+u*10),
-        displayX(x-u*10-v*10, y-v*10+u*10), displayY(x-u*10-v*10, y-v*10+u*10),
-        255, 0, 0, 255);
+    uint32_t color = rgba_to_color(255, 0, 0, 255);
+    renderSDArc(x+u*10, y+v*10, 10, heading+90, heading-90, color);
+    renderSDArc(x-u*10, y-v*10, 10, heading-90, heading+90, color);
+    renderSDLine(x+u*10+v*10, y+v*10-u*10, x-u*10+v*10, y-v*10-u*10, color);
+    renderSDLine(x+u*10-v*10, y+v*10+u*10, x-u*10-v*10, y-v*10+u*10, color);
 }
 
-int64_t TacticalStation::displayX(int64_t x, int64_t y) {
+void TacticalStation::renderSDCircle(int64_t x, int64_t y, int16_t r, uint32_t color)
+{
+    circleColor(renderer, sdX(x, y), sdY(x, y), r, color);
+}
+
+void TacticalStation::renderSDLine(int64_t x1, int64_t y1, int64_t x2, int64_t y2, uint32_t color)
+{
+    lineColor(renderer, sdX(x1, y1), sdY(x1, y1), sdX(x2, y2), sdY(x2, y2), color);
+}
+
+void TacticalStation::renderSDArc(int64_t x, int64_t y, int16_t r, int16_t a1, int16_t a2, uint32_t color)
+{
+    arcColor(renderer, sdX(x, y), sdY(x, y), r, sdHeading(a1), sdHeading(a2), color);
+}
+
+int64_t TacticalStation::sdX(int64_t x, int64_t y) {
     return WIDTH/2
         - (x - lastState.x) * sin(lastState.heading * 2*M_PI/360.0)
         + (y - lastState.y) * cos(lastState.heading * 2*M_PI/360.0);
 }
 
-int64_t TacticalStation::displayY(int64_t x, int64_t y) {
+int64_t TacticalStation::sdY(int64_t x, int64_t y) {
     return HEIGHT/2
         - (x - lastState.x) * cos(lastState.heading * 2*M_PI/360.0)
         - (y - lastState.y) * sin(lastState.heading * 2*M_PI/360.0);
 }
 
-int16_t TacticalStation::displayHeading(int16_t heading) {
+int16_t TacticalStation::sdHeading(int16_t heading) {
     return heading - lastState.heading + 90;
 }
 
