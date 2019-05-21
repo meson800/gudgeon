@@ -93,7 +93,7 @@ void EnvelopeMessage::deserialize(RakNet::BitStream& source)
                     {
                         source >> sd.units[i].team >> sd.units[i].unit
                             >> sd.units[i].x >> sd.units[i].y >> sd.units[i].depth
-                            >> sd.units[i].heading;
+                            >> sd.units[i].heading >> sd.units[i].speed >> sd.units[i].hasFlag;
                     }
 
                     source >> len;
@@ -209,7 +209,7 @@ void EnvelopeMessage::deserialize(RakNet::BitStream& source)
                     ConfigEvent ce;
                     source >> ce.config.subTurningSpeed >> ce.config.subMaxSpeed 
                         >> ce.config.maxTorpedos >> ce.config.maxMines
-                        >> ce.config.sonarRange
+                        >> ce.config.sonarRange >> ce.config.passiveSonarNoiseFloor
                         >> ce.config.torpedoSpread >> ce.config.torpedoSpeed >> ce.config.collisionRadius
                         >> ce.config.startLocations >> ce.config.flags
                         >> ce.config.terrain.map >> ce.config.terrain.width 
@@ -300,7 +300,7 @@ void EnvelopeMessage::serialize(RakNet::BitStream& source) const
                     {
                         source << unit.team << unit.unit
                           << unit.x << unit.y << unit.depth
-                          << unit.heading;
+                          << unit.heading << unit.speed << unit.hasFlag;
                     }
 
                     len = sd->torpedos.size();
@@ -397,7 +397,7 @@ void EnvelopeMessage::serialize(RakNet::BitStream& source) const
                     ConfigEvent* ce = (ConfigEvent*)event.get();
                     source << ce->config.subTurningSpeed << ce->config.subMaxSpeed 
                         << ce->config.maxTorpedos << ce->config.maxMines
-                        << ce->config.sonarRange
+                        << ce->config.sonarRange << ce->config.passiveSonarNoiseFloor
                         << ce->config.torpedoSpread << ce->config.torpedoSpeed << ce->config.sonarRange
                         << ce->config.startLocations << ce->config.flags
                         << ce->config.terrain.map << ce->config.terrain.width << ce->config.terrain.height << ce->config.terrain.scale;

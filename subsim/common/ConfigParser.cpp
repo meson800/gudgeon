@@ -131,6 +131,11 @@ Config ConfigParser::parseConfig(const ParseResult& parse)
             {
                 sstream >> result.maxTorpedos;
             }
+
+            if (key == "passive_sonar_noise_floor")
+            {
+                sstream >> result.passiveSonarNoiseFloor;
+            }
         }
     }
     return result;

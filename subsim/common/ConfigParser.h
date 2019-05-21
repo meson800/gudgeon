@@ -44,10 +44,12 @@ public:
     uint16_t maxMines;
 
     uint16_t sonarRange;
+    uint8_t passiveSonarNoiseFloor;
 
     uint16_t torpedoSpread;
     uint16_t torpedoSpeed;
     uint16_t collisionRadius;
+
 
 };
 
