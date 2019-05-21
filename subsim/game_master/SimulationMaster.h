@@ -99,6 +99,9 @@ private:
     /// Stores the current flag state
     std::map<FlagID, FlagState> flags;
 
+    /// Stores the current team scores
+    std::map<uint32_t, uint32_t> scores;
+
     /// Stores the game configuration
     Config config;
 };

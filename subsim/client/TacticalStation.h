@@ -42,6 +42,9 @@ public:
     /// Adds an explosion to the display
     HandleResult handleExplosion(ExplosionEvent* explosion);
 
+    /// Handles new incoming scores
+    HandleResult handleScores(ScoreEvent* event);
+
     /// Handles drawing the current state on the renderer.
     virtual void redraw() override;
 
@@ -91,6 +94,9 @@ private:
     
     /// Last received unit state for our unit
     UnitState lastState;
+
+    /// Stores last received scores
+    std::map<uint32_t, uint32_t> scores;
     
     /// Last received sonar state (shared across all units)
     SonarDisplayState lastSonar;

@@ -24,7 +24,8 @@ TacticalStation::TacticalStation(uint32_t team_, uint32_t unit_, Config* config_
         dispatchEvent<TacticalStation, TextMessage, &TacticalStation::receiveTextMessage>,
         dispatchEvent<TacticalStation, UnitState, &TacticalStation::handleUnitState>,
         dispatchEvent<TacticalStation, SonarDisplayState, &TacticalStation::handleSonarDisplay>,
-        dispatchEvent<TacticalStation, ExplosionEvent, &TacticalStation::handleExplosion>
+        dispatchEvent<TacticalStation, ExplosionEvent, &TacticalStation::handleExplosion>,
+        dispatchEvent<TacticalStation, ScoreEvent, &TacticalStation::handleScores>,
     })
     , team(team_)
     , unit(unit_)
@@ -242,6 +243,13 @@ HandleResult TacticalStation::handleSonarDisplay(SonarDisplayState* sonar)
     return HandleResult::Stop;
 }
 
+HandleResult TacticalStation::handleScores(ScoreEvent* event)
+{
+    std::lock_guard<std::mutex> lock(UI::getGlobalUI()->redrawMux);
+    scores = event->scores;
+    return HandleResult::Continue;
+}
+
 HandleResult TacticalStation::handleExplosion(ExplosionEvent* explosion)
 {
     std::lock_guard<std::mutex> lock(UI::getGlobalUI()->redrawMux);
@@ -315,8 +323,27 @@ void TacticalStation::redraw()
             renderSDFlag(flag.x, flag.y, rgba_to_color(0, 255, 0, 255));
         }
     }
+
+    // render our starting location
+    auto startLoc = config->startLocations[team].at(0);
+    startLoc.first *= config->terrain.scale;
+    startLoc.first += config->terrain.scale;
+    startLoc.second *= config->terrain.scale;
+    startLoc.second += config->terrain.scale;
+    renderSDCircle(startLoc.first, startLoc.second, 20, rgba_to_color(255, 255, 255, 255));
+
     renderTubeState();
     renderSonarState();
+
+    int x = 300;
+    int y = 0;
+    for (auto& scorePair : scores)
+    {
+        std::ostringstream ss;
+        ss << "Team " << scorePair.first << ": " << scorePair.second;
+        drawText(ss.str(), 20, x, y);
+        x += 150;
+    }
 
     SDL_RenderPresent(renderer);
 }

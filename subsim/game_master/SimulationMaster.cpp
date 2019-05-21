@@ -161,11 +161,16 @@ void SimulationMaster::runSimLoop()
             }
         }
 
-        // Deliver latest SonarDisplayState to every attached client
+        ScoreEvent score;
+        score.scores = scores;
+        // Deliver latest SonarDisplayState and ScoreEvent to every attached client
         for (const RakNet::RakNetGUID &client : all_clients)
         {
             EnvelopeMessage envelope(sonar, client);
             EventSystem::getGlobalInstance()->queueEvent(envelope);
+
+            EnvelopeMessage scoreEnvelope(score, client);
+            EventSystem::getGlobalInstance()->queueEvent(scoreEnvelope);
         }
     }
 }
@@ -261,6 +266,46 @@ void SimulationMaster::runSimForUnit(UnitState *unitState)
     {
         mines.erase(mineHit);
     }
+
+    // Check for collisions with flags if we don't currently have a flag
+    if (!unitState->hasFlag)
+    {
+        for (auto &flagPair : flags)
+        {
+            // Check to make sure if we can pick up this flag
+            if (flagPair.second.team != unitState->team
+                && !flagPair.second.isTaken
+                && didCollide(unitState->x, unitState->y,
+                    flagPair.second.x, flagPair.second.y, config.collisionRadius))
+            {
+                unitState->hasFlag = true;
+                unitState->flag.team = flagPair.second.team;
+                unitState->flag.index = flagPair.first;
+
+                flagPair.second.isTaken = true;
+            }
+        }
+    }
+    else
+    {
+        // Otherwise, check if we have delivered the flag back to the spawn location
+        auto startLoc = config.startLocations[unitState->team].at(0);
+        startLoc.first *= config.terrain.scale;
+        startLoc.first += config.terrain.scale;
+        startLoc.second *= config.terrain.scale;
+        startLoc.second += config.terrain.scale;
+
+        if (didCollide(unitState->x, unitState->y,
+            startLoc.first, startLoc.second, config.collisionRadius))
+        {
+            Log::writeToLog(Log::L_DEBUG, "Team ", unitState->team, " unit ", unitState->unit, " returned a flag");
+            ++scores[unitState->team];
+            // remove flag, restoring it to its position on the map
+            
+            unitState->hasFlag = false;
+            flags[unitState->flag.index].isTaken = false;
+        }
+    }
 }
 
 void SimulationMaster::damage(uint32_t team, uint32_t unit, int16_t amount)
@@ -274,6 +319,13 @@ void SimulationMaster::damage(uint32_t team, uint32_t unit, int16_t amount)
     if (u->powerAvailable < 0) {
         explosion(u->x, u->y, 50);
         Log::writeToLog(Log::INFO, "Team ", team, " unit ", unit, " destroyed!");
+
+        // Check if we were holding a flag, resetting it if needed
+        if (u->hasFlag)
+        {
+            flags[u->flag.index].isTaken = false;
+        }
+            
         *u = initialUnitState(team, unit);
     }
 }
@@ -347,6 +399,9 @@ HandleResult SimulationMaster::simStart(SimulationStartServer* event)
             flag.isTaken = false;
 
             flags[nextFlagID++] = flag;
+
+            // Initalize zero scores
+            scores[flag.team] = 0;
         }
     }
 
@@ -363,7 +418,6 @@ HandleResult SimulationMaster::simStart(SimulationStartServer* event)
     {
         EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(configEvent, client));
     }
-
 
     // Start the game loop
     Log::writeToLog(Log::L_DEBUG, "Simulation master attempting to start simulation thread...");

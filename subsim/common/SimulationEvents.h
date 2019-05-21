@@ -418,3 +418,16 @@ public:
 
     Config config;
 };
+
+/*!
+ * Sends the current team scores
+ */
+class ScoreEvent : public Event
+{
+public:
+    ScoreEvent() : Event(category, id) {}
+    constexpr static uint32_t category = Events::Category::Simulation;
+    constexpr static uint32_t id = Events::Sim::Score;
+    
+    std::map<uint32_t, uint32_t> scores;
+};
