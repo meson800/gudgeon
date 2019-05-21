@@ -3,6 +3,7 @@
 #include <sstream>
 #include <math.h>
 
+#include "Targeting.h"
 #include "../common/Log.h"
 #include "../common/Exceptions.h"
 
@@ -220,6 +221,17 @@ void SimulationMaster::runSimForUnit(UnitState *unitState)
     {
         torpedos.erase(torpedoHit);
     }
+
+    // Update automatic targeting
+    unitState->targetIsLocked = chooseTarget(
+        unitState->x,
+        unitState->y,
+        unitState->heading,
+        20,
+        config.sonarRange,
+        unitStates,
+        &unitState->targetTeam,
+        &unitState->targetUnit);
 }
 
 void SimulationMaster::damage(uint32_t team, uint32_t unit, int16_t amount)
@@ -383,10 +395,23 @@ HandleResult SimulationMaster::fire(FireEvent *event)
 
         if (torpedoCount > 0)
         {
+            int16_t heading;
+            if (unit.targetIsLocked) {
+                heading = aimAtTarget(
+                    unit.x,
+                    unit.y,
+                    unitStates[unit.targetTeam][unit.targetUnit],
+                    config);
+            } else {
+                // If there's no target locked, just fire the torpedo straight
+                // forwards
+                heading = unit.heading;
+            }
+
             int16_t maxOffset = (torpedoCount - 1) * config.torpedoSpread / 2;
             for (int16_t offset = -maxOffset; offset <= maxOffset; offset += config.torpedoSpread)
             {
-                int16_t newHeading = unit.heading + offset;
+                int16_t newHeading = heading + offset;
                 if (newHeading < 0)
                 {
                     newHeading += 360;

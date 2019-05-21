@@ -74,7 +74,8 @@ void EnvelopeMessage::deserialize(RakNet::BitStream& source)
                         >> us.x >> us.y >> us.depth >> us.heading >> us.direction >> us.pitch
                         >> us.speed >> us.powerAvailable >> us.powerUsage >> us.isActiveSonar
                         >> us.yawEnabled >> us.pitchEnabled >> us.engineEnabled >> us.commsEnabled >> us.sonarEnabled
-                        >> us.weaponsEnabled;
+                        >> us.weaponsEnabled
+                        >> us.targetIsLocked >> us.targetTeam >> us.targetUnit;
 
                     EventSystem::getGlobalInstance()->queueEvent(us);
                 }
@@ -263,7 +264,8 @@ void EnvelopeMessage::serialize(RakNet::BitStream& source) const
                         << us->x << us->y << us->depth << us->heading << us->direction << us->pitch 
                         << us->speed << us->powerAvailable << us->powerUsage << us->isActiveSonar
                         << us->yawEnabled << us->pitchEnabled << us->engineEnabled << us->commsEnabled << us->sonarEnabled
-                        << us->weaponsEnabled;
+                        << us->weaponsEnabled
+                        << us->targetIsLocked << us->targetTeam << us->targetUnit;
                 }
                 break;
 
