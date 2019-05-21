@@ -76,6 +76,7 @@ void EnvelopeMessage::deserialize(RakNet::BitStream& source)
                         >> us.yawEnabled >> us.pitchEnabled >> us.engineEnabled >> us.commsEnabled >> us.sonarEnabled
                         >> us.weaponsEnabled
                         >> us.targetIsLocked >> us.targetTeam >> us.targetUnit;
+                        >> us.hasFlag >> us.flag.team >> us.flag.index;
 
                     EventSystem::getGlobalInstance()->queueEvent(us);
                 }
@@ -108,6 +109,14 @@ void EnvelopeMessage::deserialize(RakNet::BitStream& source)
                     for (int i = 0; i < len; ++i)
                     {
                         source >> sd.mines[i].x >> sd.mines[i].y >> sd.mines[i].depth;
+                    }
+
+                    source >> len;
+                    sd.flags.resize(len);
+                    for (int i = 0; i < len; ++i)
+                    {
+                        source >> sd.flags[i].team >> sd.flags[i].x >> sd.flags[i].y
+                            >> sd.flags[i].depth >> sd.flags[i].isTaken;
                     }
 
                     EventSystem::getGlobalInstance()->queueEvent(sd);
@@ -202,7 +211,7 @@ void EnvelopeMessage::deserialize(RakNet::BitStream& source)
                         >> ce.config.maxTorpedos >> ce.config.maxMines
                         >> ce.config.sonarRange
                         >> ce.config.torpedoSpread >> ce.config.torpedoSpeed >> ce.config.collisionRadius
-                        >> ce.config.startLocations
+                        >> ce.config.startLocations >> ce.config.flags
                         >> ce.config.terrain.map >> ce.config.terrain.width 
                         >> ce.config.terrain.height >> ce.config.terrain.scale;
 
@@ -267,6 +276,7 @@ void EnvelopeMessage::serialize(RakNet::BitStream& source) const
                         << us->yawEnabled << us->pitchEnabled << us->engineEnabled << us->commsEnabled << us->sonarEnabled
                         << us->weaponsEnabled
                         << us->targetIsLocked << us->targetTeam << us->targetUnit;
+                        << us->hasFlag << us->flag.team << us->flag.index;
                 }
                 break;
 
@@ -296,6 +306,13 @@ void EnvelopeMessage::serialize(RakNet::BitStream& source) const
                     for (auto mine : sd->mines)
                     {
                         source << mine.x << mine.y << mine.depth;
+                    }
+
+                    len = sd->flags.size();
+                    source << len;
+                    for (auto flag : sd->flags)
+                    {
+                        source << flag.team << flag.x << flag.y << flag.depth << flag.isTaken;
                     }
                 }
                 break;
@@ -373,7 +390,7 @@ void EnvelopeMessage::serialize(RakNet::BitStream& source) const
                         << ce->config.maxTorpedos << ce->config.maxMines
                         << ce->config.sonarRange
                         << ce->config.torpedoSpread << ce->config.torpedoSpeed << ce->config.sonarRange
-                        << ce->config.startLocations
+                        << ce->config.startLocations << ce->config.flags
                         << ce->config.terrain.map << ce->config.terrain.width << ce->config.terrain.height << ce->config.terrain.scale;
 
                 }

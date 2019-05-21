@@ -76,6 +76,9 @@ UnitState SimulationMaster::initialUnitState(uint32_t team, uint32_t unit)
     unitState.speed = 0;
     unitState.powerAvailable = 100;
     unitState.powerUsage = 0;
+    unitState.isActiveSonar = false;
+    unitState.hasFlag = false;
+    unitState.flag = Flag();
     unitState.yawEnabled = true;
     unitState.pitchEnabled = true;
     unitState.engineEnabled = true;
@@ -124,6 +127,12 @@ void SimulationMaster::runSimLoop()
         {
             sonar.mines.push_back(minePair.second);
         }
+
+        for (const auto& flagPair : flags)
+        {
+            sonar.flags.push_back(flagPair.second);
+        }
+                
 
         for (auto& teamPair : unitStates)
         {
@@ -321,20 +330,25 @@ HandleResult SimulationMaster::simStart(SimulationStartServer* event)
         }
     }
 
-    nextTorpedoID = nextMineID = 1;
+    nextTorpedoID = nextMineID = nextFlagID = 1;
 
-    TorpedoState torp;
-    torp.x = 80;
-    torp.y = 80;
-    torp.depth = 0;
-    torp.heading = 0;
-    torpedos[nextTorpedoID++] = torp;
+    // Push flag locations
+    for (auto& teamFlags : config.flags)
+    {
+        for (auto flagLocation : teamFlags.second)
+        {
+            FlagState flag;
+            flag.team = teamFlags.first;
+            flag.x = flagLocation.first * config.terrain.scale;
+            flag.x += config.terrain.scale / 2;
+            flag.y = flagLocation.second * config.terrain.scale;
+            flag.y += config.terrain.scale / 2;
+            flag.depth = 0;
+            flag.isTaken = false;
 
-    MineState mine;
-    mine.x = 200;
-    mine.y = 200;
-    mine.depth = 0;
-    mines[nextMineID++] = mine;
+            flags[nextFlagID++] = flag;
+        }
+    }
 
     Log::writeToLog(Log::INFO, "Starting server-side simulation. Final assignments:", sstream.str());
     // Unhook the lobby handler and destroy it

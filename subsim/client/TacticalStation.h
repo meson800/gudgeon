@@ -58,6 +58,9 @@ private:
     /// Renders a submarine on the sonar screen
     void renderSDSubmarine(int64_t x, int64_t y, int16_t heading);
 
+    /// Renders a flag on the sonar screen with SD coordinates
+    void renderSDFlag(int64_t x, int64_t y, uint32_t color);
+
     /// Render various geometric primitives on the sonar screen. These are
     /// analogous to the corresponding SDL display primitives, but they convert
     /// to sonar display coordinates automatically.

@@ -88,12 +88,16 @@ private:
     /// Stores the next unused ID number for torpedos/mines
     TorpedoID nextTorpedoID;
     MineID nextMineID;
+    FlagID nextFlagID;
 
     /// Stores the current state of all torpedos
     std::map<TorpedoID, TorpedoState> torpedos;
 
     /// Stores the current location of all mines
     std::map<MineID, MineState> mines;
+
+    /// Stores the current flag state
+    std::map<FlagID, FlagState> flags;
 
     /// Stores the game configuration
     Config config;

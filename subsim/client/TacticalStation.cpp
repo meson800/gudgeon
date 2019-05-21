@@ -307,6 +307,14 @@ void TacticalStation::redraw()
     }
     explosions = std::move(newExplosions);
 
+    for (const FlagState &flag : lastSonar.flags)
+    {
+        Log::writeToLog(Log::L_DEBUG, "Got flag state at ", flag.x, ",", flag.y);
+        if (!flag.isTaken)
+        {
+            renderSDFlag(flag.x, flag.y, rgba_to_color(0, 255, 0, 255));
+        }
+    }
     renderTubeState();
     renderSonarState();
 
@@ -421,6 +429,15 @@ void TacticalStation::renderSDSubmarine(int64_t x, int64_t y, int16_t heading)
     renderSDLine(x+u*10-v*10, y+v*10+u*10, x-u*10-v*10, y-v*10+u*10, color);
     renderSDCircle(x+u*7, y+v*7, 4, color);
 }
+
+void TacticalStation::renderSDFlag(int64_t x, int64_t y, uint32_t color)
+{
+    
+    int64_t x_locs [6] = {x, x, x + 20, x + 20, x + 8, x + 8};
+    int64_t y_locs [6] = {y, y + 20, y + 20, y + 12, y + 12, y};
+    renderSDFilledPolygon(x_locs, y_locs, 6, color);
+}
+    
 
 void TacticalStation::renderSDCircle(int64_t x, int64_t y, int16_t r, uint32_t color)
 {
