@@ -3,6 +3,7 @@
 #include <math.h>
 
 #include "../common/Log.h"
+#include "../common/Exceptions.h"
 
 
 SimulationMaster::SimulationMaster(Network* network_, const std::string& filename)
@@ -190,6 +191,18 @@ HandleResult SimulationMaster::simStart(SimulationStartServer* event)
     for (auto& teamPair : assignments)
     {
         unitStates[teamPair.first] = std::vector<UnitState>();
+
+        // Make sure we have a starting position
+        if (config.startLocations[teamPair.first].size() == 0)
+        {
+            Log::writeToLog(Log::ERR, "Team ", teamPair.first, " had no starting position in the map!");
+            throw ConfigParseError("Not enough start positions defined");
+        }
+
+        std::pair<int64_t, int64_t> start = config.startLocations[teamPair.first][0];
+        start.first *= config.terrain.scale;
+        start.second *= config.terrain.scale;
+
         for (uint32_t unit = 0; unit < teamPair.second.size(); ++unit) {
             UnitState unitState;
             unitState.team = teamPair.first;
@@ -199,8 +212,8 @@ HandleResult SimulationMaster::simStart(SimulationStartServer* event)
             unitState.remainingTorpedos = config.maxTorpedos;
             unitState.remainingMines = config.maxMines;
             unitState.torpedoDistance = 100;
-            unitState.x = 200;
-            unitState.y = 200;
+            unitState.x = start.first + config.collisionRadius * 2 * unit;
+            unitState.y = start.second;
             unitState.depth = 0;
             unitState.heading = 0;
             unitState.direction = UnitState::SteeringDirection::Center;
