@@ -32,6 +32,10 @@ enum Key
     D,
     F,
     G,
+    H,
+    J,
+    K,
+    L,
 };
 
 class KeyEvent : public Event

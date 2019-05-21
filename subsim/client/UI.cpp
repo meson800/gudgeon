@@ -470,6 +470,22 @@ void UI::runSDLloop(bool& startupDone, std::mutex& startupMux)
                         ke.key = Key::G;
                         break;
 
+                        case SDLK_h:
+                        ke.key = Key::H;
+                        break;
+
+                        case SDLK_j:
+                        ke.key = Key::J;
+                        break;
+
+                        case SDLK_k:
+                        ke.key = Key::K;
+                        break;
+
+                        case SDLK_l:
+                        ke.key = Key::L;
+                        break;
+
                         default:
                         ke.key = Key::Other;
                     }

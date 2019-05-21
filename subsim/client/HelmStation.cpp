@@ -39,6 +39,68 @@ HandleResult HelmStation::handleKeypress(KeyEvent* keypress)
         return HandleResult::Unhandled;
     }
 
+    if (keypress->isDown == false)
+    {
+        switch (keypress->key)
+        {
+            case Key::H:
+            {
+                PowerEvent event;
+                event.team = team;
+                event.unit = unit;
+                event.system = PowerEvent::System::Yaw;
+                event.isOn = !lastState.yawEnabled;
+
+                EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(event));
+                return HandleResult::Stop;
+            }
+
+            break;
+
+            case Key::J:
+            {
+                PowerEvent event;
+                event.team = team;
+                event.unit = unit;
+                event.system = PowerEvent::System::Engine;
+                event.isOn = !lastState.engineEnabled;
+
+                EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(event));
+                return HandleResult::Stop;
+            }
+            break;
+
+            case Key::K:
+            {
+                PowerEvent event;
+                event.team = team;
+                event.unit = unit;
+                event.system = PowerEvent::System::Sonar;
+                event.isOn = !lastState.sonarEnabled;
+
+                EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(event));
+                return HandleResult::Stop;
+            }
+            break;
+
+            case Key::L:
+            {
+                PowerEvent event;
+                event.team = team;
+                event.unit = unit;
+                event.system = PowerEvent::System::Weapons;
+                event.isOn = !lastState.weaponsEnabled;
+
+                EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(event));
+                return HandleResult::Stop;
+            }
+            break;
+
+            default:
+            break;
+        }
+    }
+
     if (keypress->isDown == true)
     {
         ThrottleEvent event;
@@ -130,7 +192,38 @@ void HelmStation::redraw()
     std::ostringstream sstream;
     sstream << "Speed:" << lastState.speed;
     drawText(sstream.str(), 20, 50, 50);
-    //filledCircleColor(renderer, 100, 100, 50, 0xFFFFFFFF);
+
+    if (lastState.yawEnabled)
+    {
+        filledCircleRGBA(renderer, 200, 50, 8, 0, 255, 0, 255);
+    } else {
+        filledCircleRGBA(renderer, 200, 50, 8, 255, 0, 0, 255);
+    }
+    drawText("Yaw steering", 20, 210, 36);
+        
+    if (lastState.engineEnabled)
+    {
+        filledCircleRGBA(renderer, 200, 70, 8, 0, 255, 0, 255);
+    } else {
+        filledCircleRGBA(renderer, 200, 70, 8, 255, 0, 0, 255);
+    }
+    drawText("Engine", 20, 210, 56);
+
+    if (lastState.sonarEnabled)
+    {
+        filledCircleRGBA(renderer, 200, 90, 8, 0, 255, 0, 255);
+    } else {
+        filledCircleRGBA(renderer, 200, 90, 8, 255, 0, 0, 255);
+    }
+    drawText("Sonar", 20, 210, 76);
+
+    if (lastState.weaponsEnabled)
+    {
+        filledCircleRGBA(renderer, 200, 110, 8, 0, 255, 0, 255);
+    } else {
+        filledCircleRGBA(renderer, 200, 110, 8, 255, 0, 0, 255);
+    }
+    drawText("Weapons", 20, 210, 96);
 
     SDL_RenderPresent(renderer);
 }
