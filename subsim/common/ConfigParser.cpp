@@ -55,11 +55,11 @@ Config ConfigParser::parseConfig(const ParseResult& parse)
                         uint32_t color = result.terrain.colorAt(tx, ty);
                         if (color == Terrain::START1)
                         {
-                            result.startLocations[0].push_back(std::pair<int64_t, int64_t>(tx, ty));
+                            result.startLocations[1].push_back(std::pair<int64_t, int64_t>(tx, ty));
                         }
                         else if (color == Terrain::START2)
                         {
-                            result.startLocations[1].push_back(std::pair<int64_t, int64_t>(tx, ty));
+                            result.startLocations[2].push_back(std::pair<int64_t, int64_t>(tx, ty));
                         }
                         else
                         {
