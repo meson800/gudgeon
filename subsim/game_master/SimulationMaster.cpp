@@ -1,4 +1,5 @@
 #include "SimulationMaster.h"
+#include <algorithm>
 #include <sstream>
 #include <math.h>
 
@@ -52,6 +53,20 @@ void SimulationMaster::runSimLoop()
         std::lock_guard<std::mutex> lock(stateMux);
 
         SonarDisplayState sonar;
+
+        // Remove any torpedos that intersect a wall
+        auto it = torpedos.begin();
+        while (it != torpedos.end())
+        {
+            if (config.terrain.colorAt(
+                it->second.x / config.terrain.scale,
+                it->second.y / config.terrain.scale) == Terrain::WALL)
+            {
+                it = torpedos.erase(it);
+            } else {
+                ++it;
+            }
+        }
 
         for (auto& torpedoPair : torpedos)
         {
