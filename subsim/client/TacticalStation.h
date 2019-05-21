@@ -57,10 +57,13 @@ private:
     void renderSDArc(int64_t x, int64_t y, int16_t r, int16_t a1, int16_t a2, uint32_t color);
     void renderSDFilledPolygon(const int64_t *xs, const int64_t *ys, int count, uint32_t color);
 
-    /// sdX() and sdY() convert from world coordinates to SDL display
+    /// sdX() and sdY() convert from world coordinates to SDL pixel
     /// coordinates based on the unit's current location
     int64_t sdX(int64_t x, int64_t y);
     int64_t sdY(int64_t x, int64_t y);
+
+    // sdRadius() converts from a global distance to a SDL pixel distance
+    int16_t sdRadius(int16_t r);
 
     // sdHeading() converts from a global heading to a SDL angle number
     int16_t sdHeading(int16_t heading);

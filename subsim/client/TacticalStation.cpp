@@ -7,8 +7,8 @@
 #include "UI.h"
 #include <SDL2_gfxPrimitives.h>
 
-#define WIDTH 640
-#define HEIGHT 480
+#define WIDTH 1280
+#define HEIGHT 960
 
 static constexpr uint32_t rgba_to_color(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 {
@@ -345,7 +345,7 @@ void TacticalStation::renderSDSubmarine(int64_t x, int64_t y, int16_t heading)
 
 void TacticalStation::renderSDCircle(int64_t x, int64_t y, int16_t r, uint32_t color)
 {
-    circleColor(renderer, sdX(x, y), sdY(x, y), r, color);
+    circleColor(renderer, sdX(x, y), sdY(x, y), sdRadius(r), color);
 }
 
 void TacticalStation::renderSDLine(int64_t x1, int64_t y1, int64_t x2, int64_t y2, uint32_t color)
@@ -355,7 +355,7 @@ void TacticalStation::renderSDLine(int64_t x1, int64_t y1, int64_t x2, int64_t y
 
 void TacticalStation::renderSDArc(int64_t x, int64_t y, int16_t r, int16_t a1, int16_t a2, uint32_t color)
 {
-    arcColor(renderer, sdX(x, y), sdY(x, y), r, sdHeading(a1), sdHeading(a2), color);
+    arcColor(renderer, sdX(x, y), sdY(x, y), sdRadius(r), sdHeading(a1), sdHeading(a2), color);
 }
 
 void TacticalStation::renderSDFilledPolygon(const int64_t *xs, const int64_t *ys, int count, uint32_t color) {
@@ -368,19 +368,29 @@ void TacticalStation::renderSDFilledPolygon(const int64_t *xs, const int64_t *ys
     filledPolygonColor(renderer, transformed_xs.data(), transformed_ys.data(), count, color);
 }
 
-int64_t TacticalStation::sdX(int64_t x, int64_t y) {
-    return WIDTH/2
-        - (x - lastState.x) * sin(lastState.heading * 2*M_PI/360.0)
-        + (y - lastState.y) * cos(lastState.heading * 2*M_PI/360.0);
+int64_t TacticalStation::sdX(int64_t x, int64_t y)
+{
+    float xx = - (x - lastState.x) * sin(lastState.heading * 2*M_PI/360.0)
+               + (y - lastState.y) * cos(lastState.heading * 2*M_PI/360.0);
+    xx = xx / config->sonarRange * (WIDTH/2);
+    return WIDTH/2 + xx;
 }
 
-int64_t TacticalStation::sdY(int64_t x, int64_t y) {
-    return HEIGHT/2
-        - (x - lastState.x) * cos(lastState.heading * 2*M_PI/360.0)
-        - (y - lastState.y) * sin(lastState.heading * 2*M_PI/360.0);
+int64_t TacticalStation::sdY(int64_t x, int64_t y)
+{
+    float yy = - (x - lastState.x) * cos(lastState.heading * 2*M_PI/360.0)
+               - (y - lastState.y) * sin(lastState.heading * 2*M_PI/360.0);
+    yy = yy / config->sonarRange * (WIDTH/2);
+    return HEIGHT/2 + yy;
 }
 
-int16_t TacticalStation::sdHeading(int16_t heading) {
+int16_t TacticalStation::sdRadius(int16_t r)
+{
+    return float(r) / config->sonarRange * (WIDTH/2);
+}
+
+int16_t TacticalStation::sdHeading(int16_t heading)
+{
     return heading - lastState.heading + 90;
 }
 
