@@ -285,7 +285,10 @@ void TacticalStation::redraw()
 
     for (const TorpedoState &torp : lastSonar.torpedos)
     {
-        renderSDCircle(torp.x, torp.y, 10, rgba_to_color(255, 0, 0, 255));
+        float u = cos(torp.heading * 2*M_PI/360.0);
+        float v = sin(torp.heading * 2*M_PI/360.0);
+        uint32_t color = rgba_to_color(255, 0, 0, 255);
+        renderSDLine(torp.x-u*5, torp.y-v*5, torp.x+u*5, torp.y+v*5, color);
     }
 
     for (const MineState &mine : lastSonar.mines)
@@ -416,6 +419,7 @@ void TacticalStation::renderSDSubmarine(int64_t x, int64_t y, int16_t heading)
     renderSDArc(x-u*10, y-v*10, 10, heading-90, heading+90, color);
     renderSDLine(x+u*10+v*10, y+v*10-u*10, x-u*10+v*10, y-v*10-u*10, color);
     renderSDLine(x+u*10-v*10, y+v*10+u*10, x-u*10-v*10, y-v*10+u*10, color);
+    renderSDCircle(x+u*7, y+v*7, 4, color);
 }
 
 void TacticalStation::renderSDCircle(int64_t x, int64_t y, int16_t r, uint32_t color)

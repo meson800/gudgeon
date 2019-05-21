@@ -91,7 +91,8 @@ void EnvelopeMessage::deserialize(RakNet::BitStream& source)
                     for (int i = 0; i < len; ++i)
                     {
                         source >> sd.units[i].team >> sd.units[i].unit
-                            >> sd.units[i].x >> sd.units[i].y >> sd.units[i].depth;
+                            >> sd.units[i].x >> sd.units[i].y >> sd.units[i].depth
+                            >> sd.units[i].heading;
                     }
 
                     source >> len;
@@ -278,7 +279,9 @@ void EnvelopeMessage::serialize(RakNet::BitStream& source) const
                     source << len;
                     for (auto unit : sd->units)
                     {
-                        source << unit.team << unit.unit << unit.x << unit.y << unit.depth;
+                        source << unit.team << unit.unit
+                          << unit.x << unit.y << unit.depth
+                          << unit.heading;
                     }
 
                     len = sd->torpedos.size();
