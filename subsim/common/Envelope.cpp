@@ -221,6 +221,7 @@ void EnvelopeMessage::deserialize(RakNet::BitStream& source)
                         >> ce.config.terrain.scale
                         >> ce.config.startLocations
                         >> ce.config.flags
+                        >> ce.config.mines
                         >> ce.config.subTurningSpeed
                         >> ce.config.subAcceleration
                         >> ce.config.subMaxSpeed 
@@ -443,6 +444,7 @@ void EnvelopeMessage::serialize(RakNet::BitStream& source) const
                         << ce->config.terrain.scale
                         << ce->config.startLocations
                         << ce->config.flags
+                        << ce->config.mines
                         << ce->config.subTurningSpeed
                         << ce->config.subAcceleration
                         << ce->config.subMaxSpeed 

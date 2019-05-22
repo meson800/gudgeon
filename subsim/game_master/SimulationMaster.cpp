@@ -528,6 +528,17 @@ HandleResult SimulationMaster::simStart(SimulationStartServer* event)
         }
     }
 
+    // Push mine locations
+    for (auto& mine : config.mines)
+    {
+        MineState mineS;
+        mineS.x = mine.first;
+        mineS.y = mine.second;
+        mineS.depth = 0;
+
+        mines[nextMineID++] = mineS;
+    }
+
     Log::writeToLog(Log::INFO, "Starting server-side simulation. Final assignments:", sstream.str());
     // Unhook the lobby handler and destroy it
     network->deregisterCallback(lobbyInit.get());
