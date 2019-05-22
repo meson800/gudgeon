@@ -40,6 +40,7 @@ enum Sim
     Explosion,
     Config,
     Score,
+    StatusUpdate,
 };
 
 } //namespace events
