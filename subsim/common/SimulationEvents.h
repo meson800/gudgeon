@@ -159,8 +159,11 @@ public:
     /// Stores the current power usage
     uint16_t powerUsage;
 
-    /// Stores if we are using active/passive sonar
-    bool isActiveSonar;
+    /// Stores if we are in stealth mode
+    bool isStealth;
+
+    /// Stores the number of milliseconds that stealth is on cooldown
+    uint16_t stealthCooldown;
 
     /// Stores the enable/disable status of various power items
     bool yawEnabled, pitchEnabled, engineEnabled, commsEnabled, sonarEnabled, weaponsEnabled;
@@ -231,6 +234,9 @@ struct UnitSonarState
     uint16_t heading;
 
     uint16_t speed;
+
+    bool isStealth;
+    uint16_t stealthCooldown;
 
     bool hasFlag;
 };
@@ -385,16 +391,16 @@ public:
 /*!
  * Stores if the sonar is in active or passive mode
  */
-class SonarEvent : public Event
+class StealthEvent : public Event
 {
 public:
-    SonarEvent() : Event(category, id) {}
+    StealthEvent() : Event(category, id) {}
     constexpr static uint32_t category = Events::Category::Simulation;
-    constexpr static uint32_t id = Events::Sim::Sonar;
+    constexpr static uint32_t id = Events::Sim::Stealth;
 
     uint32_t team;
     uint32_t unit;
-    bool isActive;
+    bool isStealth;
 };
 
 /*!

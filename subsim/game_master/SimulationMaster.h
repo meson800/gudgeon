@@ -43,8 +43,8 @@ public:
     /// Handles when clients update power status
     HandleResult power(PowerEvent* event);
 
-    /// Handles when clients use active/passive sonar
-    HandleResult sonar(SonarEvent* event);
+    /// Handles when clients use stealth
+    HandleResult stealth(StealthEvent* event);
 
 private:
     /// Calculates initial state for a submarine, when first spawning or when

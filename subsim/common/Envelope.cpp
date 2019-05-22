@@ -73,7 +73,7 @@ void EnvelopeMessage::deserialize(RakNet::BitStream& source)
                         >> us.tubeIsArmed >> us.tubeOccupancy >> us.remainingTorpedos >> us.remainingMines >> us.torpedoDistance
                         >> us.x >> us.y >> us.depth >> us.heading >> us.direction >> us.pitch
                         >> us.speed >> us.desiredSpeed
-                        >> us.powerAvailable >> us.powerUsage >> us.isActiveSonar
+                        >> us.powerAvailable >> us.powerUsage >> us.isStealth >> us.stealthCooldown
                         >> us.yawEnabled >> us.pitchEnabled >> us.engineEnabled >> us.commsEnabled >> us.sonarEnabled
                         >> us.weaponsEnabled
                         >> us.targetIsLocked >> us.targetTeam >> us.targetUnit
@@ -94,7 +94,8 @@ void EnvelopeMessage::deserialize(RakNet::BitStream& source)
                     {
                         source >> sd.units[i].team >> sd.units[i].unit
                             >> sd.units[i].x >> sd.units[i].y >> sd.units[i].depth
-                            >> sd.units[i].heading >> sd.units[i].speed >> sd.units[i].hasFlag;
+                            >> sd.units[i].heading >> sd.units[i].speed >> sd.units[i].hasFlag
+                            >> sd.units[i].isStealth >> sd.units[i].stealthCooldown;
                     }
 
                     source >> len;
@@ -187,10 +188,10 @@ void EnvelopeMessage::deserialize(RakNet::BitStream& source)
                 }
                 break;
 
-                case Events::Sim::Sonar:
+                case Events::Sim::Stealth:
                 {
-                    SonarEvent se;
-                    source >> se.team >> se.unit >> se.isActive;
+                    StealthEvent se;
+                    source >> se.team >> se.unit >> se.isStealth;
 
                     EventSystem::getGlobalInstance()->queueEvent(se);
                 }
@@ -218,6 +219,7 @@ void EnvelopeMessage::deserialize(RakNet::BitStream& source)
                         >> ce.config.subTurningSpeed
                         >> ce.config.subAcceleration
                         >> ce.config.subMaxSpeed 
+                        >> ce.config.stealthSpeedLimit
                         >> ce.config.maxTorpedos
                         >> ce.config.maxMines
                         >> ce.config.sonarRange
@@ -226,7 +228,8 @@ void EnvelopeMessage::deserialize(RakNet::BitStream& source)
                         >> ce.config.torpedoSpeed
                         >> ce.config.sonarRange
                         >> ce.config.mineExclusionRadius
-                        >> ce.config.frameMilliseconds;
+                        >> ce.config.frameMilliseconds
+                        >> ce.config.stealthCooldown;
 
                     EventSystem::getGlobalInstance()->queueEvent(ce);
                 }
@@ -295,7 +298,7 @@ void EnvelopeMessage::serialize(RakNet::BitStream& source) const
                         << us->tubeIsArmed << us->tubeOccupancy << us->remainingTorpedos << us->remainingMines << us->torpedoDistance
                         << us->x << us->y << us->depth << us->heading << us->direction << us->pitch 
                         << us->speed << us->desiredSpeed
-                        << us->powerAvailable << us->powerUsage << us->isActiveSonar
+                        << us->powerAvailable << us->powerUsage << us->isStealth << us->stealthCooldown
                         << us->yawEnabled << us->pitchEnabled << us->engineEnabled << us->commsEnabled << us->sonarEnabled
                         << us->weaponsEnabled
                         << us->targetIsLocked << us->targetTeam << us->targetUnit
@@ -314,7 +317,8 @@ void EnvelopeMessage::serialize(RakNet::BitStream& source) const
                     {
                         source << unit.team << unit.unit
                           << unit.x << unit.y << unit.depth
-                          << unit.heading << unit.speed << unit.hasFlag;
+                          << unit.heading << unit.speed << unit.hasFlag
+                          << unit.isStealth << unit.stealthCooldown;
                     }
 
                     len = sd->torpedos.size();
@@ -392,10 +396,10 @@ void EnvelopeMessage::serialize(RakNet::BitStream& source) const
                 }
                 break;
 
-                case Events::Sim::Sonar:
+                case Events::Sim::Stealth:
                 {
-                    SonarEvent* se = (SonarEvent*)event.get();
-                    source << se->team << se->unit << se->isActive;
+                    StealthEvent* se = (StealthEvent*)event.get();
+                    source << se->team << se->unit << se->isStealth;
                 }
                 break;
 
@@ -419,6 +423,7 @@ void EnvelopeMessage::serialize(RakNet::BitStream& source) const
                         << ce->config.subTurningSpeed
                         << ce->config.subAcceleration
                         << ce->config.subMaxSpeed 
+                        << ce->config.stealthSpeedLimit
                         << ce->config.maxTorpedos
                         << ce->config.maxMines
                         << ce->config.sonarRange
@@ -427,7 +432,8 @@ void EnvelopeMessage::serialize(RakNet::BitStream& source) const
                         << ce->config.torpedoSpeed
                         << ce->config.sonarRange
                         << ce->config.mineExclusionRadius
-                        << ce->config.frameMilliseconds;
+                        << ce->config.frameMilliseconds
+                        << ce->config.stealthCooldown;
                 }
                 break;
 

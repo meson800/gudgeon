@@ -12,6 +12,11 @@ bool chooseTarget(
     int16_t bestDist;
     for (const auto &teamPair : candidates) {
         for (const UnitState &u : teamPair.second) {
+            if (u.isStealth && u.stealthCooldown == 0)
+            {
+                // skip stealthed units
+                continue;
+            }
             int16_t candidateDist = sqrt((u.x-x)*(u.x-x) + (u.y-y)*(u.y-y));
             int16_t candidateHeading = atan2(u.y-y, u.x-x) / (2*M_PI/360.0);
 

@@ -48,12 +48,13 @@ public:
     uint16_t subTurningSpeed;
     uint16_t subAcceleration;
     uint16_t subMaxSpeed;
+    uint16_t stealthSpeedLimit;
 
     uint16_t maxTorpedos;
     uint16_t maxMines;
 
     uint16_t sonarRange;
-    uint8_t passiveSonarNoiseFloor;
+    uint16_t passiveSonarNoiseFloor;
 
     uint16_t torpedoSpread;
     uint16_t torpedoSpeed;
@@ -62,6 +63,8 @@ public:
     uint16_t mineExclusionRadius;
 
     uint16_t frameMilliseconds;
+
+    uint16_t stealthCooldown;
 };
 
 /**
