@@ -301,7 +301,7 @@ void SimulationMaster::runSimForUnit(UnitState *unitState)
             startLoc.first, startLoc.second, config.collisionRadius*2))
         {
             Log::writeToLog(Log::L_DEBUG, "Team ", unitState->team, " unit ", unitState->unit, " returned a flag");
-            ++scores[unitState->team];
+            scores[unitState->team] += 3;
             // remove flag, restoring it to its position on the map
             
             unitState->hasFlag = false;
@@ -321,6 +321,14 @@ void SimulationMaster::damage(uint32_t team, uint32_t unit, int16_t amount)
     if (u->powerAvailable < 0) {
         explosion(u->x, u->y, 50);
         Log::writeToLog(Log::INFO, "Team ", team, " unit ", unit, " destroyed!");
+
+        for (auto& pair : scores)
+        {
+            if (pair.first != team)
+            {
+                ++pair.second;
+            }
+        }
 
         // Check if we were holding a flag, resetting it if needed
         if (u->hasFlag)
