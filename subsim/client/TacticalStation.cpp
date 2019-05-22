@@ -288,7 +288,7 @@ void TacticalStation::redraw()
     renderSDSubmarine(
         lastState.x, lastState.y, lastState.heading,
         lastState.hasFlag,
-        ownColor, enemyColor);
+        ownColor, enemyColor, lastState.respawning);
 
     for (const UnitSonarState &u : lastSonar.units)
     {
@@ -312,7 +312,7 @@ void TacticalStation::redraw()
             rgba_to_color(colorIntensity, colorIntensity, colorIntensity, 255),
             // If the sub is on our team, assume it's carrying an enemy flag,
             // and vice versa
-            (u.team == team) ? enemyColor : friendColor);
+            (u.team == team) ? enemyColor : friendColor, u.respawning);
 
         // Draw targeting reticule
         if (lastState.targetIsLocked &&
@@ -566,16 +566,27 @@ void TacticalStation::renderSDTerrain()
 void TacticalStation::renderSDSubmarine(
     int64_t x, int64_t y, int16_t heading,
     bool hasFlag,
-    uint32_t color, uint32_t flagColor)
+    uint32_t color, uint32_t flagColor, bool destroyed)
 {
     float u = cos(heading * 2*M_PI/360.0);
     float v = sin(heading * 2*M_PI/360.0);
 
-    renderSDArc(x+u*100, y+v*100, 100, heading+90, heading-90, color);
-    renderSDArc(x-u*100, y-v*100, 100, heading-90, heading+90, color);
-    renderSDLine(x+u*100+v*100, y+v*100-u*100, x-u*100+v*100, y-v*100-u*100, color);
-    renderSDLine(x+u*100-v*100, y+v*100+u*100, x-u*100-v*100, y-v*100+u*100, color);
-    renderSDCircle(x+u*70, y+v*70, 40, color);
+    if (!destroyed)
+    {
+        renderSDArc(x+u*100, y+v*100, 100, heading+90, heading-90, color);
+        renderSDArc(x-u*100, y-v*100, 100, heading-90, heading+90, color);
+        renderSDLine(x+u*100+v*100, y+v*100-u*100, x-u*100+v*100, y-v*100-u*100, color);
+        renderSDLine(x+u*100-v*100, y+v*100+u*100, x-u*100-v*100, y-v*100+u*100, color);
+        renderSDCircle(x+u*70, y+v*70, 40, color);
+    }
+    else
+    {
+        renderSDArc(x+u*100, y+v*100, 100, heading-90, heading+90, color);
+        renderSDArc(x-u*80, y-v*80, 100, heading+90, heading-90, color);
+        renderSDLine(x+u*120+v*60, y+v*100-u*100, x-u*100+v*100, y-v*70-u*100, color);
+        renderSDLine(x+u*20-v*40, y+v*100+u*100, x-u*100-v*100, y-v*160+u*100, color);
+        renderSDCircle(x+u*70, y+v*70, 40, color);
+    }
 
     if (hasFlag)
     {

@@ -64,7 +64,7 @@ private:
     void renderSDSubmarine(
         int64_t x, int64_t y, int16_t heading,
         bool hasFlag,
-        uint32_t color, uint32_t flagColor);
+        uint32_t color, uint32_t flagColor, bool destroyed=false);
 
     /// Renders a flag on the sonar screen with SD coordinates
     void renderSDFlag(int64_t x, int64_t y, uint32_t color);

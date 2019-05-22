@@ -86,6 +86,8 @@ UnitState SimulationMaster::initialUnitState(uint32_t team, uint32_t unit)
     unitState.commsEnabled = true;
     unitState.sonarEnabled = true;
     unitState.weaponsEnabled = true;
+    unitState.respawning = false;
+    unitState.respawnCooldown = 0;
     return unitState;
 }
 
@@ -182,6 +184,7 @@ void SimulationMaster::runSimLoop()
                 unitSonarState.hasFlag = unitState.hasFlag;
                 unitSonarState.isStealth = unitState.isStealth;
                 unitSonarState.stealthCooldown = unitState.stealthCooldown;
+                unitSonarState.respawning = unitState.respawning;
 
                 sonar.units.push_back(unitSonarState);
 

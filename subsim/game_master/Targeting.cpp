@@ -12,9 +12,10 @@ bool chooseTarget(
     int16_t bestDist;
     for (const auto &teamPair : candidates) {
         for (const UnitState &u : teamPair.second) {
-            if (u.isStealth && u.stealthCooldown == 0 && !u.hasFlag)
+            if ((u.isStealth && u.stealthCooldown == 0 && !u.hasFlag)
+                || u.respawning)
             {
-                // skip stealthed units without flags
+                // skip stealthed units without flags or skip dead units
                 continue;
             }
             int16_t candidateDist = sqrt((u.x-x)*(u.x-x) + (u.y-y)*(u.y-y));
