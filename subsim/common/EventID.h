@@ -20,7 +20,9 @@ enum MockUIEvents
     Key,
     Text,
     IgnoreKeypresses,
-    TeamOwnership
+    TeamOwnership,
+    ClearAudio,
+    Theme,
 };
 
 enum Sim

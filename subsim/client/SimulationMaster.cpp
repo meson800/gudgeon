@@ -76,6 +76,9 @@ bool SimulationMaster::ConnectionEstablished(RakNet::RakNetGUID other)
     network->registerCallback(lobbyInit.get());
     lobbyInit->joinLobby(other, 1);
 
+    // start the theme!
+    EventSystem::getGlobalInstance()->queueEvent(ThemeAudio());
+
     return true;
 }
 

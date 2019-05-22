@@ -6,6 +6,8 @@ VoiceHandler::VoiceHandler()
     : EventReceiver({
         dispatchEvent<VoiceHandler, StatusUpdateEvent, &VoiceHandler::handleStatusUpdate>,
         dispatchEvent<VoiceHandler, TeamOwnership, &VoiceHandler::handleTeamEvent>,
+        dispatchEvent<VoiceHandler, ClearAudio, &VoiceHandler::handleClearAudio>,
+        dispatchEvent<VoiceHandler, ThemeAudio, &VoiceHandler::handleTheme>,
         })
 {
     SDL_AudioSpec desiredSpec;
@@ -35,6 +37,7 @@ VoiceHandler::VoiceHandler()
     voiceEnemySubKill = loadVoice("data/sounds/subKillEnemy.wav");
     voiceOwnFlagSubKill = loadVoice("data/sounds/flagSubKillUs.wav");
     voiceEnemyFlagSubKill = loadVoice("data/sounds/flagSubKillEnemy.wav");
+    theme = loadVoice("data/sounds/theme.wav");
 }
 
 VoiceHandler::~VoiceHandler()
@@ -86,6 +89,26 @@ std::vector<uint8_t> VoiceHandler::loadVoice(const char *filename)
     }
 }
 
+HandleResult VoiceHandler::handleClearAudio(ClearAudio* event)
+{
+    SDL_ClearQueuedAudio(outputDeviceID);
+    return HandleResult::Stop;
+}
+
+HandleResult VoiceHandler::handleTheme(ThemeAudio* event)
+{
+    for (int i = 0; i < 4; ++i)
+    {
+        if (SDL_QueueAudio(outputDeviceID, theme.data(), theme.size()) < 0)
+        {
+            throw SDLError("SDL_QueueAudio");
+        }
+    }
+
+    return HandleResult::Stop;
+}
+
+
 void VoiceHandler::playVoice(const std::vector<uint8_t> *voice)
 {
     if (SDL_QueueAudio(outputDeviceID, voice->data(), voice->size()) < 0)
@@ -105,6 +128,7 @@ HandleResult VoiceHandler::handleStatusUpdate(StatusUpdateEvent *event)
     switch (event->type)
     {
         case StatusUpdateEvent::GameStart:
+            (void)handleClearAudio(nullptr);
             playVoice(&voiceGameStart);
             break;
 

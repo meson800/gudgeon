@@ -17,6 +17,10 @@ public:
 
     HandleResult handleTeamEvent(TeamOwnership* event);
 
+    HandleResult handleClearAudio(ClearAudio* event);
+
+    HandleResult handleTheme(ThemeAudio* event);
+
 private:
     SDL_AudioDeviceID outputDeviceID;
     SDL_AudioSpec outputDeviceSpec;
@@ -37,6 +41,8 @@ private:
 
     std::vector<uint8_t> voiceOwnFlagSubKill;
     std::vector<uint8_t> voiceEnemyFlagSubKill;
+
+    std::vector<uint8_t> theme;
 
     uint32_t team;
 

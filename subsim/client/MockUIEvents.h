@@ -91,3 +91,25 @@ public:
 
     uint32_t team;
 };
+
+/**
+ * Clears the audio queue
+ */
+class ClearAudio : public Event
+{
+public:
+    ClearAudio() : Event(category, id) {}
+    constexpr static uint32_t category = Events::Category::MockUI;
+    constexpr static uint32_t id = Events::MockUIEvents::ClearAudio;
+};
+
+/**
+ * Plays the theme
+ */
+class ThemeAudio : public Event
+{
+public:
+    ThemeAudio() : Event(category, id) {}
+    constexpr static uint32_t category = Events::Category::MockUI;
+    constexpr static uint32_t id = Events::MockUIEvents::Theme;
+};
