@@ -322,7 +322,7 @@ void TacticalStation::redraw()
     std::vector<ExplosionEvent> newExplosions;
     for (ExplosionEvent &exp : explosions)
     {
-        renderSDCircle(exp.x, exp.y, exp.size*10, rgba_to_color(150, 150, 150, 255));
+        renderSDCircle(exp.x, exp.y, exp.size*10, rgba_to_color(200, 200, 200, 255));
         exp.size -= 2;
         if (exp.size > 0) {
             newExplosions.push_back(exp);
