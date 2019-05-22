@@ -131,6 +131,11 @@ Config ConfigParser::parseConfig(const ParseResult& parse)
             {
                 sstream >> result.maxTorpedos;
             }
+
+            if (key == "frame_milliseconds")
+            {
+                sstream >> result.frameMilliseconds;
+            }
         }
     }
     return result;

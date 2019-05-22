@@ -49,6 +49,7 @@ public:
     uint16_t torpedoSpeed;
     uint16_t collisionRadius;
 
+    uint16_t frameMilliseconds;
 };
 
 /**

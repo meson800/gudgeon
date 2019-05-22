@@ -299,19 +299,19 @@ void TacticalStation::redraw()
         float u = cos(torp.heading * 2*M_PI/360.0);
         float v = sin(torp.heading * 2*M_PI/360.0);
         uint32_t color = rgba_to_color(255, 0, 0, 255);
-        renderSDLine(torp.x-u*5, torp.y-v*5, torp.x+u*5, torp.y+v*5, color);
+        renderSDLine(torp.x-u*50, torp.y-v*50, torp.x+u*50, torp.y+v*50, color);
     }
 
     for (const MineState &mine : lastSonar.mines)
     {
-        renderSDCircle(mine.x, mine.y, 20, rgba_to_color(255, 0, 0, 255));
+        renderSDCircle(mine.x, mine.y, 200, rgba_to_color(255, 0, 0, 255));
     }
 
     std::vector<ExplosionEvent> newExplosions;
     for (ExplosionEvent &exp : explosions)
     {
-        renderSDCircle(exp.x, exp.y, exp.size, rgba_to_color(255, 0, 0, 255));
-        exp.size -= 5;
+        renderSDCircle(exp.x, exp.y, exp.size*10, rgba_to_color(255, 0, 0, 255));
+        exp.size -= 2;
         if (exp.size > 0) {
             newExplosions.push_back(exp);
         }
@@ -337,7 +337,7 @@ void TacticalStation::redraw()
     startLoc.first += config->terrain.scale;
     startLoc.second *= config->terrain.scale;
     startLoc.second += config->terrain.scale;
-    renderSDCircle(startLoc.first, startLoc.second, 20, rgba_to_color(255, 255, 255, 255));
+    renderSDCircle(startLoc.first, startLoc.second, 200, rgba_to_color(255, 255, 255, 255));
 
     renderTubeState();
     renderSonarState();
@@ -508,18 +508,18 @@ void TacticalStation::renderSDSubmarine(int64_t x, int64_t y, int16_t heading)
     float u = cos(heading * 2*M_PI/360.0);
     float v = sin(heading * 2*M_PI/360.0);
     uint32_t color = rgba_to_color(255, 0, 0, 255);
-    renderSDArc(x+u*10, y+v*10, 10, heading+90, heading-90, color);
-    renderSDArc(x-u*10, y-v*10, 10, heading-90, heading+90, color);
-    renderSDLine(x+u*10+v*10, y+v*10-u*10, x-u*10+v*10, y-v*10-u*10, color);
-    renderSDLine(x+u*10-v*10, y+v*10+u*10, x-u*10-v*10, y-v*10+u*10, color);
-    renderSDCircle(x+u*7, y+v*7, 4, color);
+    renderSDArc(x+u*100, y+v*100, 100, heading+90, heading-90, color);
+    renderSDArc(x-u*100, y-v*100, 100, heading-90, heading+90, color);
+    renderSDLine(x+u*100+v*100, y+v*100-u*100, x-u*100+v*100, y-v*100-u*100, color);
+    renderSDLine(x+u*100-v*100, y+v*100+u*100, x-u*100-v*100, y-v*100+u*100, color);
+    renderSDCircle(x+u*70, y+v*70, 40, color);
 }
 
 void TacticalStation::renderSDFlag(int64_t x, int64_t y, uint32_t color)
 {
     
-    int64_t x_locs [6] = {x, x, x + 20, x + 20, x + 3, x + 3};
-    int64_t y_locs [6] = {y, y + 20, y + 20, y + 9, y + 9, y};
+    int64_t x_locs [6] = {x, x, x + 200, x + 200, x + 30, x + 30};
+    int64_t y_locs [6] = {y, y + 200, y + 200, y + 90, y + 90, y};
     renderSDFilledPolygon(x_locs, y_locs, 6, color);
 }
     
