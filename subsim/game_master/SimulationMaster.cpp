@@ -484,22 +484,30 @@ HandleResult SimulationMaster::fire(FireEvent *event)
         if (torpedoCount > 0)
         {
             int16_t heading;
-            if (unit.targetIsLocked) {
+            if (unit.targetIsLocked)
+            {
                 heading = aimAtTarget(
                     unit.x,
                     unit.y,
                     unitStates[unit.targetTeam][unit.targetUnit],
                     config);
-            } else {
+            }
+            else
+            {
                 // If there's no target locked, just fire the torpedo straight
                 // forwards
                 heading = unit.heading;
             }
 
-            int16_t maxOffset = (torpedoCount - 1) * config.torpedoSpread / 2;
-            for (int16_t offset = -maxOffset; offset <= maxOffset; offset += config.torpedoSpread)
+            // When firing multiple torpedos, spread them out. We always want
+            // one to go perfectly straight, so if there are an even number,
+            // the spread will be asymmetrical on a random side.
+            int minSpreadPos = - (torpedoCount - 1) / 2;
+            if ((torpedoCount - 1) % 2 == 1) minSpreadPos -= rand() % 2;
+
+            for (int i = 0; i < torpedoCount; ++i)
             {
-                int16_t newHeading = heading + offset;
+                int16_t newHeading = heading + (minSpreadPos + i) * config.torpedoSpread;
                 if (newHeading < 0)
                 {
                     newHeading += 360;
