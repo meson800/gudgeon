@@ -159,8 +159,11 @@ public:
     /// Stores the current power usage
     uint16_t powerUsage;
 
-    /// Stores if we are using active/passive sonar
-    bool isActiveSonar;
+    /// Stores if we are in stealth mode
+    bool isStealth;
+
+    /// Stores the number of milliseconds that stealth is on cooldown
+    uint16_t stealthCooldown;
 
     /// Stores the enable/disable status of various power items
     bool yawEnabled, pitchEnabled, engineEnabled, commsEnabled, sonarEnabled, weaponsEnabled;
@@ -231,6 +234,9 @@ struct UnitSonarState
     uint16_t heading;
 
     uint16_t speed;
+
+    bool isStealth;
+    uint16_t stealthCooldown;
 
     bool hasFlag;
 };
@@ -385,16 +391,16 @@ public:
 /*!
  * Stores if the sonar is in active or passive mode
  */
-class SonarEvent : public Event
+class StealthEvent : public Event
 {
 public:
-    SonarEvent() : Event(category, id) {}
+    StealthEvent() : Event(category, id) {}
     constexpr static uint32_t category = Events::Category::Simulation;
-    constexpr static uint32_t id = Events::Sim::Sonar;
+    constexpr static uint32_t id = Events::Sim::Stealth;
 
     uint32_t team;
     uint32_t unit;
-    bool isActive;
+    bool isStealth;
 };
 
 /*!
@@ -436,3 +442,29 @@ public:
     
     std::map<uint32_t, uint32_t> scores;
 };
+
+/*!
+ * Sends a notification when various simulation events occur
+ */
+class StatusUpdateEvent : public Event
+{
+public:
+    StatusUpdateEvent() : Event(category, id) {}
+    constexpr static uint32_t category = Events::Category::Simulation;
+    constexpr static uint32_t id = Events::Sim::StatusUpdate;
+
+    uint32_t team; // team referes to team of sub or owner of flag
+    uint32_t unit;
+
+    enum Type
+    {
+        GameStart, // The battle has begun.
+        FlagTaken, // (Own): Our flag was stolen. (Enemy): We have the enemy flag.
+        FlagScored,// (Own): The enemey has gotten away with our flag. (Enemy): We have secured the enemy flag.
+        SubKill,   // (Own): Our submarine was lost.  (Enemy): We have sunk an enemy!
+        FlagSubKill// (Own): We have lost the enemy flag. (Enemy): We have recovered our flag.
+    };
+
+    Type type;
+};
+

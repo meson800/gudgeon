@@ -36,10 +36,11 @@ enum Sim
     Fire,
     Range,
     Power,
-    Sonar,
+    Stealth,
     Explosion,
     Config,
     Score,
+    StatusUpdate,
 };
 
 } //namespace events

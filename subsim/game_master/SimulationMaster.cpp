@@ -23,7 +23,7 @@ SimulationMaster::SimulationMaster(Network* network_, const std::string& filenam
         dispatchEvent<SimulationMaster, TubeLoadEvent, &SimulationMaster::tubeLoad>,
         dispatchEvent<SimulationMaster, TubeArmEvent, &SimulationMaster::tubeArm>,
         dispatchEvent<SimulationMaster, PowerEvent, &SimulationMaster::power>,
-        dispatchEvent<SimulationMaster, SonarEvent, &SimulationMaster::sonar>,
+        dispatchEvent<SimulationMaster, StealthEvent, &SimulationMaster::stealth>,
     })
 {
     ParseResult result = GenericParser::parse(filename);
@@ -76,7 +76,8 @@ UnitState SimulationMaster::initialUnitState(uint32_t team, uint32_t unit)
     unitState.speed = unitState.desiredSpeed = 0;
     unitState.powerAvailable = 100;
     unitState.powerUsage = 0;
-    unitState.isActiveSonar = false;
+    unitState.isStealth = false;
+    unitState.stealthCooldown = 0;
     unitState.hasFlag = false;
     unitState.flag = Flag();
     unitState.yawEnabled = true;
@@ -153,6 +154,21 @@ void SimulationMaster::runSimLoop()
             for (UnitState &unitState : teamPair.second)
             {
                 runSimForUnit(&unitState);
+                // Deliver latest UnitState to every attached client
+                // This will send a redundant message if the same client is
+                // handling multiple stations for a single unit, but it doesn't
+                // matter
+                for (const auto &stationPair : assignments[unitState.team][unitState.unit])
+                {
+                    EnvelopeMessage envelope(unitState, stationPair.second);
+                    EventSystem::getGlobalInstance()->queueEvent(envelope);
+                }
+
+                // Skip sonar state if this unit is correctly in stealth mode
+                if (unitState.isStealth && unitState.stealthCooldown == 0)
+                {
+                    continue;
+                }
 
                 UnitSonarState unitSonarState;
                 unitSonarState.team = unitState.team;
@@ -163,17 +179,11 @@ void SimulationMaster::runSimLoop()
                 unitSonarState.heading = unitState.heading;
                 unitSonarState.speed = unitState.speed;
                 unitSonarState.hasFlag = unitState.hasFlag;
+                unitSonarState.isStealth = unitState.isStealth;
+                unitSonarState.stealthCooldown = unitState.stealthCooldown;
+
                 sonar.units.push_back(unitSonarState);
 
-                // Deliver latest UnitState to every attached client
-                // This will send a redundant message if the same client is
-                // handling multiple stations for a single unit, but it doesn't
-                // matter
-                for (const auto &stationPair : assignments[unitState.team][unitState.unit])
-                {
-                    EnvelopeMessage envelope(unitState, stationPair.second);
-                    EventSystem::getGlobalInstance()->queueEvent(envelope);
-                }
             }
         }
 
@@ -193,18 +203,27 @@ void SimulationMaster::runSimLoop()
 
 void SimulationMaster::runSimForUnit(UnitState *unitState)
 {
+    // Use the stealth speed limit if required
+    uint16_t setSpeed = unitState->desiredSpeed;
+    if (unitState->isStealth && setSpeed > config.stealthSpeedLimit)
+    {
+        setSpeed = config.stealthSpeedLimit;
+    }
+
+    Log::writeToLog(Log::L_DEBUG, "Set speed:", setSpeed);
+
     // Update submarine speed
-    if (unitState->speed < unitState->desiredSpeed - config.subAcceleration)
+    if (unitState->speed < setSpeed - config.subAcceleration)
     {
         unitState->speed += config.subAcceleration;
     }
-    else if (unitState->speed > unitState->desiredSpeed + config.subAcceleration)
+    else if (unitState->speed > setSpeed + config.subAcceleration)
     {
         unitState->speed -= config.subAcceleration;
     }
     else
     {
-        unitState->speed = unitState->desiredSpeed;
+        unitState->speed = setSpeed;
     }
 
     // Update submarine heading
@@ -331,6 +350,19 @@ void SimulationMaster::runSimForUnit(UnitState *unitState)
             
             unitState->hasFlag = false;
             flags[unitState->flag.index].isTaken = false;
+        }
+    }
+
+    // Decrement the stealth cooldown, if needed
+    if (unitState->isStealth && unitState->stealthCooldown > 0)
+    {
+        if (unitState->stealthCooldown > config.frameMilliseconds)
+        {
+            unitState->stealthCooldown -= config.frameMilliseconds;
+        }
+        else
+        {
+            unitState->stealthCooldown = 0;
         }
     }
 }
@@ -494,6 +526,12 @@ HandleResult SimulationMaster::fire(FireEvent *event)
     {
         std::lock_guard<std::mutex> lock(stateMux);
         UnitState& unit = unitStates[event->team][event->unit];
+
+        // Ignore if we are in stealth mode
+        if (unit.isStealth)
+        {
+            return HandleResult::Stop;
+        }
 
         uint8_t mineCount = 0;
         uint8_t torpedoCount = 0;
@@ -707,11 +745,14 @@ HandleResult SimulationMaster::power(PowerEvent* event)
     return HandleResult::Stop;
 }
 
-HandleResult SimulationMaster::sonar(SonarEvent* event)
+HandleResult SimulationMaster::stealth(StealthEvent* event)
 {
     {
         std::lock_guard<std::mutex> lock(stateMux);
-        unitStates[event->team][event->unit].isActiveSonar = event->isActive;
+        unitStates[event->team][event->unit].isStealth = event->isStealth;
+        
+        // If we transitioned to using stealth, set the cooldown
+        unitStates[event->team][event->unit].stealthCooldown = config.stealthCooldown;
     }
     return HandleResult::Stop;
 }

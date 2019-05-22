@@ -151,6 +151,16 @@ Config ConfigParser::parseConfig(const ParseResult& parse)
             {
                 sstream >> result.frameMilliseconds;
             }
+
+            if (key == "stealth_cooldown")
+            {
+                sstream >> result.stealthCooldown;
+            }
+
+            if (key == "stealth_speed_limit")
+            {
+                sstream >> result.stealthSpeedLimit;
+            }
         }
     }
 

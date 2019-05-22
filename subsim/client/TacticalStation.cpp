@@ -18,6 +18,7 @@ static constexpr uint32_t rgba_to_color(uint8_t r, uint8_t g, uint8_t b, uint8_t
 }
 
 constexpr uint32_t friendColor = rgba_to_color(0, 255, 0, 255);
+constexpr uint32_t stealthColor = rgba_to_color(0, 70, 0, 255);
 constexpr uint32_t enemyColor = rgba_to_color(255, 0, 0, 255);
 
 TacticalStation::TacticalStation(uint32_t team_, uint32_t unit_, Config* config_)
@@ -80,10 +81,10 @@ HandleResult TacticalStation::handleKeypress(KeyEvent* keypress)
 
     if (keypress->isDown == false && keypress->key == Key::Backslash)
     {
-        SonarEvent event;
+        StealthEvent event;
         event.team = team;
         event.unit = unit;
-        event.isActive = !lastState.isActiveSonar;
+        event.isStealth = !lastState.isStealth;
 
         EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(event));
         return HandleResult::Stop;
@@ -271,10 +272,23 @@ void TacticalStation::redraw()
 
     renderSDTerrain();
 
+    uint32_t ownColor;
+    if (!lastState.isStealth)
+    {
+        ownColor = friendColor;
+    } else if (lastState.isStealth && lastState.stealthCooldown == 0) {
+        ownColor = stealthColor;
+    } else {
+        // linearlly interpolate color if in cooldown
+        uint8_t lerp = 70 + (255 - 70) 
+            * ((double)lastState.stealthCooldown / (double)config->stealthCooldown);
+
+        ownColor = rgba_to_color(0, lerp, 0, 255);
+    }
     renderSDSubmarine(
         lastState.x, lastState.y, lastState.heading,
         lastState.hasFlag,
-        friendColor, enemyColor);
+        ownColor, enemyColor);
 
     for (const UnitSonarState &u : lastSonar.units)
     {
@@ -283,10 +297,19 @@ void TacticalStation::redraw()
             // Don't draw ourself this way
             continue;
         }
+        uint8_t colorIntensity;
+        if (!u.isStealth)
+        {
+            colorIntensity = 255;
+        } else if (u.isStealth && u.stealthCooldown > 0) {
+            colorIntensity = 255 * (double) u.stealthCooldown / (double) config->stealthCooldown;
+        } else {
+            colorIntensity = 0;
+        }
         renderSDSubmarine(
             u.x, u.y, u.heading,
             u.hasFlag,
-            rgba_to_color(255, 255, 255, 255),
+            rgba_to_color(colorIntensity, colorIntensity, colorIntensity, 255),
             // If the sub is on our team, assume it's carrying an enemy flag,
             // and vice versa
             (u.team == team) ? enemyColor : friendColor);
@@ -354,7 +377,7 @@ void TacticalStation::redraw()
     }
 
     renderTubeState();
-    renderSonarState();
+    renderStealthState();
 
     int x = 300;
     int y = 0;
@@ -410,14 +433,21 @@ void TacticalStation::initializeRendering() {
     }
 }
 
-void TacticalStation::renderSonarState()
+void TacticalStation::renderStealthState()
 {
-    boxRGBA(renderer, 120, 0, 240, 20, 0, 0, 0, 255);
-    if (lastState.isActiveSonar)
+    boxRGBA(renderer, 120, 0, 290, 20, 0, 0, 0, 255);
+    if (!lastState.isStealth)
     {
-        drawText("Active sonar", 18, 125, 0);
+        drawText("Active mode", 18, 125, 0);
     } else {
-        drawText("Passive sonar", 18, 125, 0);
+        if (lastState.stealthCooldown > 0)
+        {
+            drawText("Stealth activating...", 18, 125, 0);
+        } 
+        else
+        {
+            drawText("Stealth mode", 18, 125, 0);
+        }
     }
 }
     
