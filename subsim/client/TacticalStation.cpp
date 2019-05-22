@@ -268,7 +268,7 @@ void TacticalStation::redraw()
 
     renderSDTerrain();
 
-    renderSDSubmarine(lastState.x, lastState.y, lastState.heading);
+    renderSDSubmarine(lastState.x, lastState.y, lastState.heading, lastState.hasFlag);
 
     for (const UnitSonarState &u : lastSonar.units)
     {
@@ -277,7 +277,7 @@ void TacticalStation::redraw()
             // Don't draw ourself this way
             continue;
         }
-        renderSDSubmarine(u.x, u.y, u.heading);
+        renderSDSubmarine(u.x, u.y, u.heading, u.hasFlag);
 
         // Draw targeting reticule
         if (lastState.targetIsLocked &&
@@ -320,7 +320,6 @@ void TacticalStation::redraw()
 
     for (const FlagState &flag : lastSonar.flags)
     {
-        Log::writeToLog(Log::L_DEBUG, "Got flag state at ", flag.x, ",", flag.y);
         if (!flag.isTaken)
         {
             uint32_t ourColor = rgba_to_color(255, 0, 0, 255);
@@ -503,24 +502,50 @@ void TacticalStation::renderSDTerrain()
     }
 }
 
-void TacticalStation::renderSDSubmarine(int64_t x, int64_t y, int16_t heading)
+void TacticalStation::renderSDSubmarine(int64_t x, int64_t y, int16_t heading, bool hasFlag)
 {
     float u = cos(heading * 2*M_PI/360.0);
     float v = sin(heading * 2*M_PI/360.0);
     uint32_t color = rgba_to_color(255, 0, 0, 255);
+
+    if (hasFlag)
+    {
+        renderSDFlag(x, y, color);
+    }
+
     renderSDArc(x+u*100, y+v*100, 100, heading+90, heading-90, color);
     renderSDArc(x-u*100, y-v*100, 100, heading-90, heading+90, color);
     renderSDLine(x+u*100+v*100, y+v*100-u*100, x-u*100+v*100, y-v*100-u*100, color);
     renderSDLine(x+u*100-v*100, y+v*100+u*100, x-u*100-v*100, y-v*100+u*100, color);
     renderSDCircle(x+u*70, y+v*70, 40, color);
+
+    if (hasFlag)
+    {
+        renderSDFlag(x, y, color);
+    }
 }
 
 void TacticalStation::renderSDFlag(int64_t x, int64_t y, uint32_t color)
 {
-    
-    int64_t x_locs [6] = {x, x, x + 200, x + 200, x + 30, x + 30};
-    int64_t y_locs [6] = {y, y + 200, y + 200, y + 90, y + 90, y};
-    renderSDFilledPolygon(x_locs, y_locs, 6, color);
+    int16_t newX = sdX(x, y);
+    int16_t newY = sdY(x, y);
+
+    int16_t x_locs [6];
+    x_locs[0] = newX;
+    x_locs[1] = newX;
+    x_locs[2] = newX + 30;
+    x_locs[3] = newX + 30;
+    x_locs[4] = newX + 4;
+    x_locs[5] = newX + 4;
+
+    int16_t y_locs [6];
+    y_locs[0] = newY;
+    y_locs[1] = newY - 30;
+    y_locs[2] = newY - 30;
+    y_locs[3] = newY - 13;
+    y_locs[4] = newY - 13;
+    y_locs[5] = newY;
+    filledPolygonColor(renderer, x_locs, y_locs, 6, color);
 }
     
 

@@ -36,8 +36,6 @@ HandleResult HelmStation::handleScore(ScoreEvent* event)
 {
     std::lock_guard<std::mutex> lock(UI::getGlobalUI()->redrawMux);
 
-    Log::writeToLog(Log::L_DEBUG, "Got updated score event!");
-
     scores = event->scores;
     return HandleResult::Continue;
 }

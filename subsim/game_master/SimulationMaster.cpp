@@ -147,6 +147,8 @@ void SimulationMaster::runSimLoop()
                 unitSonarState.y = unitState.y;
                 unitSonarState.depth = unitState.depth;
                 unitSonarState.heading = unitState.heading;
+                unitSonarState.speed = unitState.speed;
+                unitSonarState.hasFlag = unitState.hasFlag;
                 sonar.units.push_back(unitSonarState);
 
                 // Deliver latest UnitState to every attached client

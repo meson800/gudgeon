@@ -57,4 +57,6 @@ private:
     HandleResult getKeypress(KeyEvent* event);
 
     std::mutex mux;
+
+    RakNet::RakNetGUID ourGUID;
 };
