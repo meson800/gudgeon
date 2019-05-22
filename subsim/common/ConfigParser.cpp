@@ -97,6 +97,11 @@ Config ConfigParser::parseConfig(const ParseResult& parse)
                 sstream >> result.subTurningSpeed;
             }
 
+            if (key == "sub_acceleration")
+            {
+                sstream >> result.subAcceleration;
+            }
+
             if (key == "sub_max_speed")
             {
                 sstream >> result.subMaxSpeed;

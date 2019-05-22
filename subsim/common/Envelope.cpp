@@ -72,7 +72,8 @@ void EnvelopeMessage::deserialize(RakNet::BitStream& source)
                         >> us.team >> us.unit
                         >> us.tubeIsArmed >> us.tubeOccupancy >> us.remainingTorpedos >> us.remainingMines >> us.torpedoDistance
                         >> us.x >> us.y >> us.depth >> us.heading >> us.direction >> us.pitch
-                        >> us.speed >> us.powerAvailable >> us.powerUsage >> us.isActiveSonar
+                        >> us.speed >> us.desiredSpeed
+                        >> us.powerAvailable >> us.powerUsage >> us.isActiveSonar
                         >> us.yawEnabled >> us.pitchEnabled >> us.engineEnabled >> us.commsEnabled >> us.sonarEnabled
                         >> us.weaponsEnabled
                         >> us.targetIsLocked >> us.targetTeam >> us.targetUnit
@@ -126,7 +127,7 @@ void EnvelopeMessage::deserialize(RakNet::BitStream& source)
                 case Events::Sim::Throttle:
                 {
                     ThrottleEvent te;
-                    source >> te.team >> te.unit >> te.speed;
+                    source >> te.team >> te.unit >> te.desiredSpeed;
 
                     EventSystem::getGlobalInstance()->queueEvent(te);
                 }
@@ -207,7 +208,7 @@ void EnvelopeMessage::deserialize(RakNet::BitStream& source)
                 case Events::Sim::Config:
                 {
                     ConfigEvent ce;
-                    source >> ce.config.subTurningSpeed >> ce.config.subMaxSpeed 
+                    source >> ce.config.subTurningSpeed >> ce.config.subAcceleration >> ce.config.subMaxSpeed 
                         >> ce.config.maxTorpedos >> ce.config.maxMines
                         >> ce.config.sonarRange >> ce.config.passiveSonarNoiseFloor
                         >> ce.config.torpedoSpread >> ce.config.torpedoSpeed >> ce.config.collisionRadius
@@ -281,7 +282,8 @@ void EnvelopeMessage::serialize(RakNet::BitStream& source) const
                         << us->team << us->unit
                         << us->tubeIsArmed << us->tubeOccupancy << us->remainingTorpedos << us->remainingMines << us->torpedoDistance
                         << us->x << us->y << us->depth << us->heading << us->direction << us->pitch 
-                        << us->speed << us->powerAvailable << us->powerUsage << us->isActiveSonar
+                        << us->speed << us->desiredSpeed
+                        << us->powerAvailable << us->powerUsage << us->isActiveSonar
                         << us->yawEnabled << us->pitchEnabled << us->engineEnabled << us->commsEnabled << us->sonarEnabled
                         << us->weaponsEnabled
                         << us->targetIsLocked << us->targetTeam << us->targetUnit
@@ -330,7 +332,7 @@ void EnvelopeMessage::serialize(RakNet::BitStream& source) const
                 {
                     ThrottleEvent* te = (ThrottleEvent*)event.get();
 
-                    source << te->team << te->unit << te->speed;
+                    source << te->team << te->unit << te->desiredSpeed;
                 }
                 break;
 
@@ -395,7 +397,7 @@ void EnvelopeMessage::serialize(RakNet::BitStream& source) const
                 case Events::Sim::Config:
                 {
                     ConfigEvent* ce = (ConfigEvent*)event.get();
-                    source << ce->config.subTurningSpeed << ce->config.subMaxSpeed 
+                    source << ce->config.subTurningSpeed << ce->config.subAcceleration << ce->config.subMaxSpeed 
                         << ce->config.maxTorpedos << ce->config.maxMines
                         << ce->config.sonarRange << ce->config.passiveSonarNoiseFloor
                         << ce->config.torpedoSpread << ce->config.torpedoSpeed << ce->config.sonarRange

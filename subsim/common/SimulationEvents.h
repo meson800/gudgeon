@@ -150,6 +150,9 @@ public:
     /// Stores the current speed of the sub, as this affects power usage.
     uint16_t speed;
 
+    /// Stores the desired speed of the sub
+    uint16_t desiredSpeed;
+
     /// Stores the current power available (used as health)
     int16_t powerAvailable;
 
@@ -259,7 +262,7 @@ public:
 
     uint32_t team;
     uint32_t unit;
-    uint16_t speed;
+    uint16_t desiredSpeed;
 };
 
 /*!

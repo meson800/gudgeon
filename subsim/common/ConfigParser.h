@@ -38,6 +38,7 @@ public:
     std::map<uint32_t, std::vector<std::pair<int64_t, int64_t>>> flags;
 
     uint16_t subTurningSpeed;
+    uint16_t subAcceleration;
     uint16_t subMaxSpeed;
 
     uint16_t maxTorpedos;

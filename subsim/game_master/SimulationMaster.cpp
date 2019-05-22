@@ -77,7 +77,7 @@ UnitState SimulationMaster::initialUnitState(uint32_t team, uint32_t unit)
     unitState.heading = 90;
     unitState.direction = UnitState::SteeringDirection::Center;
     unitState.pitch = 0;
-    unitState.speed = 0;
+    unitState.speed = unitState.desiredSpeed = 0;
     unitState.powerAvailable = 100;
     unitState.powerUsage = 0;
     unitState.isActiveSonar = false;
@@ -197,6 +197,20 @@ void SimulationMaster::runSimLoop()
 
 void SimulationMaster::runSimForUnit(UnitState *unitState)
 {
+    // Update submarine speed
+    if (unitState->speed < unitState->desiredSpeed - config.subAcceleration)
+    {
+        unitState->speed += config.subAcceleration;
+    }
+    else if (unitState->speed > unitState->desiredSpeed + config.subAcceleration)
+    {
+        unitState->speed -= config.subAcceleration;
+    }
+    else
+    {
+        unitState->speed = unitState->desiredSpeed;
+    }
+
     // Update submarine heading
     if (unitState->direction == UnitState::SteeringDirection::Right)
     {
@@ -221,10 +235,16 @@ void SimulationMaster::runSimForUnit(UnitState *unitState)
 
     if (config.terrain.colorAt(scaledX, scaledY) == Terrain::WALL)
     {
-        // Terrain collision!
-        Log::writeToLog(Log::INFO, "Submarine struck terrain");
-        damage(unitState->team, unitState->unit, unitState->speed * 2);
-        explosion(nextX, nextY, unitState->speed * 2);
+        // Terrain collision! If it's a low-speed collision, don't apply a
+        // penalty. This is so that after the sub crashes, it won't continue to
+        // take damage every timestep from trying to continue accelerating into
+        // the wall.
+        if (unitState->speed > 10)
+        {
+            Log::writeToLog(Log::INFO, "Submarine struck terrain");
+            damage(unitState->team, unitState->unit, unitState->speed * 2);
+            explosion(nextX, nextY, unitState->speed * 2);
+        }
         unitState->speed = 0;
     } else {
         unitState->x = nextX;
@@ -454,8 +474,8 @@ HandleResult SimulationMaster::throttle(ThrottleEvent *event)
 {
     {
         std::lock_guard<std::mutex> lock(stateMux);
-        unitStates[event->team][event->unit].speed =
-            event->speed > config.subMaxSpeed ? config.subMaxSpeed : event->speed;
+        unitStates[event->team][event->unit].desiredSpeed =
+            std::min(event->desiredSpeed, config.subMaxSpeed);
     }
 
     return HandleResult::Stop;

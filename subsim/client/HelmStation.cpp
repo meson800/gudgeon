@@ -121,7 +121,7 @@ HandleResult HelmStation::handleKeypress(KeyEvent* keypress)
             case Key::RBracket:
             {
                 // increase throttle!
-                event.speed = lastState.speed + 1;
+                event.desiredSpeed = lastState.speed + 10;
 
                 EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(event));
 
@@ -132,7 +132,7 @@ HandleResult HelmStation::handleKeypress(KeyEvent* keypress)
             case Key::LBracket:
             {
                 // decrease throttle
-                event.speed = lastState.speed == 0 ? 0 : lastState.speed - 1;
+                event.desiredSpeed = lastState.speed > 10 ? lastState.speed - 10 : 0;
 
                 EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(event));
                 return HandleResult::Stop;
