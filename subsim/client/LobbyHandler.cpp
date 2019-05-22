@@ -30,6 +30,8 @@ LobbyHandler::~LobbyHandler()
 
 void LobbyHandler::joinLobby(RakNet::RakNetGUID server, uint8_t numStations)
 {
+    // Store our current GUID
+    ourGUID = network->getOurGUID();
     // Setup our state, initially with no requests.
     state.stations.clear();
 
@@ -226,7 +228,7 @@ void LobbyHandler::redraw()
                 if (stationPair.second == RakNet::UNASSIGNED_RAKNET_GUID)
                 {
                     color = unassigned_color;
-                } else if (stationPair.second != network->getOurGUID()) {
+                } else if (stationPair.second != ourGUID) {
                     color = other_color;
                 } else {
                     color = us_color;
