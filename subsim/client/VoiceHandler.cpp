@@ -4,6 +4,7 @@
 
 VoiceHandler::VoiceHandler()
     : EventReceiver({
+        dispatchEvent<VoiceHandler, StatusUpdateEvent, &VoiceHandler::handleStatusUpdate>
         })
 {
     SDL_AudioSpec desiredSpec;
@@ -24,7 +25,6 @@ VoiceHandler::VoiceHandler()
     SDL_PauseAudioDevice(outputDeviceID, 0); // unpause
 
     voiceGameStart = loadVoice("data/sounds/gameStart.wav");
-    playVoice(&voiceGameStart);
 }
 
 VoiceHandler::~VoiceHandler()
@@ -82,5 +82,18 @@ void VoiceHandler::playVoice(const std::vector<uint8_t> *voice)
     {
         throw SDLError("SDL_QueueAudio");
     }
+}
+
+HandleResult VoiceHandler::handleStatusUpdate(StatusUpdateEvent *event)
+{
+    switch (event->type)
+    {
+        case StatusUpdateEvent::GameStart:
+            playVoice(&voiceGameStart);
+            break;
+        default:
+            break;
+    }
+    return HandleResult::Stop;
 }
 

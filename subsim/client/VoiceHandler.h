@@ -22,4 +22,6 @@ private:
     void playVoice(const std::vector<uint8_t> *voice);
 
     std::vector<uint8_t> voiceGameStart;
+
+    HandleResult handleStatusUpdate(StatusUpdateEvent *event);
 };

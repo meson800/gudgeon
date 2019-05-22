@@ -13,6 +13,7 @@ SimulationMaster::SimulationMaster(Network* network_)
         dispatchEvent<SimulationMaster, ConfigEvent, &SimulationMaster::configData>,
         })
 {
+    voiceHandler.reset(new VoiceHandler);
 }
 
 HandleResult SimulationMaster::simStart(SimulationStart* event)
@@ -40,7 +41,6 @@ HandleResult SimulationMaster::configData(ConfigEvent* event)
     config = event->config;
     return HandleResult::Stop;
 }
-    
 
 void SimulationMaster::createStations()
 {
@@ -57,8 +57,6 @@ void SimulationMaster::createStations()
             helm.push_back(std::shared_ptr<HelmStation>(new HelmStation(station.team, station.unit)));
         }
     }
-
-    voiceHandler.reset(new VoiceHandler);
 }
 
 bool SimulationMaster::ConnectionEstablished(RakNet::RakNetGUID other)
