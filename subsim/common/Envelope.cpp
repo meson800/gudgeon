@@ -244,6 +244,15 @@ void EnvelopeMessage::deserialize(RakNet::BitStream& source)
                 }
                 break;
 
+                case Events::Sim::StatusUpdate:
+                {
+                    StatusUpdateEvent se;
+                    source >> se.team >> se.unit >> se.type;
+
+                    EventSystem::getGlobalInstance()->queueEvent(se);
+                }
+                break;
+
                 default:
                 Log::writeToLog(Log::ERR, "Attempted to deserialize a simulation event of id=", id, " from an envelope without deserialization code defined!");
                 throw EnvelopeError("Cannot deserialize a simulation event from an envelope.");
@@ -441,6 +450,13 @@ void EnvelopeMessage::serialize(RakNet::BitStream& source) const
                 {
                     ScoreEvent* se = (ScoreEvent*)event.get();
                     source << se->scores;
+                }
+                break;
+
+                case Events::Sim::StatusUpdate:
+                {
+                    StatusUpdateEvent* se = (StatusUpdateEvent*)event.get();
+                    source << se->team << se->unit << se->type;
                 }
                 break;
 
