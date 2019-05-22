@@ -19,7 +19,8 @@ enum MockUIEvents
 {
     Key,
     Text,
-    IgnoreKeypresses
+    IgnoreKeypresses,
+    TeamOwnership
 };
 
 enum Sim

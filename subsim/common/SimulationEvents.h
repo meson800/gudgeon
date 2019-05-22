@@ -467,11 +467,11 @@ public:
 
     enum Type
     {
-        GameStart, // The battle has begun.
-        FlagTaken, // (Own): Our flag was stolen. (Enemy): We have the enemy flag.
-        FlagScored,// (Own): The enemy has gotten away with our flag. (Enemy): We have secured the enemy flag.
+        GameStart, // The battle has begun. // FLIP OWN/Enemy
+        FlagTaken, // (Enemy): The enemy has stolen our intel! (Own): We captured enemy intel.
+        FlagScored,// (Enemy): The enemy has uploaded our intel! (Own): We have secured enemy intel.
         SubKill,   // (Own): Our submarine was lost.  (Enemy): We have sunk an enemy!
-        FlagSubKill// (Own): We have lost the enemy flag. (Enemy): We have recovered our flag.
+        FlagSubKill// (Own): We have lost the enemy intel. (Enemy): We have recovered our intel.
     };
 
     Type type;

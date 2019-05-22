@@ -4,7 +4,8 @@
 
 VoiceHandler::VoiceHandler()
     : EventReceiver({
-        dispatchEvent<VoiceHandler, StatusUpdateEvent, &VoiceHandler::handleStatusUpdate>
+        dispatchEvent<VoiceHandler, StatusUpdateEvent, &VoiceHandler::handleStatusUpdate>,
+        dispatchEvent<VoiceHandler, TeamOwnership, &VoiceHandler::handleTeamEvent>,
         })
 {
     SDL_AudioSpec desiredSpec;
@@ -25,6 +26,15 @@ VoiceHandler::VoiceHandler()
     SDL_PauseAudioDevice(outputDeviceID, 0); // unpause
 
     voiceGameStart = loadVoice("data/sounds/gameStart.wav");
+
+    voiceOwnFlagTaken = loadVoice("data/sounds/flagTakenUs.wav");
+    voiceEnemyFlagTaken = loadVoice("data/sounds/flagTakenEnemy.wav");
+    voiceOwnFlagScored = loadVoice("data/sounds/flagScoredUs.wav");
+    voiceEnemyFlagScored = loadVoice("data/sounds/flagScoredEnemy.wav");
+    voiceOwnSubKill = loadVoice("data/sounds/subKillUs.wav");
+    voiceEnemySubKill = loadVoice("data/sounds/subKillEnemy.wav");
+    voiceOwnFlagSubKill = loadVoice("data/sounds/flagSubKillUs.wav");
+    voiceEnemyFlagSubKill = loadVoice("data/sounds/flagSubKillEnemy.wav");
 }
 
 VoiceHandler::~VoiceHandler()
@@ -84,6 +94,12 @@ void VoiceHandler::playVoice(const std::vector<uint8_t> *voice)
     }
 }
 
+HandleResult VoiceHandler::handleTeamEvent(TeamOwnership* event)
+{
+    team = event->team;
+    return HandleResult::Stop;
+}
+
 HandleResult VoiceHandler::handleStatusUpdate(StatusUpdateEvent *event)
 {
     switch (event->type)
@@ -91,9 +107,54 @@ HandleResult VoiceHandler::handleStatusUpdate(StatusUpdateEvent *event)
         case StatusUpdateEvent::GameStart:
             playVoice(&voiceGameStart);
             break;
+
+        case StatusUpdateEvent::FlagTaken:
+            if (event->team != team)
+            {
+               playVoice(&voiceEnemyFlagTaken);
+            }
+            else
+            {
+                playVoice(&voiceOwnFlagTaken);
+            }
+            break;
+
+        case StatusUpdateEvent::FlagScored:
+            if (event->team != team)
+            {
+               playVoice(&voiceEnemyFlagScored);
+            }
+            else
+            {
+                playVoice(&voiceOwnFlagScored);
+            }
+            break;
+
+        case StatusUpdateEvent::SubKill:
+            if (event->team != team)
+            {
+               playVoice(&voiceEnemySubKill);
+            }
+            else
+            {
+                playVoice(&voiceOwnSubKill);
+            }
+            break;
+
+        case StatusUpdateEvent::FlagSubKill:
+            if (event->team != team)
+            {
+               playVoice(&voiceEnemyFlagSubKill);
+            }
+            else
+            {
+                playVoice(&voiceOwnFlagSubKill);
+            }
+            break;
+
         default:
             break;
     }
-    return HandleResult::Stop;
+    return HandleResult::Continue;
 }
 

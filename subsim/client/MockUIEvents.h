@@ -78,3 +78,16 @@ public:
 
     bool shouldIgnore;
 };
+
+/**
+ * Event sent when we know what team we are on
+ */
+class TeamOwnership : public Event
+{
+public:
+    TeamOwnership() : Event(category, id) {}
+    constexpr static uint32_t category = Events::Category::MockUI;
+    constexpr static uint32_t id = Events::MockUIEvents::TeamOwnership;
+
+    uint32_t team;
+};

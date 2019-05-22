@@ -20,6 +20,15 @@ HandleResult SimulationMaster::simStart(SimulationStart* event)
 {
     stations = event->stations;
 
+    TeamOwnership team;
+    for (auto station : stations)
+    {
+        team.team = station.team;
+    }
+    EventSystem::getGlobalInstance()->queueEvent(team);
+
+
+
     Log::writeToLog(Log::INFO, "Simulation started; closing lobby.");
     // Unhook the lobby handler and destroy it
     //ugly hack to destroy without getting into mutex land
