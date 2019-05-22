@@ -273,7 +273,7 @@ void TacticalStation::redraw()
     renderSDTerrain();
 
     uint32_t ownColor;
-    if (!lastState.isStealth)
+    if (!lastState.isStealth || lastState.respawning)
     {
         ownColor = friendColor;
     } else if (lastState.isStealth && lastState.stealthCooldown == 0) {
@@ -298,7 +298,7 @@ void TacticalStation::redraw()
             continue;
         }
         uint8_t colorIntensity;
-        if (!u.isStealth)
+        if (!u.isStealth || u.respawning)
         {
             colorIntensity = 255;
         } else if (u.isStealth && u.stealthCooldown > 0) {

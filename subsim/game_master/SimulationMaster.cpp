@@ -168,7 +168,7 @@ void SimulationMaster::runSimLoop()
 
                 // Skip sonar state if this unit is correctly in stealth mode without the flag
                 if (unitState.isStealth && unitState.stealthCooldown == 0
-                    && !unitState.hasFlag)
+                    && !unitState.hasFlag && !unitState.respawning)
                 {
                     continue;
                 }
