@@ -54,20 +54,6 @@ HandleResult TacticalStation::handleKeypress(KeyEvent* keypress)
         return HandleResult::Unhandled;
     }
 
-    if (keypress->isDown == false && keypress->key == Key::Enter)
-    {
-        // Swap text input status
-        IgnoreKeypresses ignore;
-        receivingText = !receivingText;
-        ignore.shouldIgnore = receivingText;
-        // Inform other modules that we are receiving text
-        EventSystem::getGlobalInstance()->queueEvent(ignore);
-
-        // And update the UI
-        UI::getGlobalUI()->changeTextInput(receivingText);
-        return HandleResult::Stop;
-    }
-
     if (keypress->isDown == false && keypress->key == Key::Space)
     {
         FireEvent fire;
@@ -213,18 +199,11 @@ HandleResult TacticalStation::handleKeypress(KeyEvent* keypress)
 
 HandleResult TacticalStation::handleText(TextInputEvent* text)
 {
-    std::lock_guard<std::mutex> lock(UI::getGlobalUI()->redrawMux);
-
-    Log::writeToLog(Log::L_DEBUG, "Received TextInput from the server. Text:", text->text);
     return HandleResult::Stop;
 }
 
 HandleResult TacticalStation::receiveTextMessage(TextMessage* message)
 {
-    std::lock_guard<std::mutex> lock(UI::getGlobalUI()->redrawMux);
-
-    Log::writeToLog(Log::L_DEBUG, "Received TextMessage from the server. Message:", message->message);
-
     return HandleResult::Stop;
 }
 
