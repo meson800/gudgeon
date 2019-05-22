@@ -181,6 +181,7 @@ void SimulationMaster::runSimLoop()
                 unitSonarState.depth = unitState.depth;
                 unitSonarState.heading = unitState.heading;
                 unitSonarState.speed = unitState.speed;
+                unitSonarState.power = unitState.powerAvailable;
                 unitSonarState.hasFlag = unitState.hasFlag;
                 unitSonarState.isStealth = unitState.isStealth;
                 unitSonarState.stealthCooldown = unitState.stealthCooldown;

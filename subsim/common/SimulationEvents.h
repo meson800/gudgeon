@@ -241,6 +241,8 @@ struct UnitSonarState
 
     uint16_t speed;
 
+    int16_t power;
+
     bool isStealth;
     uint16_t stealthCooldown;
 

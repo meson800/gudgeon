@@ -266,7 +266,7 @@ void TacticalStation::redraw()
     }
     renderSDSubmarine(
         lastState.x, lastState.y, lastState.heading,
-        lastState.hasFlag,
+        lastState.hasFlag, lastState.powerAvailable,
         ownColor, enemyColor, lastState.respawning);
 
     for (const UnitSonarState &u : lastSonar.units)
@@ -287,7 +287,7 @@ void TacticalStation::redraw()
         }
         renderSDSubmarine(
             u.x, u.y, u.heading,
-            u.hasFlag,
+            u.hasFlag, u.power,
             rgba_to_color(colorIntensity, colorIntensity, colorIntensity, 255),
             // If the sub is on our team, assume it's carrying an enemy flag,
             // and vice versa
@@ -544,7 +544,7 @@ void TacticalStation::renderSDTerrain()
 
 void TacticalStation::renderSDSubmarine(
     int64_t x, int64_t y, int16_t heading,
-    bool hasFlag,
+    bool hasFlag, int16_t power,
     uint32_t color, uint32_t flagColor, bool destroyed)
 {
     float u = cos(heading * 2*M_PI/360.0);
@@ -557,6 +557,16 @@ void TacticalStation::renderSDSubmarine(
         renderSDLine(x+u*100+v*100, y+v*100-u*100, x-u*100+v*100, y-v*100-u*100, color);
         renderSDLine(x+u*100-v*100, y+v*100+u*100, x-u*100-v*100, y-v*100+u*100, color);
         renderSDCircle(x+u*70, y+v*70, 40, color);
+        // Render the health bar
+        if (power == 100)
+        {
+            renderSDCircle(x+u*70, y+v*70, 65, color);
+        }
+        else
+        {
+            double health = power < 0 ? 1.0 : 1.0 - power / 100.0;
+            renderSDArc(x+u*70, y+v*70, 65, heading, heading + 359 * health, color);
+        }
     }
     else
     {

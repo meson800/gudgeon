@@ -63,7 +63,7 @@ private:
     /// Renders a submarine on the sonar screen
     void renderSDSubmarine(
         int64_t x, int64_t y, int16_t heading,
-        bool hasFlag,
+        bool hasFlag, int16_t power,
         uint32_t color, uint32_t flagColor, bool destroyed=false);
 
     /// Renders a flag on the sonar screen with SD coordinates

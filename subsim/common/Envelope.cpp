@@ -95,7 +95,8 @@ void EnvelopeMessage::deserialize(RakNet::BitStream& source)
                     {
                         source >> sd.units[i].team >> sd.units[i].unit
                             >> sd.units[i].x >> sd.units[i].y >> sd.units[i].depth
-                            >> sd.units[i].heading >> sd.units[i].speed >> sd.units[i].hasFlag
+                            >> sd.units[i].heading >> sd.units[i].speed >> sd.units[i].power
+                            >> sd.units[i].hasFlag
                             >> sd.units[i].isStealth >> sd.units[i].stealthCooldown
                             >> sd.units[i].respawning >> sd.units[i].respawnCooldown;
                     }
@@ -333,7 +334,8 @@ void EnvelopeMessage::serialize(RakNet::BitStream& source) const
                     {
                         source << unit.team << unit.unit
                           << unit.x << unit.y << unit.depth
-                          << unit.heading << unit.speed << unit.hasFlag
+                          << unit.heading << unit.speed << unit.power
+                          << unit.hasFlag
                           << unit.isStealth << unit.stealthCooldown
                           << unit.respawning << unit.respawnCooldown;
                     }
