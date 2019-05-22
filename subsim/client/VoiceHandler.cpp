@@ -23,7 +23,7 @@ VoiceHandler::VoiceHandler()
     }
     SDL_PauseAudioDevice(outputDeviceID, 0); // unpause
 
-    voiceGameStart = loadVoice("data/voice_game_start.wav");
+    voiceGameStart = loadVoice("data/sounds/gameStart.wav");
     playVoice(&voiceGameStart);
 }
 
@@ -78,7 +78,7 @@ std::vector<uint8_t> VoiceHandler::loadVoice(const char *filename)
 
 void VoiceHandler::playVoice(const std::vector<uint8_t> *voice)
 {
-    if (!SDL_QueueAudio(outputDeviceID, voice->data(), voice->size()))
+    if (SDL_QueueAudio(outputDeviceID, voice->data(), voice->size()) < 0)
     {
         throw SDLError("SDL_QueueAudio");
     }
