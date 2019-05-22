@@ -21,7 +21,7 @@ constexpr uint32_t friendColor = rgba_to_color(0, 255, 0, 255);
 constexpr uint32_t stealthColor = rgba_to_color(0, 70, 0, 255);
 constexpr uint32_t enemyColor = rgba_to_color(255, 0, 0, 255);
 
-TacticalStation::TacticalStation(uint32_t team_, uint32_t unit_, Config* config_)
+TacticalStation::TacticalStation(uint32_t team_, uint32_t unit_, Config* config_, std::map<uint32_t, std::string> teamNames_)
     : Renderable(WIDTH, HEIGHT)
     , EventReceiver({
         dispatchEvent<TacticalStation, KeyEvent, &TacticalStation::handleKeypress>,
@@ -35,6 +35,7 @@ TacticalStation::TacticalStation(uint32_t team_, uint32_t unit_, Config* config_
     , team(team_)
     , unit(unit_)
     , receivingText(false)
+    , teamNames(teamNames_)
     , config(config_)
     , terrainTexture(NULL)
 {}
@@ -379,7 +380,7 @@ void TacticalStation::redraw()
     for (auto& scorePair : scores)
     {
         std::ostringstream ss;
-        ss << "Team " << scorePair.first << ": " << scorePair.second;
+        ss << "Team " << teamNames[scorePair.first] << ": " << scorePair.second;
         drawText(ss.str(), 20, x, y);
         x += 150;
     }

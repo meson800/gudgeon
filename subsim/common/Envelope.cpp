@@ -56,6 +56,8 @@ void EnvelopeMessage::deserialize(RakNet::BitStream& source)
                         simevent.stations.push_back(station);
                     }
 
+                    source >> simevent.teamNames;
+
                     Log::writeToLog(Log::L_DEBUG, "Deserialized a SimStart event from node ", address, ". Responsible for stations: ", sstream.str());
 
                         
@@ -302,6 +304,8 @@ void EnvelopeMessage::serialize(RakNet::BitStream& source) const
                     {
                         source << station.team << station.unit << station.station;
                     }
+
+                    source << simevent->teamNames;
                 }
                 break;
 

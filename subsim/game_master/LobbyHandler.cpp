@@ -187,12 +187,21 @@ bool LobbyHandler::LobbyStatusRequested(RakNet::RakNetGUID other, const LobbySta
     if (done)
     {
         Log::writeToLog(Log::INFO, "Lobby creation completed; all stations assigned. Sending SimulationStart messages.");
+        // Extract TeamNames to send to each client
+        std::map<uint32_t, std::string> names;
+
+        for (auto& team_pair : status.stations)
+        {
+            names[team_pair.first] = team_pair.second.first;
+        }
+
         for (auto& pair : assignments)
         {
             Log::writeToLog(Log::L_DEBUG, "Sending SimulationStart event to client ", pair.first, " who owns ", pair.second.size(), " stations.");
             // Create the SimStart event
             SimulationStart sstart;
             sstart.stations = pair.second;
+            sstart.teamNames = names;
 
             EnvelopeMessage envelope(sstart, pair.first);
             // deliver simstart's to all attached clients!

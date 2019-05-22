@@ -16,7 +16,7 @@ class HelmStation : public EventReceiver, public Renderable
 {
 public:
     /// Init internal state
-    HelmStation(uint32_t team_, uint32_t unit_); 
+    HelmStation(uint32_t team_, uint32_t unit_, std::map<uint32_t, std::string> teamNames_); 
 
     /// Handles key events from SDL. This enables/disables text input using the enter key
     HandleResult handleKeypress(KeyEvent* keypress);
@@ -39,6 +39,9 @@ private:
 
     /// Stores the last score update we got
     std::map<uint32_t, uint32_t> scores;
+
+    /// Stores the team names
+    std::map<uint32_t, std::string> teamNames;
 
     /// Stores if we are ignoring key input because text entry is happening
     bool ignoringMocks;

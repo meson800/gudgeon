@@ -61,5 +61,8 @@ private:
 
     /// Stores the config for this game
     Config config;
+
+    /// Stores the team names
+    std::map<uint32_t, std::string> teamNames;
 };
 
