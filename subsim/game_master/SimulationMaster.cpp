@@ -56,10 +56,6 @@ UnitState SimulationMaster::initialUnitState(uint32_t team, uint32_t unit)
     }
 
     std::pair<int64_t, int64_t> start = config.startLocations[team][0];
-    start.first *= config.terrain.scale;
-    start.first += config.terrain.scale / 2;
-    start.second *= config.terrain.scale;
-    start.second += config.terrain.scale / 2;
 
     UnitState unitState;
     unitState.team = team;
@@ -325,10 +321,6 @@ void SimulationMaster::runSimForUnit(UnitState *unitState)
     {
         // Otherwise, check if we have delivered the flag back to the spawn location
         auto startLoc = config.startLocations[unitState->team].at(0);
-        startLoc.first *= config.terrain.scale;
-        startLoc.first += config.terrain.scale / 2;
-        startLoc.second *= config.terrain.scale;
-        startLoc.second += config.terrain.scale / 2;
 
         if (didCollide(unitState->x, unitState->y,
             startLoc.first, startLoc.second, config.collisionRadius*2))
@@ -434,10 +426,8 @@ HandleResult SimulationMaster::simStart(SimulationStartServer* event)
         {
             FlagState flag;
             flag.team = teamFlags.first;
-            flag.x = flagLocation.first * config.terrain.scale;
-            flag.x += config.terrain.scale / 2;
-            flag.y = flagLocation.second * config.terrain.scale;
-            flag.y += config.terrain.scale / 2;
+            flag.x = flagLocation.first;
+            flag.y = flagLocation.second;
             flag.depth = 0;
             flag.isTaken = false;
 
@@ -588,6 +578,39 @@ HandleResult SimulationMaster::fire(FireEvent *event)
                     - 1.5 * config.collisionRadius * v
                     - 2.0 * (minSpreadPos + i) * config.collisionRadius * u;
                 mine.depth = unit.depth;
+
+                /// Calculate if the mine falls within an exclusion zone
+                bool isExcluded = false;
+                for (const auto &startPair : config.startLocations)
+                {
+                    for (const auto &startPos : startPair.second)
+                    {
+                        if (didCollide(
+                            mine.x, mine.y,
+                            startPos.first, startPos.second,
+                            config.mineExclusionRadius))
+                        {
+                            isExcluded = true;
+                        }
+                    }
+                }
+                for (const auto &flagPair : config.flags)
+                {
+                    for (const auto &flagPos : flagPair.second)
+                    {
+                        if (didCollide(
+                            mine.x, mine.y,
+                            flagPos.first, flagPos.second,
+                            config.mineExclusionRadius))
+                        {
+                            isExcluded = true;
+                        }
+                    }
+                }
+                if (isExcluded)
+                {
+                    continue;
+                }
 
                 mines[nextMineID++] = mine;
                 Log::writeToLog(Log::L_DEBUG, "Laid mine from team ",

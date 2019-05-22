@@ -27,6 +27,14 @@ public:
         }
         return map[tx+(height-1-ty)*width];
     }
+    
+    std::pair<int64_t, int64_t> convertMapCoords(int32_t tx, int32_t ty) const
+    {
+        return std::pair<int64_t, int64_t>(
+            tx * scale + scale/2,
+            ty * scale + scale/2
+        );
+    }
 };
 
 class Config
@@ -50,6 +58,8 @@ public:
     uint16_t torpedoSpread;
     uint16_t torpedoSpeed;
     uint16_t collisionRadius;
+
+    uint16_t mineExclusionRadius;
 
     uint16_t frameMilliseconds;
 };

@@ -208,13 +208,25 @@ void EnvelopeMessage::deserialize(RakNet::BitStream& source)
                 case Events::Sim::Config:
                 {
                     ConfigEvent ce;
-                    source >> ce.config.subTurningSpeed >> ce.config.subAcceleration >> ce.config.subMaxSpeed 
-                        >> ce.config.maxTorpedos >> ce.config.maxMines
-                        >> ce.config.sonarRange >> ce.config.passiveSonarNoiseFloor
-                        >> ce.config.torpedoSpread >> ce.config.torpedoSpeed >> ce.config.collisionRadius
-                        >> ce.config.startLocations >> ce.config.flags
-                        >> ce.config.terrain.map >> ce.config.terrain.width 
-                        >> ce.config.terrain.height >> ce.config.terrain.scale;
+                    source
+                        >> ce.config.terrain.map
+                        >> ce.config.terrain.width
+                        >> ce.config.terrain.height
+                        >> ce.config.terrain.scale
+                        >> ce.config.startLocations
+                        >> ce.config.flags
+                        >> ce.config.subTurningSpeed
+                        >> ce.config.subAcceleration
+                        >> ce.config.subMaxSpeed 
+                        >> ce.config.maxTorpedos
+                        >> ce.config.maxMines
+                        >> ce.config.sonarRange
+                        >> ce.config.passiveSonarNoiseFloor
+                        >> ce.config.torpedoSpread
+                        >> ce.config.torpedoSpeed
+                        >> ce.config.sonarRange
+                        >> ce.config.mineExclusionRadius
+                        >> ce.config.frameMilliseconds;
 
                     EventSystem::getGlobalInstance()->queueEvent(ce);
                 }
@@ -397,13 +409,25 @@ void EnvelopeMessage::serialize(RakNet::BitStream& source) const
                 case Events::Sim::Config:
                 {
                     ConfigEvent* ce = (ConfigEvent*)event.get();
-                    source << ce->config.subTurningSpeed << ce->config.subAcceleration << ce->config.subMaxSpeed 
-                        << ce->config.maxTorpedos << ce->config.maxMines
-                        << ce->config.sonarRange << ce->config.passiveSonarNoiseFloor
-                        << ce->config.torpedoSpread << ce->config.torpedoSpeed << ce->config.sonarRange
-                        << ce->config.startLocations << ce->config.flags
-                        << ce->config.terrain.map << ce->config.terrain.width << ce->config.terrain.height << ce->config.terrain.scale;
-
+                    source
+                        << ce->config.terrain.map
+                        << ce->config.terrain.width
+                        << ce->config.terrain.height
+                        << ce->config.terrain.scale
+                        << ce->config.startLocations
+                        << ce->config.flags
+                        << ce->config.subTurningSpeed
+                        << ce->config.subAcceleration
+                        << ce->config.subMaxSpeed 
+                        << ce->config.maxTorpedos
+                        << ce->config.maxMines
+                        << ce->config.sonarRange
+                        << ce->config.passiveSonarNoiseFloor
+                        << ce->config.torpedoSpread
+                        << ce->config.torpedoSpeed
+                        << ce->config.sonarRange
+                        << ce->config.mineExclusionRadius
+                        << ce->config.frameMilliseconds;
                 }
                 break;
 

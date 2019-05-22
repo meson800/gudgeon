@@ -142,11 +142,32 @@ Config ConfigParser::parseConfig(const ParseResult& parse)
                 sstream >> result.passiveSonarNoiseFloor;
             }
 
+            if (key == "mine_exclusion_radius")
+            {
+                sstream >> result.mineExclusionRadius;
+            }
+
             if (key == "frame_milliseconds")
             {
                 sstream >> result.frameMilliseconds;
             }
         }
     }
+
+    for (auto &startPair : result.startLocations)
+    {
+        for (auto &startPos : startPair.second)
+        {
+            startPos = result.terrain.convertMapCoords(startPos.first, startPos.second);
+        }
+    }
+    for (auto &flagPair : result.flags)
+    {
+        for (auto &flagPos : flagPair.second)
+        {
+            flagPos = result.terrain.convertMapCoords(flagPos.first, flagPos.second);
+        }
+    }
+
     return result;
 }

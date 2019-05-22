@@ -318,25 +318,30 @@ void TacticalStation::redraw()
     }
     explosions = std::move(newExplosions);
 
+    uint32_t ourColor = rgba_to_color(255, 0, 0, 255);
+    uint32_t theirColor = rgba_to_color(0, 255, 0, 255);
+    uint32_t mineExclusionColor = rgba_to_color(255, 255, 255, 255);
+
     for (const FlagState &flag : lastSonar.flags)
     {
         if (!flag.isTaken)
         {
-            uint32_t ourColor = rgba_to_color(255, 0, 0, 255);
-            uint32_t theirColor = rgba_to_color(0, 255, 0, 255);
-
             uint32_t color = flag.team == team ? ourColor : theirColor;
             renderSDFlag(flag.x, flag.y, color);
         }
+
+        // render exclusion zone even if flag is taken
+        renderSDCircle(flag.x, flag.y, config->mineExclusionRadius, mineExclusionColor);
     }
 
-    // render our starting location
-    auto startLoc = config->startLocations[team].at(0);
-    startLoc.first *= config->terrain.scale;
-    startLoc.first += config->terrain.scale / 2;
-    startLoc.second *= config->terrain.scale;
-    startLoc.second += config->terrain.scale / 2;
-    renderSDCircle(startLoc.first, startLoc.second, 200, rgba_to_color(255, 255, 255, 255));
+    // render starting locations
+    for (const auto &startPair : config->startLocations)
+    {
+        auto startLoc = startPair.second.at(0);
+        uint32_t color = startPair.first == team ? ourColor : theirColor;
+        renderSDCircle(startLoc.first, startLoc.second, 200, color);
+        renderSDCircle(startLoc.first, startLoc.second, config->mineExclusionRadius, mineExclusionColor);
+    }
 
     renderTubeState();
     renderSonarState();
@@ -498,7 +503,7 @@ void TacticalStation::renderSDTerrain()
     }
     for (int64_t ty = ty_min; ty < ty_max; ++ty)
     {
-        renderSDLine(ty_min*s, ty*s, ty_max*s, ty*s, gridColor);
+        renderSDLine(tx_min*s, ty*s, tx_max*s, ty*s, gridColor);
     }
 }
 
