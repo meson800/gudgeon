@@ -17,6 +17,9 @@ static constexpr uint32_t rgba_to_color(uint8_t r, uint8_t g, uint8_t b, uint8_t
     return ((uint32_t)a << 24) | ((uint32_t)b << 16) | ((uint32_t)g << 8) | ((uint32_t)r);
 }
 
+constexpr uint32_t friendColor = rgba_to_color(0, 255, 0, 255);
+constexpr uint32_t enemyColor = rgba_to_color(255, 0, 0, 255);
+
 TacticalStation::TacticalStation(uint32_t team_, uint32_t unit_, Config* config_)
     : Renderable(WIDTH, HEIGHT)
     , EventReceiver({
@@ -268,7 +271,10 @@ void TacticalStation::redraw()
 
     renderSDTerrain();
 
-    renderSDSubmarine(lastState.x, lastState.y, lastState.heading, lastState.hasFlag);
+    renderSDSubmarine(
+        lastState.x, lastState.y, lastState.heading,
+        lastState.hasFlag,
+        friendColor, enemyColor);
 
     for (const UnitSonarState &u : lastSonar.units)
     {
@@ -277,7 +283,13 @@ void TacticalStation::redraw()
             // Don't draw ourself this way
             continue;
         }
-        renderSDSubmarine(u.x, u.y, u.heading, u.hasFlag);
+        renderSDSubmarine(
+            u.x, u.y, u.heading,
+            u.hasFlag,
+            rgba_to_color(255, 255, 255, 255),
+            // If the sub is on our team, assume it's carrying an enemy flag,
+            // and vice versa
+            (u.team == team) ? enemyColor : friendColor);
 
         // Draw targeting reticule
         if (lastState.targetIsLocked &&
@@ -285,7 +297,7 @@ void TacticalStation::redraw()
             u.unit == lastState.targetUnit)
         {
             int16_t x = sdX(u.x, u.y), y = sdY(u.x, u.y);
-            uint32_t color = rgba_to_color(255, 255, 255, 255);
+            uint32_t color = rgba_to_color(0, 0, 255, 255);
             circleColor(renderer, x, y, 30, color);
             lineColor(renderer, x+20, y, x+35, y, color);
             lineColor(renderer, x, y+20, x, y+35, color);
@@ -298,19 +310,19 @@ void TacticalStation::redraw()
     {
         float u = cos(torp.heading * 2*M_PI/360.0);
         float v = sin(torp.heading * 2*M_PI/360.0);
-        uint32_t color = rgba_to_color(255, 0, 0, 255);
+        uint32_t color = rgba_to_color(255, 255, 255, 255);
         renderSDLine(torp.x-u*50, torp.y-v*50, torp.x+u*50, torp.y+v*50, color);
     }
 
     for (const MineState &mine : lastSonar.mines)
     {
-        renderSDCircle(mine.x, mine.y, 200, rgba_to_color(255, 0, 0, 255));
+        renderSDCircle(mine.x, mine.y, 200, rgba_to_color(255, 255, 255, 255));
     }
 
     std::vector<ExplosionEvent> newExplosions;
     for (ExplosionEvent &exp : explosions)
     {
-        renderSDCircle(exp.x, exp.y, exp.size*10, rgba_to_color(255, 0, 0, 255));
+        renderSDCircle(exp.x, exp.y, exp.size*10, rgba_to_color(150, 150, 150, 255));
         exp.size -= 2;
         if (exp.size > 0) {
             newExplosions.push_back(exp);
@@ -318,15 +330,13 @@ void TacticalStation::redraw()
     }
     explosions = std::move(newExplosions);
 
-    uint32_t ourColor = rgba_to_color(255, 0, 0, 255);
-    uint32_t theirColor = rgba_to_color(0, 255, 0, 255);
     uint32_t mineExclusionColor = rgba_to_color(255, 255, 255, 255);
 
     for (const FlagState &flag : lastSonar.flags)
     {
         if (!flag.isTaken)
         {
-            uint32_t color = flag.team == team ? ourColor : theirColor;
+            uint32_t color = flag.team == team ? friendColor : enemyColor;
             renderSDFlag(flag.x, flag.y, color);
         }
 
@@ -338,7 +348,7 @@ void TacticalStation::redraw()
     for (const auto &startPair : config->startLocations)
     {
         auto startLoc = startPair.second.at(0);
-        uint32_t color = startPair.first == team ? ourColor : theirColor;
+        uint32_t color = startPair.first == team ? friendColor : enemyColor;
         renderSDCircle(startLoc.first, startLoc.second, 200, color);
         renderSDCircle(startLoc.first, startLoc.second, config->mineExclusionRadius, mineExclusionColor);
     }
@@ -507,16 +517,13 @@ void TacticalStation::renderSDTerrain()
     }
 }
 
-void TacticalStation::renderSDSubmarine(int64_t x, int64_t y, int16_t heading, bool hasFlag)
+void TacticalStation::renderSDSubmarine(
+    int64_t x, int64_t y, int16_t heading,
+    bool hasFlag,
+    uint32_t color, uint32_t flagColor)
 {
     float u = cos(heading * 2*M_PI/360.0);
     float v = sin(heading * 2*M_PI/360.0);
-    uint32_t color = rgba_to_color(255, 0, 0, 255);
-
-    if (hasFlag)
-    {
-        renderSDFlag(x, y, color);
-    }
 
     renderSDArc(x+u*100, y+v*100, 100, heading+90, heading-90, color);
     renderSDArc(x-u*100, y-v*100, 100, heading-90, heading+90, color);
@@ -526,7 +533,7 @@ void TacticalStation::renderSDSubmarine(int64_t x, int64_t y, int16_t heading, b
 
     if (hasFlag)
     {
-        renderSDFlag(x, y, color);
+        renderSDFlag(x, y, flagColor);
     }
 }
 
