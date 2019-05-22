@@ -567,7 +567,7 @@ void TacticalStation::renderSDSubmarine(
         renderSDCircle(x+u*70, y+v*70, 40, color);
     }
 
-    if (hasFlag)
+    if (hasFlag && !destroyed)
     {
         renderSDFlag(x, y, flagColor);
     }
