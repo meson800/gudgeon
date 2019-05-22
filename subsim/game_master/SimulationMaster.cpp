@@ -7,6 +7,10 @@
 #include "../common/Log.h"
 #include "../common/Exceptions.h"
 
+inline bool didCollide(int64_t x1, int64_t y1, int64_t x2, int64_t y2, int32_t radius)
+{
+    return (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1) < radius * radius;
+}
 
 SimulationMaster::SimulationMaster(Network* network_, const std::string& filename)
     : shouldShutdown(false)
@@ -105,14 +109,29 @@ void SimulationMaster::runSimLoop()
         auto it = torpedos.begin();
         while (it != torpedos.end())
         {
+            bool destroyed = false;
             if (config.terrain.colorAt(
                 it->second.x / config.terrain.scale,
                 it->second.y / config.terrain.scale) == Terrain::WALL)
             {
-                it = torpedos.erase(it);
-            } else {
-                ++it;
+                destroyed = true;
             }
+            else
+            {
+                for (auto& minePair : mines) {
+                    if (didCollide(
+                        it->second.x, it->second.y,
+                        minePair.second.x, minePair.second.y,
+                        config.collisionRadius))
+                    {
+                        mines.erase(minePair.first);
+                        destroyed = true;
+                        break;
+                    }
+                }
+            }
+            if (destroyed) it = torpedos.erase(it);
+            else ++it;
         }
 
         for (auto& torpedoPair : torpedos)
@@ -132,7 +151,6 @@ void SimulationMaster::runSimLoop()
         {
             sonar.flags.push_back(flagPair.second);
         }
-                
 
         for (auto& teamPair : unitStates)
         {
@@ -175,11 +193,6 @@ void SimulationMaster::runSimLoop()
             EventSystem::getGlobalInstance()->queueEvent(scoreEnvelope);
         }
     }
-}
-
-inline bool didCollide(int64_t x1, int64_t y1, int64_t x2, int64_t y2, int32_t radius)
-{
-    return (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1) < radius * radius;
 }
 
 void SimulationMaster::runSimForUnit(UnitState *unitState)
@@ -541,14 +554,25 @@ HandleResult SimulationMaster::fire(FireEvent *event)
 
         if (mineCount > 0)
         {
-            MineState mine;
-            mine.x = unit.x - 1.5 * config.collisionRadius * cos(unit.heading * 2*M_PI/360.0);
-            mine.y = unit.y - 1.5 * config.collisionRadius * sin(unit.heading * 2*M_PI/360.0);
-            mine.depth = unit.depth;
+            float u = cos(unit.heading * 2*M_PI/360.0);
+            float v = sin(unit.heading * 2*M_PI/360.0);
 
-            mines[nextMineID++] = mine;
-            Log::writeToLog(Log::L_DEBUG, "Laid mine from team ",
-                unit.team, " unit ", unit.unit);
+            float minSpreadPos = - (mineCount - 1) / 2.0;
+            for (int i = 0; i < mineCount; ++i)
+            {
+                MineState mine;
+                mine.x = unit.x
+                    - 1.5 * config.collisionRadius * u
+                    + 2.0 * (minSpreadPos + i) * config.collisionRadius * v;
+                mine.y = unit.y
+                    - 1.5 * config.collisionRadius * v
+                    - 2.0 * (minSpreadPos + i) * config.collisionRadius * u;
+                mine.depth = unit.depth;
+
+                mines[nextMineID++] = mine;
+                Log::writeToLog(Log::L_DEBUG, "Laid mine from team ",
+                    unit.team, " unit ", unit.unit);
+            }
         }
     }
     return HandleResult::Stop;
