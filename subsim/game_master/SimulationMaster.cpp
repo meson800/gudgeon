@@ -227,8 +227,6 @@ void SimulationMaster::runSimForUnit(UnitState *unitState)
         setSpeed = config.stealthSpeedLimit;
     }
 
-    Log::writeToLog(Log::L_DEBUG, "Set speed:", setSpeed);
-
     // Update submarine speed
     if (unitState->speed < setSpeed - config.subAcceleration)
     {
@@ -274,8 +272,9 @@ void SimulationMaster::runSimForUnit(UnitState *unitState)
         if (unitState->speed > 10)
         {
             Log::writeToLog(Log::INFO, "Submarine struck terrain");
-            damage(unitState->team, unitState->unit, unitState->speed * 2);
-            explosion(nextX, nextY, unitState->speed * 2);
+            uint16_t dmg = (uint32_t)config.collisionDamage * unitState->speed / config.subMaxSpeed;
+            damage(unitState->team, unitState->unit, dmg);
+            explosion(nextX, nextY, dmg);
         }
         unitState->speed = 0;
     } else {
@@ -293,8 +292,8 @@ void SimulationMaster::runSimForUnit(UnitState *unitState)
                 config.collisionRadius))
         {
             Log::writeToLog(Log::INFO, "Torpedo struck submarine");
-            damage(unitState->team, unitState->unit, 50);
-            explosion(torpedoPair.second.x, torpedoPair.second.y, 50);
+            damage(unitState->team, unitState->unit, config.torpedoDamage);
+            explosion(torpedoPair.second.x, torpedoPair.second.y, config.torpedoDamage);
             torpedosHit.push_back(torpedoPair.first);
         }
     }
@@ -324,8 +323,8 @@ void SimulationMaster::runSimForUnit(UnitState *unitState)
                 config.collisionRadius))
         {
             Log::writeToLog(Log::INFO, "Mine struck submarine");
-            damage(unitState->team, unitState->unit, 50);
-            explosion(minePair.second.x, minePair.second.y, 50);
+            damage(unitState->team, unitState->unit, config.mineDamage);
+            explosion(minePair.second.x, minePair.second.y, config.mineDamage);
             minesHit.push_back(minePair.first);
         }
     }
@@ -412,7 +411,7 @@ void SimulationMaster::damage(uint32_t team, uint32_t unit, int16_t amount)
     Log::writeToLog(Log::INFO, "Team ", team, " unit ", unit,
         " damaged for ", amount, "; remaining power is ", u->powerAvailable);
 
-    if (u->powerAvailable < 0) {
+    if (u->powerAvailable <= 0) {
         explosion(u->x, u->y, 50);
         Log::writeToLog(Log::INFO, "Team ", team, " unit ", unit, " destroyed!");
 

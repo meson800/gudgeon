@@ -60,6 +60,10 @@ public:
     uint16_t torpedoSpeed;
     uint16_t collisionRadius;
 
+    uint16_t torpedoDamage;
+    uint16_t mineDamage;
+    uint16_t collisionDamage;
+
     uint16_t mineExclusionRadius;
 
     uint16_t frameMilliseconds;

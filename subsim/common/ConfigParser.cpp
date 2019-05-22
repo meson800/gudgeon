@@ -127,6 +127,21 @@ Config ConfigParser::parseConfig(const ParseResult& parse)
                 sstream >> result.collisionRadius;
             }
 
+            if (key == "torpedo_damage")
+            {
+                sstream >> result.torpedoDamage;
+            }
+
+            if (key == "mine_damage")
+            {
+                sstream >> result.mineDamage;
+            }
+
+            if (key == "collision_damage")
+            {
+                sstream >> result.collisionDamage;
+            }
+
             if (key == "max_mines")
             {
                 sstream >> result.maxMines;

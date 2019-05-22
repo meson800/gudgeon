@@ -228,7 +228,10 @@ void EnvelopeMessage::deserialize(RakNet::BitStream& source)
                         >> ce.config.passiveSonarNoiseFloor
                         >> ce.config.torpedoSpread
                         >> ce.config.torpedoSpeed
-                        >> ce.config.sonarRange
+                        >> ce.config.collisionRadius
+                        >> ce.config.torpedoDamage
+                        >> ce.config.mineDamage
+                        >> ce.config.collisionDamage
                         >> ce.config.mineExclusionRadius
                         >> ce.config.frameMilliseconds
                         >> ce.config.stealthCooldown
@@ -444,7 +447,10 @@ void EnvelopeMessage::serialize(RakNet::BitStream& source) const
                         << ce->config.passiveSonarNoiseFloor
                         << ce->config.torpedoSpread
                         << ce->config.torpedoSpeed
-                        << ce->config.sonarRange
+                        << ce->config.collisionRadius
+                        << ce->config.torpedoDamage
+                        << ce->config.mineDamage
+                        << ce->config.collisionDamage
                         << ce->config.mineExclusionRadius
                         << ce->config.frameMilliseconds
                         << ce->config.stealthCooldown
