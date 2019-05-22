@@ -333,6 +333,16 @@ void SimulationMaster::runSimForUnit(UnitState *unitState)
                 unitState->flag.index = flagPair.first;
 
                 flagPair.second.isTaken = true;
+
+                // Generate StatusUpdate events
+                StatusUpdateEvent statusEvent;
+                statusEvent.team = unitState->team;
+                statusEvent.unit = unitState->unit;
+                statusEvent.type = StatusUpdateEvent::FlagTaken;
+                for (auto& client : all_clients)
+                {
+                    EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(statusEvent, client));
+                }
             }
         }
     }
@@ -350,6 +360,16 @@ void SimulationMaster::runSimForUnit(UnitState *unitState)
             
             unitState->hasFlag = false;
             flags[unitState->flag.index].isTaken = false;
+
+            // Generate StatusUpdate events
+            StatusUpdateEvent statusEvent;
+            statusEvent.team = unitState->team;
+            statusEvent.unit = unitState->unit;
+            statusEvent.type = StatusUpdateEvent::FlagScored;
+            for (auto& client : all_clients)
+            {
+                EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(statusEvent, client));
+            }
         }
     }
 
@@ -391,7 +411,28 @@ void SimulationMaster::damage(uint32_t team, uint32_t unit, int16_t amount)
         if (u->hasFlag)
         {
             flags[u->flag.index].isTaken = false;
+
+            // Generate StatusUpdate events; this was a flag carrier kill
+            StatusUpdateEvent statusEvent;
+            statusEvent.team = u->team;
+            statusEvent.unit = u->unit;
+            statusEvent.type = StatusUpdateEvent::FlagSubKill;
+            for (auto& client : all_clients)
+            {
+                EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(statusEvent, client));
+            }
+        } else {
+            // Generate StatusUpdate events for normal sub kill
+            StatusUpdateEvent statusEvent;
+            statusEvent.team = u->team;
+            statusEvent.unit = u->unit;
+            statusEvent.type = StatusUpdateEvent::SubKill;
+            for (auto& client : all_clients)
+            {
+                EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(statusEvent, client));
+            }
         }
+
             
         *u = initialUnitState(team, unit);
     }
@@ -475,13 +516,17 @@ HandleResult SimulationMaster::simStart(SimulationStartServer* event)
     network->deregisterCallback(lobbyInit.get());
     lobbyInit.reset();
 
-    // Send config data to all connected clients
+    // Send config data and GameStart status update to all connected clients
     ConfigEvent configEvent;
     configEvent.config = config;
+    StatusUpdateEvent statusEvent;
+    statusEvent.team = statusEvent.unit = 0;
+    statusEvent.type = StatusUpdateEvent::Type::GameStart;
 
     for (auto& client : all_clients)
     {
         EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(configEvent, client));
+        EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(statusEvent, client));
     }
 
     // Start the game loop

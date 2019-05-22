@@ -460,7 +460,7 @@ public:
     {
         GameStart, // The battle has begun.
         FlagTaken, // (Own): Our flag was stolen. (Enemy): We have the enemy flag.
-        FlagScored,// (Own): The enemey has gotten away with our flag. (Enemy): We have secured the enemy flag.
+        FlagScored,// (Own): The enemy has gotten away with our flag. (Enemy): We have secured the enemy flag.
         SubKill,   // (Own): Our submarine was lost.  (Enemy): We have sunk an enemy!
         FlagSubKill// (Own): We have lost the enemy flag. (Enemy): We have recovered our flag.
     };
