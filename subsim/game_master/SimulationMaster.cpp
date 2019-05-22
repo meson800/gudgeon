@@ -95,7 +95,7 @@ void SimulationMaster::runSimLoop()
     while (!shouldShutdown)
     {
         //TODO: possibly replace with a sleep until to keep game logic on a schedule?
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(config.frameMilliseconds));
 
         std::lock_guard<std::mutex> lock(stateMux);
 
@@ -278,7 +278,7 @@ void SimulationMaster::runSimForUnit(UnitState *unitState)
             if (flagPair.second.team != unitState->team
                 && !flagPair.second.isTaken
                 && didCollide(unitState->x, unitState->y,
-                    flagPair.second.x, flagPair.second.y, config.collisionRadius))
+                    flagPair.second.x, flagPair.second.y, config.collisionRadius*2))
             {
                 unitState->hasFlag = true;
                 unitState->flag.team = flagPair.second.team;
@@ -298,7 +298,7 @@ void SimulationMaster::runSimForUnit(UnitState *unitState)
         startLoc.second += config.terrain.scale;
 
         if (didCollide(unitState->x, unitState->y,
-            startLoc.first, startLoc.second, config.collisionRadius))
+            startLoc.first, startLoc.second, config.collisionRadius*2))
         {
             Log::writeToLog(Log::L_DEBUG, "Team ", unitState->team, " unit ", unitState->unit, " returned a flag");
             ++scores[unitState->team];

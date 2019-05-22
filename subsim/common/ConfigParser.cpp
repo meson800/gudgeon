@@ -136,6 +136,11 @@ Config ConfigParser::parseConfig(const ParseResult& parse)
             {
                 sstream >> result.passiveSonarNoiseFloor;
             }
+
+            if (key == "frame_milliseconds")
+            {
+                sstream >> result.frameMilliseconds;
+            }
         }
     }
     return result;
