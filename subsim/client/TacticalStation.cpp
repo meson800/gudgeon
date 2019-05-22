@@ -379,6 +379,22 @@ void TacticalStation::redraw()
     renderTubeState();
     renderStealthState();
 
+    // If we are dead, lerp a rectangle over the screen
+    if (lastState.respawning)
+    {
+        uint8_t color = 255 - 255 * (double) lastState.respawnCooldown / (double)config->respawnCooldown;
+        SDL_Rect rect;
+        rect.x = 0;
+        rect.y = 0;
+        rect.w = WIDTH;
+        rect.h = HEIGHT;
+
+        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, color);
+        SDL_RenderFillRect(renderer, &rect);
+    }
+
+
     int x = 300;
     int y = 0;
     for (auto& scorePair : scores)

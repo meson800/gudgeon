@@ -164,8 +164,9 @@ void SimulationMaster::runSimLoop()
                     EventSystem::getGlobalInstance()->queueEvent(envelope);
                 }
 
-                // Skip sonar state if this unit is correctly in stealth mode
-                if (unitState.isStealth && unitState.stealthCooldown == 0)
+                // Skip sonar state if this unit is correctly in stealth mode without the flag
+                if (unitState.isStealth && unitState.stealthCooldown == 0
+                    && !unitState.hasFlag)
                 {
                     continue;
                 }
@@ -203,6 +204,19 @@ void SimulationMaster::runSimLoop()
 
 void SimulationMaster::runSimForUnit(UnitState *unitState)
 {
+    // If we are in respawn mode, just decrement count and do nothing else
+    if (unitState->respawning)
+    {
+        if ((int32_t) unitState->respawnCooldown - config.frameMilliseconds < 0)
+        {
+            // respawn normally
+            *unitState = initialUnitState(unitState->team, unitState->unit);
+        } else {
+            unitState->respawnCooldown -= config.frameMilliseconds;
+        }
+        return;
+    }
+
     // Use the stealth speed limit if required
     uint16_t setSpeed = unitState->desiredSpeed;
     if (unitState->isStealth && setSpeed > config.stealthSpeedLimit)
@@ -317,8 +331,8 @@ void SimulationMaster::runSimForUnit(UnitState *unitState)
         mines.erase(mineHit);
     }
 
-    // Check for collisions with flags if we don't currently have a flag
-    if (!unitState->hasFlag)
+    // Check for collisions with flags if we don't currently have a flag and are not in stealth mode
+    if (!unitState->hasFlag && !unitState->isStealth)
     {
         for (auto &flagPair : flags)
         {
@@ -346,7 +360,7 @@ void SimulationMaster::runSimForUnit(UnitState *unitState)
             }
         }
     }
-    else
+    else if (!unitState->isStealth)
     {
         // Otherwise, check if we have delivered the flag back to the spawn location
         auto startLoc = config.startLocations[unitState->team].at(0);
@@ -399,6 +413,9 @@ void SimulationMaster::damage(uint32_t team, uint32_t unit, int16_t amount)
         explosion(u->x, u->y, 50);
         Log::writeToLog(Log::INFO, "Team ", team, " unit ", unit, " destroyed!");
 
+        u->respawning = true;
+        u->respawnCooldown = config.respawnCooldown;
+
         for (auto& pair : scores)
         {
             if (pair.first != team)
@@ -432,9 +449,6 @@ void SimulationMaster::damage(uint32_t team, uint32_t unit, int16_t amount)
                 EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(statusEvent, client));
             }
         }
-
-            
-        *u = initialUnitState(team, unit);
     }
 }
 
@@ -541,6 +555,12 @@ HandleResult SimulationMaster::throttle(ThrottleEvent *event)
 {
     {
         std::lock_guard<std::mutex> lock(stateMux);
+        // stop if unit is respawning
+        if (unitStates[event->team][event->unit].respawning)
+        {
+            return HandleResult::Stop;
+        }
+        
         unitStates[event->team][event->unit].desiredSpeed =
             std::min(event->desiredSpeed, config.subMaxSpeed);
     }
@@ -553,6 +573,12 @@ HandleResult SimulationMaster::steering(SteeringEvent *event)
 {
     {
         std::lock_guard<std::mutex> lock(stateMux);
+        // stop if unit is respawning
+        if (unitStates[event->team][event->unit].respawning)
+        {
+            return HandleResult::Stop;
+        }
+        
         if (event->isPressed == false)
         {
             unitStates[event->team][event->unit].direction = UnitState::SteeringDirection::Center;
@@ -570,6 +596,12 @@ HandleResult SimulationMaster::fire(FireEvent *event)
 {
     {
         std::lock_guard<std::mutex> lock(stateMux);
+        // stop if unit is respawning
+        if (unitStates[event->team][event->unit].respawning)
+        {
+            return HandleResult::Stop;
+        }
+        
         UnitState& unit = unitStates[event->team][event->unit];
 
         // Ignore if we are in stealth mode
@@ -708,6 +740,12 @@ HandleResult SimulationMaster::tubeArm(TubeArmEvent *event)
 {
     {
         std::lock_guard<std::mutex> lock(stateMux);
+        // stop if unit is respawning
+        if (unitStates[event->team][event->unit].respawning)
+        {
+            return HandleResult::Stop;
+        }
+        
         unitStates[event->team][event->unit].tubeIsArmed[event->tube] = event->isArmed;
         Log::writeToLog(Log::L_DEBUG, "Team ", event->team, " unit ", event->unit,
             event->isArmed ? " armed tube " : " disarmed tube ", event->tube);
@@ -720,6 +758,12 @@ HandleResult SimulationMaster::tubeLoad(TubeLoadEvent *event)
 {
     {
         std::lock_guard<std::mutex> lock(stateMux);
+        // stop if unit is respawning
+        if (unitStates[event->team][event->unit].respawning)
+        {
+            return HandleResult::Stop;
+        }
+        
 
         UnitState & unit = unitStates[event->team][event->unit];
 
@@ -754,6 +798,12 @@ HandleResult SimulationMaster::power(PowerEvent* event)
 {
     {
         std::lock_guard<std::mutex> lock(stateMux);
+        // stop if unit is respawning
+        if (unitStates[event->team][event->unit].respawning)
+        {
+            return HandleResult::Stop;
+        }
+        
 
         UnitState& unit = unitStates[event->team][event->unit];
 
@@ -794,6 +844,13 @@ HandleResult SimulationMaster::stealth(StealthEvent* event)
 {
     {
         std::lock_guard<std::mutex> lock(stateMux);
+
+        // stop if unit is respawning
+        if (unitStates[event->team][event->unit].respawning)
+        {
+            return HandleResult::Stop;
+        }
+        
         unitStates[event->team][event->unit].isStealth = event->isStealth;
         
         // If we transitioned to using stealth, set the cooldown

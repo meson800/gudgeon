@@ -165,6 +165,12 @@ public:
     /// Stores the number of milliseconds that stealth is on cooldown
     uint16_t stealthCooldown;
 
+    /// Stores if we are in the respawn state
+    bool respawning;
+
+    /// Stores the number of milliseconds until we respawn
+    uint16_t respawnCooldown;
+
     /// Stores the enable/disable status of various power items
     bool yawEnabled, pitchEnabled, engineEnabled, commsEnabled, sonarEnabled, weaponsEnabled;
 
@@ -237,6 +243,9 @@ struct UnitSonarState
 
     bool isStealth;
     uint16_t stealthCooldown;
+
+    bool respawning;
+    uint16_t respawnCooldown;
 
     bool hasFlag;
 };

@@ -65,6 +65,7 @@ public:
     uint16_t frameMilliseconds;
 
     uint16_t stealthCooldown;
+    uint16_t respawnCooldown;
 };
 
 /**
