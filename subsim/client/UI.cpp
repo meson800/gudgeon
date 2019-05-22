@@ -285,7 +285,7 @@ void UI::runSDLloop(bool& startupDone, std::mutex& startupMux)
             throw SDLError("Error in TTF_Init");
         }
 
-        if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0)
+        if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_AUDIO) != 0)
         {
             Log::writeToLog(Log::ERR, "Couldn't start SDL! SDL error:", SDL_GetError());
             throw SDLError("Error in SDL_Init");

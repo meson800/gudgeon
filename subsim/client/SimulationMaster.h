@@ -7,6 +7,7 @@
 #include "LobbyHandler.h"
 #include "TacticalStation.h"
 #include "HelmStation.h"
+#include "VoiceHandler.h"
 
 #include <memory>
 
@@ -54,6 +55,9 @@ private:
 
     /// Internal mapping of teams/units/stations
     std::vector<SimulationStart::Station> stations;
+
+    /// Smart pointer for the voice handler
+    std::unique_ptr<VoiceHandler> voiceHandler;
 
     /// Stores the config for this game
     Config config;

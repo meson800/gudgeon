@@ -57,6 +57,8 @@ void SimulationMaster::createStations()
             helm.push_back(std::shared_ptr<HelmStation>(new HelmStation(station.team, station.unit)));
         }
     }
+
+    voiceHandler.reset(new VoiceHandler);
 }
 
 bool SimulationMaster::ConnectionEstablished(RakNet::RakNetGUID other)
