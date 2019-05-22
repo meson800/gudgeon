@@ -118,7 +118,7 @@ HandleResult HelmStation::handleKeypress(KeyEvent* keypress)
 
         switch (keypress->key)
         {
-            case Key::RBracket:
+            case Key::Up:
             {
                 // increase throttle!
                 event.desiredSpeed = lastState.speed + 10;
@@ -129,7 +129,7 @@ HandleResult HelmStation::handleKeypress(KeyEvent* keypress)
             }
             break;
 
-            case Key::LBracket:
+            case Key::Down:
             {
                 // decrease throttle
                 event.desiredSpeed = lastState.speed > 10 ? lastState.speed - 10 : 0;
