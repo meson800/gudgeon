@@ -293,9 +293,9 @@ void SimulationMaster::runSimForUnit(UnitState *unitState)
         // Otherwise, check if we have delivered the flag back to the spawn location
         auto startLoc = config.startLocations[unitState->team].at(0);
         startLoc.first *= config.terrain.scale;
-        startLoc.first += config.terrain.scale;
+        startLoc.first += config.terrain.scale / 2;
         startLoc.second *= config.terrain.scale;
-        startLoc.second += config.terrain.scale;
+        startLoc.second += config.terrain.scale / 2;
 
         if (didCollide(unitState->x, unitState->y,
             startLoc.first, startLoc.second, config.collisionRadius*2))

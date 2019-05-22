@@ -333,9 +333,9 @@ void TacticalStation::redraw()
     // render our starting location
     auto startLoc = config->startLocations[team].at(0);
     startLoc.first *= config->terrain.scale;
-    startLoc.first += config->terrain.scale;
+    startLoc.first += config->terrain.scale / 2;
     startLoc.second *= config->terrain.scale;
-    startLoc.second += config->terrain.scale;
+    startLoc.second += config->terrain.scale / 2;
     renderSDCircle(startLoc.first, startLoc.second, 200, rgba_to_color(255, 255, 255, 255));
 
     renderTubeState();
