@@ -46,8 +46,10 @@ private:
     int inputPos;
     uint8_t inputChecksum;
 
-    FILE* serialPort;
+    int serialPortFD;
 
     void receiveInput();
+    int receiveInputChar();
     void sendOutput();
+    void sendOutputChar(uint8_t c);
 };

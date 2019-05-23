@@ -39,11 +39,6 @@ void setup() {
 void loop() {
   receiveInput();
 
-  // hack for testing
-  disp.tubeOccupancy[1] = Torpedo;
-  disp.tubeOccupancy[1] = Mine;
-  disp.tubeOccupancy[4] = Torpedo;
-
   uint16_t switchValues;
   uint16_t combinedSwitchValues = 0x0000;
   shiftRegisters(prepareShiftDisplay(Torpedo), &switchValues);
@@ -89,30 +84,30 @@ uint16_t prepareShiftDisplay(TubeStatus type) {
   if (disp.tubeOccupancy[4] != type) s |= (1 << 8);
 
   /* Low side */
-  if (type == Torpedo) s |= (1 << 11);
-  if (type == Mine) s |= (1 << 10);
+  if (type == Torpedo) s |= (1 << 10);
+  if (type == Mine) s |= (1 << 11);
 
   return s;
 }
 
 void interpretShiftControl(uint16_t switchValues) {
-  cont.tubeArmed[0]       = !!(switchValues & 0x4000);
-  cont.tubeArmed[1]       = !!(switchValues & 0x8000);
-  cont.tubeArmed[2]       = !!(switchValues & 0x0001);
-  cont.tubeArmed[3]       = !!(switchValues & 0x0040);
-  cont.tubeArmed[4]       = !!(switchValues & 0x0080);
+  cont.tubeArmed[0]       = !!(switchValues & 0x0040);
+  cont.tubeArmed[1]       = !!(switchValues & 0x0080);
+  cont.tubeArmed[2]       = !!(switchValues & 0x0100);
+  cont.tubeArmed[3]       = !!(switchValues & 0x4000);
+  cont.tubeArmed[4]       = !!(switchValues & 0x8000);
 
-  cont.tubeLoadTorpedo[0] = !!(switchValues & 0x0020);
-  cont.tubeLoadTorpedo[1] = !!(switchValues & 0x0004);
-  cont.tubeLoadTorpedo[2] = !!(switchValues & 0x0008);
-  cont.tubeLoadTorpedo[3] = !!(switchValues & 0x0010);
-  cont.tubeLoadTorpedo[4] = !!(switchValues & 0x0020);
+  cont.tubeLoadTorpedo[0] = !!(switchValues & 0x0200);
+  cont.tubeLoadTorpedo[1] = !!(switchValues & 0x0400);
+  cont.tubeLoadTorpedo[2] = !!(switchValues & 0x0800);
+  cont.tubeLoadTorpedo[3] = !!(switchValues & 0x1000);
+  cont.tubeLoadTorpedo[4] = !!(switchValues & 0x2000);
 
-  cont.tubeLoadMine[0]    = !!(switchValues & 0x0200);
-  cont.tubeLoadMine[1]    = !!(switchValues & 0x0400);
-  cont.tubeLoadMine[2]    = !!(switchValues & 0x0800);
-  cont.tubeLoadMine[3]    = !!(switchValues & 0x1000);
-  cont.tubeLoadMine[4]    = !!(switchValues & 0x2000);
+  cont.tubeLoadMine[0]    = !!(switchValues & 0x0002);
+  cont.tubeLoadMine[1]    = !!(switchValues & 0x0004);
+  cont.tubeLoadMine[2]    = !!(switchValues & 0x0008);
+  cont.tubeLoadMine[3]    = !!(switchValues & 0x0010);
+  cont.tubeLoadMine[4]    = !!(switchValues & 0x0020);
 }
 
 /* I/O code for talking to the computer */
