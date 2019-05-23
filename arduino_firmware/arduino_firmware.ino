@@ -38,11 +38,19 @@ void setup() {
 
 void loop() {
   receiveInput();
+
+  // hack for testing
+  disp.tubeOccupancy[0] = Torpedo;
+  disp.tubeOccupancy[1] = Mine;
+
   uint16_t switchValues;
-  shiftRegisters(0x6666, &switchValues);
+  shiftRegisters(prepareShiftDisplay(Torpedo), &switchValues);
+  delay(5);
+  shiftRegisters(prepareShiftDisplay(Mine), &switchValues);
+  delay(5);
   cont.debugValue = switchValues;
+
   sendOutput();
-  delay(10);
 }
 
 void shiftRegisters(uint16_t output, uint16_t *input) {
@@ -63,6 +71,23 @@ void shiftRegisters(uint16_t output, uint16_t *input) {
   }
   digitalWrite(OUTPUT_LATCH_PIN, HIGH);
   digitalWrite(OUTPUT_LATCH_PIN, LOW);
+}
+
+uint16_t prepareShiftDisplay(TubeStatus type) {
+  uint16_t s = 0;
+
+  /* High side */
+  if (disp.tubeOccupancy[0] == type) s |= (1 << 0);
+  if (disp.tubeOccupancy[1] == type) s |= (1 << 1);
+  if (disp.tubeOccupancy[2] == type) s |= (1 << 2);
+  if (disp.tubeOccupancy[3] == type) s |= (1 << 3);
+  if (disp.tubeOccupancy[4] == type) s |= (1 << 4);
+
+  /* Low side */
+  if (type != Torpedo) s |= (1 << 6);
+  if (type != Mine) s |= (1 << 7);
+
+  return s;
 }
 
 /* I/O code for talking to the computer */
