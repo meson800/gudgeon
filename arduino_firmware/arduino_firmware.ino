@@ -1,8 +1,8 @@
-#define INPUT_DATA_PIN 2
-#define INPUT_MODE_PIN 3
-#define CLOCK_PIN 4
-#define OUTPUT_DATA_PIN 5
-#define OUTPUT_LATCH_PIN 6
+#define INPUT_DATA_PIN 12
+#define INPUT_MODE_PIN 10
+#define CLOCK_PIN 9
+#define OUTPUT_DATA_PIN 13
+#define OUTPUT_LATCH_PIN 11
 
 enum TubeStatus
 {

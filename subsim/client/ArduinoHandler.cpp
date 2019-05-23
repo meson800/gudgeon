@@ -52,7 +52,7 @@ HandleResult ArduinoHandler::handleUnitState(UnitState* state)
 
 void ArduinoHandler::runLoop()
 {
-    while (true)
+    while (!shouldShutdown)
     {
         {
             std::lock_guard<std::mutex> lock(stateMux);
@@ -66,7 +66,7 @@ void ArduinoHandler::runLoop()
         receiveInput();
         for (int tube = 0; tube < 5; ++tube)
         {
-            if (cont.tubeArmed[tube] && !lastCont.tubeArmed[tube])
+            if (cont.tubeArmed[tube] != lastCont.tubeArmed[tube])
             {
                 TubeArmEvent tubeArm;
                 tubeArm.team = team;
