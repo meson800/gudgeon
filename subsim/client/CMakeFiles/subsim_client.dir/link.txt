@@ -1,1 +1,0 @@
-/usr/bin/c++       CMakeFiles/subsim_client.dir/main.o CMakeFiles/subsim_client.dir/UI.o CMakeFiles/subsim_client.dir/LobbyHandler.o CMakeFiles/subsim_client.dir/SimulationMaster.o CMakeFiles/subsim_client.dir/TacticalStation.o  -o subsim_client -rdynamic -lopenal -lRakNetLibStatic -lSDL2 -lSDL2_gfx -lSDL2_ttf 
