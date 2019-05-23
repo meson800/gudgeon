@@ -4,10 +4,17 @@
 class ArduinoHandler : public EventReceiver
 {
 public:
-    ArduinoHandler();
+    ArduinoHandler(uint32_t team_, uint32_t unit_);
     ~ArduinoHandler();
 
+    HandleResult handleUnitState(UnitState* state);
+
 private:
+    uint32_t team;
+    uint32_t unit;
+
+    UnitState lastState;
+
     /// Thread for the serial communications loop
     std::thread loopThread;
 

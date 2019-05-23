@@ -3,8 +3,10 @@
 #include "../common/Log.h"
 #include <memory.h>
 
-ArduinoHandler::ArduinoHandler()
+ArduinoHandler::ArduinoHandler(uint32_t team_, uint32_t unit_)
     : EventReceiver({})
+    , team(team_)
+    , unit(unit_)
     , shouldShutdown(false)
     , inputPos(0)
     , inputChecksum(0)
@@ -35,14 +37,23 @@ ArduinoHandler::~ArduinoHandler()
     fclose(serialPort);
 }
 
+HandleResult ArduinoHandler::handleUnitState(UnitState* state)
+{
+    std::lock_guard<std::mutex> lock(stateMux);
+    if (state->team == team && state->unit == unit) {
+        lastState = *state;
+    }
+    return HandleResult::Continue;
+}
+
 void ArduinoHandler::runLoop()
 {
     while (true)
     {
-        disp.value = 11;
         Log::writeToLog(Log::L_DEBUG, "value received from Arduino:", cont.value);
         receiveInput();
         sendOutput();
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 }
 
