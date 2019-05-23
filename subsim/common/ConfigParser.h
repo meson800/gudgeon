@@ -14,6 +14,7 @@ public:
     static constexpr uint32_t START2 = 0x0000FFFF; // blue
     static constexpr uint32_t FLAG1  = 0xFFFF00FF; // yellow
     static constexpr uint32_t FLAG2  = 0x00FFFFFF; // cyan
+    static constexpr uint32_t MINE   = 0x00FF00FF; // blue
 
     std::vector<uint32_t> map;
     uint32_t width;
@@ -44,6 +45,7 @@ public:
 
     std::map<uint32_t, std::vector<std::pair<int64_t, int64_t>>> startLocations;
     std::map<uint32_t, std::vector<std::pair<int64_t, int64_t>>> flags;
+    std::vector<std::pair<int64_t, int64_t>> mines;
 
     uint16_t subTurningSpeed;
     uint16_t subAcceleration;

@@ -181,6 +181,7 @@ void SimulationMaster::runSimLoop()
                 unitSonarState.depth = unitState.depth;
                 unitSonarState.heading = unitState.heading;
                 unitSonarState.speed = unitState.speed;
+                unitSonarState.power = unitState.powerAvailable;
                 unitSonarState.hasFlag = unitState.hasFlag;
                 unitSonarState.isStealth = unitState.isStealth;
                 unitSonarState.stealthCooldown = unitState.stealthCooldown;
@@ -371,7 +372,7 @@ void SimulationMaster::runSimForUnit(UnitState *unitState)
             startLoc.first, startLoc.second, config.collisionRadius*2))
         {
             Log::writeToLog(Log::L_DEBUG, "Team ", unitState->team, " unit ", unitState->unit, " returned a flag");
-            scores[unitState->team] += 3;
+            scores[unitState->team] += 5;
             // remove flag, restoring it to its position on the map
             
             unitState->hasFlag = false;
@@ -525,6 +526,17 @@ HandleResult SimulationMaster::simStart(SimulationStartServer* event)
             // Initalize zero scores
             scores[flag.team] = 0;
         }
+    }
+
+    // Push mine locations
+    for (auto& mine : config.mines)
+    {
+        MineState mineS;
+        mineS.x = mine.first;
+        mineS.y = mine.second;
+        mineS.depth = 0;
+
+        mines[nextMineID++] = mineS;
     }
 
     Log::writeToLog(Log::INFO, "Starting server-side simulation. Final assignments:", sstream.str());

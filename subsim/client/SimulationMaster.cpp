@@ -21,6 +21,7 @@ SimulationMaster::SimulationMaster(Network* network_)
 HandleResult SimulationMaster::simStart(SimulationStart* event)
 {
     stations = event->stations;
+    teamNames = event->teamNames;
 
     TeamOwnership team;
     for (auto station : stations)
@@ -60,12 +61,12 @@ void SimulationMaster::createStations()
         if (station.station == StationType::Tactical)
         {
             tactical.push_back(
-                std::shared_ptr<TacticalStation>(new TacticalStation(station.team, station.unit, &config)));
+                std::shared_ptr<TacticalStation>(new TacticalStation(station.team, station.unit, &config, teamNames)));
         }
 
         if (station.station == StationType::Helm)
         {
-            helm.push_back(std::shared_ptr<HelmStation>(new HelmStation(station.team, station.unit)));
+            helm.push_back(std::shared_ptr<HelmStation>(new HelmStation(station.team, station.unit, teamNames)));
         }
     }
 }

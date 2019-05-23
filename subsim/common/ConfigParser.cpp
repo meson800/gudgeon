@@ -69,6 +69,10 @@ Config ConfigParser::parseConfig(const ParseResult& parse)
                         {
                             result.flags[2].push_back(std::pair<int64_t, int64_t>(tx, ty));
                         }
+                        else if (color == Terrain::MINE)
+                        {
+                            result.mines.push_back(std::pair<int64_t, int64_t>(tx, ty));
+                        }
                         else
                         {
                             if (color != Terrain::EMPTY && color != Terrain::WALL)
@@ -197,6 +201,11 @@ Config ConfigParser::parseConfig(const ParseResult& parse)
         {
             flagPos = result.terrain.convertMapCoords(flagPos.first, flagPos.second);
         }
+    }
+
+    for (auto& mine : result.mines)
+    {
+        mine = result.terrain.convertMapCoords(mine.first, mine.second);
     }
 
     return result;

@@ -12,7 +12,7 @@
 #define WIDTH 640
 #define HEIGHT 480
 
-HelmStation::HelmStation(uint32_t team_, uint32_t unit_)
+HelmStation::HelmStation(uint32_t team_, uint32_t unit_, std::map<uint32_t, std::string> teamNames_)
     : Renderable(WIDTH, HEIGHT)
     , EventReceiver({
         dispatchEvent<HelmStation, KeyEvent, &HelmStation::handleKeypress>,
@@ -20,6 +20,7 @@ HelmStation::HelmStation(uint32_t team_, uint32_t unit_)
         dispatchEvent<HelmStation, IgnoreKeypresses, &HelmStation::handleMockIgnore>,
         dispatchEvent<HelmStation, ScoreEvent, &HelmStation::handleScore>,
         })
+    , teamNames(teamNames_)
     , ignoringMocks(false)
     , team(team_)
     , unit(unit_)
@@ -205,7 +206,7 @@ void HelmStation::redraw()
     for (auto& scorePair : scores)
     {
         std::ostringstream ss;
-        ss << "Team " << scorePair.first << ": " << scorePair.second;
+        ss << "Team " << teamNames[scorePair.first] << ": " << scorePair.second;
         drawText(ss.str(), 20, x, y);
         x += 150;
     }

@@ -37,6 +37,7 @@ public:
     };
 
     std::vector<Station> stations;
+    std::map<uint32_t, std::string> teamNames;
 };
 
 /*!
@@ -47,8 +48,7 @@ class SimulationStartServer : public Event
 public:
     SimulationStartServer() : Event(category, id) {}
     constexpr static uint32_t category = Events::Category::Simulation;
-    constexpr static uint32_t id = Events::Sim::SimStart;
-
+    constexpr static uint32_t id = Events::Sim::SimStartServer;
 
     std::map<uint32_t, std::vector<std::vector<std::pair<StationType, RakNet::RakNetGUID>>>> assignments;
 };
@@ -240,6 +240,8 @@ struct UnitSonarState
     uint16_t heading;
 
     uint16_t speed;
+
+    int16_t power;
 
     bool isStealth;
     uint16_t stealthCooldown;
@@ -476,4 +478,3 @@ public:
 
     Type type;
 };
-

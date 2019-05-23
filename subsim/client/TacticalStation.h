@@ -19,7 +19,7 @@ class TacticalStation : public EventReceiver, public Renderable
 {
 public:
     /// Init internal state, with team/unit plus pointer to a terrain object
-    TacticalStation(uint32_t team, uint32_t unit, Config* config_);
+    TacticalStation(uint32_t team, uint32_t unit, Config* config_, std::map<uint32_t, std::string> teamNames_);
 
     /// Deregisters ourself from the GUI
     ~TacticalStation();
@@ -63,7 +63,7 @@ private:
     /// Renders a submarine on the sonar screen
     void renderSDSubmarine(
         int64_t x, int64_t y, int16_t heading,
-        bool hasFlag,
+        bool hasFlag, int16_t power,
         uint32_t color, uint32_t flagColor, bool destroyed=false);
 
     /// Renders a flag on the sonar screen with SD coordinates
@@ -102,6 +102,9 @@ private:
 
     /// Stores last received scores
     std::map<uint32_t, uint32_t> scores;
+
+    /// Stores the team names
+    std::map<uint32_t, std::string> teamNames;
     
     /// Last received sonar state (shared across all units)
     SonarDisplayState lastSonar;
