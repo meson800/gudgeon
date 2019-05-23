@@ -372,7 +372,7 @@ void SimulationMaster::runSimForUnit(UnitState *unitState)
             startLoc.first, startLoc.second, config.collisionRadius*2))
         {
             Log::writeToLog(Log::L_DEBUG, "Team ", unitState->team, " unit ", unitState->unit, " returned a flag");
-            scores[unitState->team] += 3;
+            scores[unitState->team] += 5;
             // remove flag, restoring it to its position on the map
             
             unitState->hasFlag = false;
