@@ -111,38 +111,21 @@ HandleResult HelmStation::handleKeypress(KeyEvent* keypress)
         }
     }
 
-    if (keypress->isDown == true)
+    if (keypress->key == Key::Up)
     {
         ThrottleEvent event;
         event.team = team;
         event.unit = unit;
-
-        switch (keypress->key)
+        if (keypress->isDown)
         {
-            case Key::Up:
-            {
-                // increase throttle!
-                event.desiredSpeed = lastState.speed + 10;
-
-                EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(event));
-
-                return HandleResult::Stop;
-            }
-            break;
-
-            case Key::Down:
-            {
-                // decrease throttle
-                event.desiredSpeed = lastState.speed > 10 ? lastState.speed - 10 : 0;
-
-                EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(event));
-                return HandleResult::Stop;
-            }
-            break;
-
-            default:
-            break;
+            event.desiredSpeed = 1000;
         }
+        else
+        {
+            event.desiredSpeed = 0;
+        }
+        EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(event));
+        return HandleResult::Stop;
     }
 
     // handle events where we want both keyup and keydown
