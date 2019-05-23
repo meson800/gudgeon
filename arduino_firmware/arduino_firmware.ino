@@ -1,3 +1,9 @@
+#define INPUT_DATA_PIN 2
+#define INPUT_MODE_PIN 3
+#define CLOCK_PIN 4
+#define OUTPUT_DATA_PIN 5
+#define OUTPUT_LATCH_PIN 6
+
 struct Control {
   uint32_t value;
 } cont;
@@ -8,14 +14,43 @@ struct Display {
 
 void setup() {
   Serial.begin(9600);
+  pinMode(INPUT_DATA_PIN, INPUT);
+  pinMode(INPUT_MODE_PIN, OUTPUT);
+  pinMode(CLOCK_PIN, OUTPUT);
+  pinMode(OUTPUT_DATA_PIN, OUTPUT);
+  pinMode(OUTPUT_LATCH_PIN, OUTPUT);
 }
 
 void loop() {
   receiveInput();
-  cont.value = disp.value * disp.value;
+  uint16_t switchValues;
+  shiftRegisters(0x6666, &switchValues);
+  cont.value = switchValues;
   sendOutput();
   delay(10);
 }
+
+void shiftRegisters(uint16_t output, uint16_t *input) {
+  *input = 0;
+  digitalWrite(INPUT_MODE_PIN, LOW);
+  digitalWrite(CLOCK_PIN, HIGH);
+  digitalWrite(CLOCK_PIN, LOW);
+  digitalWrite(INPUT_MODE_PIN, HIGH);
+  for (int i = 0; i < 16; ++i) {
+    digitalWrite(OUTPUT_DATA_PIN, (output & 0x0001) ? HIGH : LOW);
+    if (digitalRead(INPUT_DATA_PIN) == HIGH) {
+      *input |= 0x0001;
+    }
+    digitalWrite(CLOCK_PIN, HIGH);
+    digitalWrite(CLOCK_PIN, LOW);
+    output >>= 1;
+    *input <<= 1;
+  }
+  digitalWrite(OUTPUT_LATCH_PIN, HIGH);
+  digitalWrite(OUTPUT_LATCH_PIN, LOW);
+}
+
+/* I/O code for talking to the computer */
 
 static const int inputBufSize = sizeof(Display) + 1;
 uint8_t inputBuf[inputBufSize];
