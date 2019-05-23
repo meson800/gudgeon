@@ -1,7 +1,6 @@
 #include "SimulationMaster.h"
 
 #include "MockUIEvents.h"
-#include "ArduinoHandler.h"
 
 #include <sstream>
 
@@ -15,7 +14,6 @@ SimulationMaster::SimulationMaster(Network* network_)
         })
 {
     voiceHandler.reset(new VoiceHandler);
-    new ArduinoHandler;
 }
 
 HandleResult SimulationMaster::simStart(SimulationStart* event)
@@ -69,6 +67,8 @@ void SimulationMaster::createStations()
             helm.push_back(std::shared_ptr<HelmStation>(new HelmStation(station.team, station.unit, teamNames)));
         }
     }
+
+    arduinoHandler.reset(new ArduinoHandler(stations.front().team, stations.front().unit));
 }
 
 bool SimulationMaster::ConnectionEstablished(RakNet::RakNetGUID other)

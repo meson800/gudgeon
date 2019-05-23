@@ -1,10 +1,13 @@
 #include "ArduinoHandler.h"
 
+#include "../common/Messages.h"
 #include "../common/Log.h"
 #include <memory.h>
 
 ArduinoHandler::ArduinoHandler(uint32_t team_, uint32_t unit_)
-    : EventReceiver({})
+    : EventReceiver({
+        dispatchEvent<ArduinoHandler, UnitState, &ArduinoHandler::handleUnitState>,
+    })
     , team(team_)
     , unit(unit_)
     , shouldShutdown(false)
@@ -40,7 +43,8 @@ ArduinoHandler::~ArduinoHandler()
 HandleResult ArduinoHandler::handleUnitState(UnitState* state)
 {
     std::lock_guard<std::mutex> lock(stateMux);
-    if (state->team == team && state->unit == unit) {
+    if (state->team == team && state->unit == unit)
+    {
         lastState = *state;
     }
     return HandleResult::Continue;
@@ -50,9 +54,49 @@ void ArduinoHandler::runLoop()
 {
     while (true)
     {
-        Log::writeToLog(Log::L_DEBUG, "value received from Arduino:", cont.value);
-        receiveInput();
+        {
+            std::lock_guard<std::mutex> lock(stateMux);
+            for (int tube = 0; tube < lastState.tubeOccupancy.size(); ++tube)
+            {
+                disp.tubeOccupancy[tube] = lastState.tubeOccupancy[tube];
+            }
+        }
         sendOutput();
+
+        receiveInput();
+        for (int tube = 0; tube < 5; ++tube)
+        {
+            if (cont.tubeArmed[tube] && !lastCont.tubeArmed[tube])
+            {
+                TubeArmEvent tubeArm;
+                tubeArm.team = team;
+                tubeArm.unit = unit;
+                tubeArm.tube = tube;
+                tubeArm.isArmed = cont.tubeArmed[tube];
+                EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(tubeArm));
+            }
+            if (cont.tubeLoadTorpedo[tube] && !lastCont.tubeLoadTorpedo[tube])
+            {
+                TubeLoadEvent tubeLoad;
+                tubeLoad.team = team;
+                tubeLoad.unit = unit;
+                tubeLoad.tube = tube;
+                tubeLoad.type = TubeLoadEvent::AmmoType::Torpedo;
+                EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(tubeLoad));
+            }
+            if (cont.tubeLoadMine[tube] && !lastCont.tubeLoadMine[tube])
+            {
+                TubeLoadEvent tubeLoad;
+                tubeLoad.team = team;
+                tubeLoad.unit = unit;
+                tubeLoad.tube = tube;
+                tubeLoad.type = TubeLoadEvent::AmmoType::Mine;
+                EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(tubeLoad));
+            }
+        }
+        Log::writeToLog(Log::L_DEBUG, "Arduino debugValue:", cont.debugValue);
+        lastCont = cont;
+
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 }

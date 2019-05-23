@@ -13,23 +13,31 @@ private:
     uint32_t team;
     uint32_t unit;
 
-    UnitState lastState;
-
     /// Thread for the serial communications loop
     std::thread loopThread;
 
     /// Shutdown flag atomic
     std::atomic<bool> shouldShutdown;
 
-    /// Mutex to protect internal stsate
+    /// Mutex to protect lastState
     std::mutex stateMux;
 
+    UnitState lastState;
+
+    // These structs must be kept in sync with the corresponding structs in the
+    // Arduino code
     struct Display {
-      uint32_t value;
-    } disp;
+      uint8_t tubeOccupancy[5];
+    } __attribute__((packed));
     struct Control {
-      uint32_t value;
-    } cont;
+      uint8_t tubeArmed[5];
+      uint8_t tubeLoadTorpedo[5];
+      uint8_t tubeLoadMine[5];
+      uint32_t debugValue;
+    } __attribute__((packed));
+
+    Display disp;
+    Control cont, lastCont;
 
     void runLoop();
 

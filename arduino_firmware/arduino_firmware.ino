@@ -4,13 +4,28 @@
 #define OUTPUT_DATA_PIN 5
 #define OUTPUT_LATCH_PIN 6
 
+enum TubeStatus
+{
+    Empty = 0,
+    Torpedo = 1,
+    Mine = 2
+};
+
+// These structs' format must be kept in sync with the corresponding structs in the
+// code that runs on the computer
 struct Control {
-  uint32_t value;
-} cont;
+  uint8_t tubeArmed[5];
+  uint8_t tubeLoadTorpedo[5];
+  uint8_t tubeLoadMine[5];
+  uint32_t debugValue;
+} __attribute__((packed));
 
 struct Display {
-  uint32_t value;
-} disp;
+  uint8_t tubeOccupancy[5];
+} __attribute__((packed));
+
+Control cont;
+Display disp;
 
 void setup() {
   Serial.begin(9600);
@@ -25,7 +40,7 @@ void loop() {
   receiveInput();
   uint16_t switchValues;
   shiftRegisters(0x6666, &switchValues);
-  cont.value = switchValues;
+  cont.debugValue = switchValues;
   sendOutput();
   delay(10);
 }

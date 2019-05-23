@@ -112,9 +112,9 @@ public:
     /// Stores the different possible loaded states
     enum TubeStatus
     {
-        Empty,
-        Torpedo,
-        Mine
+        Empty = 0,
+        Torpedo = 1,
+        Mine = 2
     };
 
     /// Stores the different steering directions
