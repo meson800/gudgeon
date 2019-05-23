@@ -37,8 +37,6 @@ void setup() {
 }
 
 void loop() {
-  switchTest();
-  /*
   receiveInput();
 
   // hack for testing
@@ -47,45 +45,19 @@ void loop() {
   disp.tubeOccupancy[4] = Torpedo;
 
   uint16_t switchValues;
+  uint16_t combinedSwitchValues = 0x0000;
   shiftRegisters(prepareShiftDisplay(Torpedo), &switchValues);
+  combinedSwitchValues |= switchValues;
   delay(5);
   shiftRegisters(prepareShiftDisplay(Mine), &switchValues);
+  combinedSwitchValues |= switchValues;
   delay(5);
+  shiftRegisters(0x0000, &switchValues);
+  combinedSwitchValues |= switchValues;
+  interpretShiftControl(combinedSwitchValues);
   cont.debugValue = switchValues;
   
   sendOutput();
-  */
-}
-
-void switchTest() {
-
-  uint16_t switchValues;
-  
-  for (uint8_t i = 0; i < 5; i++) {
-    disp.tubeOccupancy[i] = Torpedo;
-    
-    for (uint16_t d = 0; d < 200; d++) {
-        shiftRegisters(prepareShiftDisplay(Torpedo), &switchValues);
-        delay(5);
-        shiftRegisters(prepareShiftDisplay(Mine), &switchValues);
-        delay(5);
-        cont.debugValue = switchValues;
-        sendOutput();
-    }
-
-    disp.tubeOccupancy[i] = Mine;
-    
-    for (uint16_t d = 0; d < 200; d++) {
-        shiftRegisters(prepareShiftDisplay(Torpedo), &switchValues);
-        delay(5);
-        shiftRegisters(prepareShiftDisplay(Mine), &switchValues);
-        delay(5);
-        cont.debugValue = switchValues;
-        sendOutput();
-    }
-
-    disp.tubeOccupancy[i] = Empty;
-  }
 }
 
 void shiftRegisters(uint16_t output, uint16_t *input) {
@@ -94,7 +66,7 @@ void shiftRegisters(uint16_t output, uint16_t *input) {
   digitalWrite(INPUT_MODE_PIN, HIGH);
   for (int i = 0; i < 16; i++) {
     digitalWrite(OUTPUT_DATA_PIN, (output & 0x0001) ? HIGH : LOW);
-    if (digitalRead(INPUT_DATA_PIN) == HIGH) {
+    if (digitalRead(INPUT_DATA_PIN) == LOW) {
       *input |= 0x0001;
     }
     digitalWrite(CLOCK_PIN, HIGH);
@@ -121,6 +93,26 @@ uint16_t prepareShiftDisplay(TubeStatus type) {
   if (type == Mine) s |= (1 << 10);
 
   return s;
+}
+
+void interpretShiftControl(uint16_t switchValues) {
+  cont.tubeArmed[0]       = !!(switchValues & 0x4000);
+  cont.tubeArmed[1]       = !!(switchValues & 0x8000);
+  cont.tubeArmed[2]       = !!(switchValues & 0x0001);
+  cont.tubeArmed[3]       = !!(switchValues & 0x0040);
+  cont.tubeArmed[4]       = !!(switchValues & 0x0080);
+
+  cont.tubeLoadTorpedo[0] = !!(switchValues & 0x0020);
+  cont.tubeLoadTorpedo[1] = !!(switchValues & 0x0004);
+  cont.tubeLoadTorpedo[2] = !!(switchValues & 0x0008);
+  cont.tubeLoadTorpedo[3] = !!(switchValues & 0x0010);
+  cont.tubeLoadTorpedo[4] = !!(switchValues & 0x0020);
+
+  cont.tubeLoadMine[0]    = !!(switchValues & 0x0200);
+  cont.tubeLoadMine[1]    = !!(switchValues & 0x0400);
+  cont.tubeLoadMine[2]    = !!(switchValues & 0x0800);
+  cont.tubeLoadMine[3]    = !!(switchValues & 0x1000);
+  cont.tubeLoadMine[4]    = !!(switchValues & 0x2000);
 }
 
 /* I/O code for talking to the computer */
