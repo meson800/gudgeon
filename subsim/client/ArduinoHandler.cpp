@@ -1,5 +1,50 @@
+#include "ArduinoHandler.h"
 
-ArduinoHandler::ArduinoHandler() : inputPos(0), inputChecksum(0) {}
+#include "../common/Log.h"
+#include <memory.h>
+
+ArduinoHandler::ArduinoHandler()
+    : EventReceiver({})
+    , shouldShutdown(false)
+    , inputPos(0)
+    , inputChecksum(0)
+{
+    const char *serialPortPath = "/dev/ttyACM0";
+    serialPort = fopen(serialPortPath, "w+");
+    if (serialPort == NULL)
+    {
+        Log::writeToLog(Log::WARN, "Arduino handler failed to connect to Arduino!",
+            " Device path: ", serialPortPath,
+            " Error code: ", strerror(errno));
+    }
+    else
+    {
+        loopThread = std::thread(&ArduinoHandler::runLoop, this);
+    }
+}
+
+ArduinoHandler::~ArduinoHandler()
+{
+    Log::writeToLog(Log::INFO, "Arduino handler shutting down the Arduino thread...");
+    shouldShutdown = true;
+    if (loopThread.joinable())
+    {
+        loopThread.join();
+    }
+    Log::writeToLog(Log::INFO, "Arduino thread shutdown successfully.");
+    fclose(serialPort);
+}
+
+void ArduinoHandler::runLoop()
+{
+    while (true)
+    {
+        disp.value = 11;
+        Log::writeToLog(Log::L_DEBUG, "value received from Arduino:", cont.value);
+        receiveInput();
+        sendOutput();
+    }
+}
 
 int parseHex(int character) {
   if (character >= '0' && character <= '9') {
@@ -13,23 +58,24 @@ int parseHex(int character) {
   }
 }
 
-void receiveInput() {
+void ArduinoHandler::receiveInput() {
   while (true) {
-    int c = Serial.read();
-    if (c == -1) {
+    int c = fgetc(serialPort);
+    if (c == EOF) {
       return;
     } else if (c == '[') {
       inputPos = 0;
       inputChecksum = 0;
     } else if (c == ']') {
       if (inputPos == inputBufSize && inputChecksum == 0) {
-        memcpy(&input, inputBuf, sizeof(Input));
+        memcpy(&cont, inputBuf, sizeof(Control));
+        Log::writeToLog(Log::L_DEBUG, "Received a Control from Arduino");
       }
-      inputPos = sizeof(Input) * 2;
+      inputPos = sizeof(Control) * 2;
     } else {
       int h = parseHex(c);
       if (h == -1 || inputPos == inputBufSize) {
-        inputPos = sizeof(Input) * 2;
+        inputPos = sizeof(Control) * 2;
         continue;
       }
       int bytePos = inputPos >> 1;
@@ -53,16 +99,16 @@ int generateHex(int value) {
   }
 }
 
-void sendOutput() {
-  Serial.write('[');
+void ArduinoHandler::sendOutput() {
+  fputc('[', serialPort);
   uint8_t checksum = 0;
-  const uint8_t *outputBuf = (const uint8_t *)&output;
-  for (int i = 0; i < sizeof(Output); ++i) {
-    Serial.write(generateHex((outputBuf[i] >> 4) & 0x0F));
-    Serial.write(generateHex(outputBuf[i] & 0x0F));
+  const uint8_t *outputBuf = (const uint8_t *)&disp;
+  for (int i = 0; i < sizeof(Display); ++i) {
+    fputc(generateHex((outputBuf[i] >> 4) & 0x0F), serialPort);
+    fputc(generateHex(outputBuf[i] & 0x0F), serialPort);
     checksum ^= outputBuf[i];
   }
-  Serial.write(generateHex((checksum >> 4) & 0x0F));
-  Serial.write(generateHex(checksum & 0x0F));
-  Serial.write(']');
+  fputc(generateHex((checksum >> 4) & 0x0F), serialPort);
+  fputc(generateHex(checksum & 0x0F), serialPort);
+  fputc(']', serialPort);
 }

@@ -14,6 +14,7 @@ void loop() {
   receiveInput();
   cont.value = disp.value * disp.value;
   sendOutput();
+  delay(10);
 }
 
 static const int inputBufSize = sizeof(Display) + 1;

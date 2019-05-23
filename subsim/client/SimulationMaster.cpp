@@ -1,6 +1,7 @@
 #include "SimulationMaster.h"
 
 #include "MockUIEvents.h"
+#include "ArduinoHandler.h"
 
 #include <sstream>
 
@@ -14,6 +15,7 @@ SimulationMaster::SimulationMaster(Network* network_)
         })
 {
     voiceHandler.reset(new VoiceHandler);
+    new ArduinoHandler;
 }
 
 HandleResult SimulationMaster::simStart(SimulationStart* event)
