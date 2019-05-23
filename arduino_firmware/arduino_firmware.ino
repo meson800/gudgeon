@@ -28,7 +28,7 @@ Control cont;
 Display disp;
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   pinMode(INPUT_DATA_PIN, INPUT);
   pinMode(INPUT_MODE_PIN, OUTPUT);
   pinMode(CLOCK_PIN, OUTPUT);
@@ -37,11 +37,14 @@ void setup() {
 }
 
 void loop() {
+  switchTest();
+  /*
   receiveInput();
 
   // hack for testing
-  disp.tubeOccupancy[0] = Torpedo;
+  disp.tubeOccupancy[1] = Torpedo;
   disp.tubeOccupancy[1] = Mine;
+  disp.tubeOccupancy[4] = Torpedo;
 
   uint16_t switchValues;
   shiftRegisters(prepareShiftDisplay(Torpedo), &switchValues);
@@ -49,17 +52,47 @@ void loop() {
   shiftRegisters(prepareShiftDisplay(Mine), &switchValues);
   delay(5);
   cont.debugValue = switchValues;
-
+  
   sendOutput();
+  */
+}
+
+void switchTest() {
+
+  uint16_t switchValues;
+  
+  for (uint8_t i = 0; i < 5; i++) {
+    disp.tubeOccupancy[i] = Torpedo;
+    
+    for (uint16_t d = 0; d < 200; d++) {
+        shiftRegisters(prepareShiftDisplay(Torpedo), &switchValues);
+        delay(5);
+        shiftRegisters(prepareShiftDisplay(Mine), &switchValues);
+        delay(5);
+        cont.debugValue = switchValues;
+        sendOutput();
+    }
+
+    disp.tubeOccupancy[i] = Mine;
+    
+    for (uint16_t d = 0; d < 200; d++) {
+        shiftRegisters(prepareShiftDisplay(Torpedo), &switchValues);
+        delay(5);
+        shiftRegisters(prepareShiftDisplay(Mine), &switchValues);
+        delay(5);
+        cont.debugValue = switchValues;
+        sendOutput();
+    }
+
+    disp.tubeOccupancy[i] = Empty;
+  }
 }
 
 void shiftRegisters(uint16_t output, uint16_t *input) {
   *input = 0;
   digitalWrite(INPUT_MODE_PIN, LOW);
-  digitalWrite(CLOCK_PIN, HIGH);
-  digitalWrite(CLOCK_PIN, LOW);
   digitalWrite(INPUT_MODE_PIN, HIGH);
-  for (int i = 0; i < 16; ++i) {
+  for (int i = 0; i < 16; i++) {
     digitalWrite(OUTPUT_DATA_PIN, (output & 0x0001) ? HIGH : LOW);
     if (digitalRead(INPUT_DATA_PIN) == HIGH) {
       *input |= 0x0001;
@@ -77,15 +110,15 @@ uint16_t prepareShiftDisplay(TubeStatus type) {
   uint16_t s = 0;
 
   /* High side */
-  if (disp.tubeOccupancy[0] == type) s |= (1 << 0);
-  if (disp.tubeOccupancy[1] == type) s |= (1 << 1);
-  if (disp.tubeOccupancy[2] == type) s |= (1 << 2);
-  if (disp.tubeOccupancy[3] == type) s |= (1 << 3);
-  if (disp.tubeOccupancy[4] == type) s |= (1 << 4);
+  if (disp.tubeOccupancy[0] != type) s |= (1 << 15);
+  if (disp.tubeOccupancy[1] != type) s |= (1 << 13);
+  if (disp.tubeOccupancy[2] != type) s |= (1 << 14);
+  if (disp.tubeOccupancy[3] != type) s |= (1 << 12);
+  if (disp.tubeOccupancy[4] != type) s |= (1 << 8);
 
   /* Low side */
-  if (type != Torpedo) s |= (1 << 6);
-  if (type != Mine) s |= (1 << 7);
+  if (type == Torpedo) s |= (1 << 11);
+  if (type == Mine) s |= (1 << 10);
 
   return s;
 }
