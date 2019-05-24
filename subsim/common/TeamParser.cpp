@@ -35,6 +35,8 @@
             } else if (key == "id") {
                 std::istringstream sstream(values.at(0));
                 sstream >> id;
+            } else if (key == "flag_score" || key == "death_score") {
+                //ignore, other parser will handle it
             } else {
                 Log::writeToLog(Log::ERR, "Unexpected key in TEAM section: ", key);
                 throw TeamParseError("Invalid key encountered when parsing a TEAM section.");
@@ -93,8 +95,6 @@
                     // otherwise, add to station list
                     stations.push_back(StationTypeLookup.at(name));
                 }
-            } else if (key == "flag_score" || key == "death_score") {
-                //ignore, other parser will handle it
             } else {
                 Log::writeToLog(Log::ERR, "Unexpected key in UNIT section: ", key);
                 throw TeamParseError("Invalid key encountered while parsing a UNIT sectoin.");
