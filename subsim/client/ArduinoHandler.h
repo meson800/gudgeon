@@ -39,6 +39,8 @@ private:
     Display disp;
     Control cont, lastCont;
 
+    bool openSerialPort();
+
     void runLoop();
 
     static const int inputBufSize = (sizeof(Control) + 1) * 2;
@@ -48,7 +50,7 @@ private:
 
     int serialPortFD;
 
-    void receiveInput();
+    bool receiveInput();
     int receiveInputChar();
     void sendOutput();
     void sendOutputChar(uint8_t c);

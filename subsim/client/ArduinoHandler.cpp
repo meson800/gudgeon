@@ -3,6 +3,7 @@
 #include "../common/Messages.h"
 #include "../common/Log.h"
 #include <memory.h>
+#include <termios.h>
 
 ArduinoHandler::ArduinoHandler(uint32_t team_, uint32_t unit_)
     : EventReceiver({
@@ -13,19 +14,92 @@ ArduinoHandler::ArduinoHandler(uint32_t team_, uint32_t unit_)
     , shouldShutdown(false)
     , inputPos(0)
     , inputChecksum(0)
+    , serialPortFD(-1)
+{
+    if (openSerialPort())
+    {
+        loopThread = std::thread(&ArduinoHandler::runLoop, this);
+    }
+    else
+    {
+        Log::writeToLog(Log::ERR, "Could not connect to Arduino; falling back to keyboard control.");
+    }
+}
+
+bool ArduinoHandler::openSerialPort()
 {
     const char *serialPortPath = "/dev/ttyACM0";
     Log::writeToLog(Log::WARN, "Arduino handler connecting to Arduino at ", serialPortPath);
     serialPortFD = open(serialPortPath, O_RDWR|O_NONBLOCK);
     if (serialPortFD == -1)
     {
-        Log::writeToLog(Log::WARN, "Arduino handler failed to connect to Arduino!",
-            " Error code: ", strerror(errno));
+        Log::writeToLog(Log::WARN, "Arduino handler: open() failed: ", strerror(errno));
+        return false;
     }
-    else
+
+    /* shamelessly stolen from:
+    https://stackoverflow.com/questions/6947413/how-to-open-read-and-write-from-serial-port-in-c
+    */
+
+    struct termios tty;
+    memset(&tty, 0, sizeof(tty));
+    if (tcgetattr(serialPortFD, &tty) != 0)
     {
-        loopThread = std::thread(&ArduinoHandler::runLoop, this);
+        Log::writeToLog(Log::WARN, "Arduino handler: tcgetattr() failed: ", strerror(errno));
+        return false;
     }
+
+    cfsetospeed(&tty, B115200);
+    cfsetispeed(&tty, B115200);
+
+    tty.c_cflag = (tty.c_cflag & ~CSIZE) | CS8;     // 8-bit chars
+    // disable IGNBRK for mismatched speed tests; otherwise receive break
+    // as \000 chars
+    tty.c_iflag &= ~IGNBRK;         // disable break processing
+    tty.c_lflag = 0;                // no signaling chars, no echo,
+                                    // no canonical processing
+    tty.c_oflag = 0;                // no remapping, no delays
+    tty.c_cc[VMIN]  = 0;            // read doesn't block
+    tty.c_cc[VTIME] = 5;            // 0.5 seconds read timeout
+
+    tty.c_iflag &= ~(IXON | IXOFF | IXANY); // shut off xon/xoff ctrl
+
+    tty.c_cflag |= (CLOCAL | CREAD);// ignore modem controls,
+                                    // enable reading
+    tty.c_cflag &= ~(PARENB | PARODD);      // shut off parity
+    tty.c_cflag &= ~CSTOPB;
+    tty.c_cflag &= ~CRTSCTS;
+
+    if (tcsetattr(serialPortFD, TCSANOW, &tty) != 0)
+    {
+        Log::writeToLog(Log::WARN, "Arduino handler: tcsetattr() failed: ", strerror(errno));
+        return false;
+    }
+
+    /* Make sure we can receive a valid Control from the Arduino */
+    int attempts = 0;
+    while (!receiveInput())
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        if (attempts++ > 100)
+        {
+            Log::writeToLog(Log::WARN, "Arduino handler: did not receive input from Arduino within 1 second");
+            return false;
+        }
+    }
+
+    /* Make sure we can send a valid Display to the Arduino */
+    memset(&disp, 0, sizeof(disp));
+    try
+    {
+        sendOutput();
+    }
+    catch (std::runtime_error)
+    {
+        return false;
+    }
+
+    return true;
 }
 
 ArduinoHandler::~ArduinoHandler()
@@ -114,7 +188,8 @@ int parseHex(int character) {
   }
 }
 
-void ArduinoHandler::receiveInput() {
+bool ArduinoHandler::receiveInput() {
+  bool gotAMessage = false;
   Log::writeToLog(Log::L_DEBUG, "Arduino begin receiveInput()");
   while (true) {
     int c = receiveInputChar();
@@ -127,6 +202,7 @@ void ArduinoHandler::receiveInput() {
     } else if (c == ']') {
       if (inputPos == inputBufSize && inputChecksum == 0) {
         memcpy(&cont, inputBuf, sizeof(Control));
+        gotAMessage = true;
         Log::writeToLog(Log::L_DEBUG, "Received a Control from Arduino");
       } else {
         if (inputPos < inputBufSize) {
@@ -165,6 +241,7 @@ void ArduinoHandler::receiveInput() {
     }
   }
   Log::writeToLog(Log::L_DEBUG, "Arduino end receiveInput()");
+  return gotAMessage;
 }
 
 int ArduinoHandler::receiveInputChar() {
