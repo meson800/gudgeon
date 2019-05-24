@@ -4,19 +4,34 @@
 #define OUTPUT_DATA_PIN 13
 #define OUTPUT_LATCH_PIN 11
 
+#define THROTTLE_PIN A0
+#define STEER_LEFT_PIN A1
+#define STEER_RIGHT_PIN A2
+#define FIRE_PIN 8
+
 enum TubeStatus
 {
-    Empty = 0,
-    Torpedo = 1,
-    Mine = 2
+  Empty = 0,
+  Torpedo = 1,
+  Mine = 2
+};
+
+enum SteeringDirection
+{
+  Center = 0,
+  Left = 1,
+  Right = 2
 };
 
 // These structs' format must be kept in sync with the corresponding structs in the
 // code that runs on the computer
 struct Control {
+  uint8_t throttle;
+  uint8_t steer;
   uint8_t tubeArmed[5];
   uint8_t tubeLoadTorpedo[5];
   uint8_t tubeLoadMine[5];
+  uint8_t fire;
   uint32_t debugValue;
 } __attribute__((packed));
 
@@ -34,10 +49,26 @@ void setup() {
   pinMode(CLOCK_PIN, OUTPUT);
   pinMode(OUTPUT_DATA_PIN, OUTPUT);
   pinMode(OUTPUT_LATCH_PIN, OUTPUT);
+
+  /* Switch pins are active-low, and use a pullup */
+  pinMode(THROTTLE_PIN, INPUT_PULLUP);
+  pinMode(STEER_LEFT_PIN, INPUT_PULLUP);
+  pinMode(STEER_RIGHT_PIN, INPUT_PULLUP);
+  pinMode(FIRE_PIN, INPUT_PULLUP);
 }
 
 void loop() {
   receiveInput();
+
+  cont.throttle = (digitalRead(THROTTLE_PIN) == LOW) ? 1 : 0;
+
+  if ((digitalRead(STEER_LEFT_PIN) == LOW) && (digitalRead(STEER_RIGHT_PIN) == HIGH)) {
+    cont.steer = Left;
+  } else if ((digitalRead(STEER_RIGHT_PIN) == LOW) && (digitalRead(STEER_LEFT_PIN) == HIGH)) {
+    cont.steer = Right;
+  } else {
+    cont.steer = Center;
+  }
 
   uint16_t switchValues;
   uint16_t combinedSwitchValues = 0x0000;
@@ -50,7 +81,12 @@ void loop() {
   shiftRegisters(0x0000, &switchValues);
   combinedSwitchValues |= switchValues;
   interpretShiftControl(combinedSwitchValues);
-  cont.debugValue = switchValues;
+
+  cont.fire = (digitalRead(FIRE_PIN) == LOW) ? 1 : 0;
+
+  cont.debugValue = 0;
+  if (digitalRead(STEER_LEFT_PIN)) cont.debugValue |= 1;
+  if (digitalRead(STEER_RIGHT_PIN)) cont.debugValue |= 2;
   
   sendOutput();
 }

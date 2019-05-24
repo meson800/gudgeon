@@ -30,9 +30,12 @@ private:
       uint8_t tubeOccupancy[5];
     } __attribute__((packed));
     struct Control {
+      uint8_t throttle;
+      uint8_t steer;
       uint8_t tubeArmed[5];
       uint8_t tubeLoadTorpedo[5];
       uint8_t tubeLoadMine[5];
+      uint8_t fire;
       uint32_t debugValue;
     } __attribute__((packed));
 

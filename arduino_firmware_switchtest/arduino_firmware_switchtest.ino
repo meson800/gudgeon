@@ -188,4 +188,5 @@ void sendOutput() {
   Serial.write(generateHex((checksum >> 4) & 0x0F));
   Serial.write(generateHex(checksum & 0x0F));
   Serial.write(']');
+  Serial.write('\n');
 }

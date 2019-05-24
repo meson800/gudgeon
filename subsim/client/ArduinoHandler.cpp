@@ -141,6 +141,43 @@ void ArduinoHandler::runLoop()
         receiveInput();
         for (int tube = 0; tube < 5; ++tube)
         {
+            if (cont.throttle != lastCont.throttle)
+            {
+                ThrottleEvent event;
+                event.team = team;
+                event.unit = unit;
+                event.desiredSpeed = cont.throttle ? 1000 : 0;
+                EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(event));
+            }
+            if (cont.steer != lastCont.steer)
+            {
+                SteeringEvent event;
+                event.team = team;
+                event.unit = unit;
+                if (cont.steer == UnitState::Left)
+                {
+                    event.direction = SteeringEvent::Left;
+                    event.isPressed = true;
+                }
+                else if (cont.steer == UnitState::Right)
+                {
+                    event.direction = SteeringEvent::Right;
+                    event.isPressed = true;
+                }
+                else
+                {
+                    if (lastCont.steer == UnitState::Right)
+                    {
+                        event.direction = SteeringEvent::Right;
+                    }
+                    else
+                    {
+                        event.direction = SteeringEvent::Left;
+                    }
+                    event.isPressed = false;
+                }
+                EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(event));
+            }
             if (cont.tubeArmed[tube] != lastCont.tubeArmed[tube])
             {
                 TubeArmEvent tubeArm;
@@ -168,6 +205,14 @@ void ArduinoHandler::runLoop()
                 tubeLoad.type = TubeLoadEvent::AmmoType::Mine;
                 EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(tubeLoad));
             }
+            if (cont.fire && !lastCont.fire)
+            {
+                FireEvent fire;
+                fire.team = team;
+                fire.unit = unit;
+                EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(fire));
+                Log::writeToLog(Log::L_DEBUG, "Fired torpedos/mines");
+            }
         }
         Log::writeToLog(Log::L_DEBUG, "Arduino debugValue:", cont.debugValue);
         lastCont = cont;
@@ -193,7 +238,6 @@ bool ArduinoHandler::receiveInput() {
   Log::writeToLog(Log::L_DEBUG, "Arduino begin receiveInput()");
   while (true) {
     int c = receiveInputChar();
-    Log::writeToLog(Log::L_DEBUG, "Serial port character: ", c);
     if (c == EOF) {
       break;
     } else if (c == '[') {
