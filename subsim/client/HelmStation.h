@@ -12,7 +12,7 @@
  * Class that handles the helm station. This does steering.
  * sonar, weapons, and repair
  */
-class HelmStation : public EventReceiver, public Renderable
+class HelmStation : public EventReceiver
 {
 public:
     /// Init internal state
@@ -29,9 +29,6 @@ public:
 
     /// Handles a score update
     HandleResult handleScore(ScoreEvent* event);
-
-    /// Handles drawing the current state on the renderer.
-    virtual void redraw() override;
 
 private:
     /// Stores the last received UnitState
