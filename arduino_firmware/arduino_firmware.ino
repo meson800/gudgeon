@@ -7,6 +7,7 @@
 #define THROTTLE_PIN A0
 #define STEER_LEFT_PIN A1
 #define STEER_RIGHT_PIN A2
+#define STEALTH_PIN A5
 #define FIRE_PIN 8
 
 enum TubeStatus
@@ -28,6 +29,7 @@ enum SteeringDirection
 struct Control {
   uint8_t throttle;
   uint8_t steer;
+  uint8_t stealth;
   uint8_t tubeArmed[5];
   uint8_t tubeLoadTorpedo[5];
   uint8_t tubeLoadMine[5];
@@ -54,6 +56,7 @@ void setup() {
   pinMode(THROTTLE_PIN, INPUT_PULLUP);
   pinMode(STEER_LEFT_PIN, INPUT_PULLUP);
   pinMode(STEER_RIGHT_PIN, INPUT_PULLUP);
+  pinMode(STEALTH_PIN, INPUT_PULLUP);
   pinMode(FIRE_PIN, INPUT_PULLUP);
 }
 
@@ -69,6 +72,8 @@ void loop() {
   } else {
     cont.steer = Center;
   }
+
+  cont.stealth = (digitalRead(STEALTH_PIN) == LOW) ? 1 : 0;
 
   uint16_t switchValues;
   uint16_t combinedSwitchValues = 0x0000;

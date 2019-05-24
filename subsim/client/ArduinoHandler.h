@@ -32,6 +32,7 @@ private:
     struct Control {
       uint8_t throttle;
       uint8_t steer;
+      uint8_t stealth;
       uint8_t tubeArmed[5];
       uint8_t tubeLoadTorpedo[5];
       uint8_t tubeLoadMine[5];

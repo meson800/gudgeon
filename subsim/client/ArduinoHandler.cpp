@@ -188,6 +188,14 @@ void ArduinoHandler::runLoop()
                 }
                 EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(event));
             }
+            if (cont.stealth != lastCont.stealth)
+            {
+                StealthEvent event;
+                event.team = team;
+                event.unit = unit;
+                event.isStealth = !!cont.stealth;
+                EventSystem::getGlobalInstance()->queueEvent(EnvelopeMessage(event));
+            }
             if (cont.tubeArmed[tube] != lastCont.tubeArmed[tube])
             {
                 TubeArmEvent tubeArm;
