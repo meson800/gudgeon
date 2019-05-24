@@ -93,6 +93,8 @@
                     // otherwise, add to station list
                     stations.push_back(StationTypeLookup.at(name));
                 }
+            } else if (key == "flag_score" || key == "death_score") {
+                //ignore, other parser will handle it
             } else {
                 Log::writeToLog(Log::ERR, "Unexpected key in UNIT section: ", key);
                 throw TeamParseError("Invalid key encountered while parsing a UNIT sectoin.");
@@ -115,6 +117,48 @@
         Log::writeToLog(Log::L_DEBUG, "Succesfully processed unit with name=\"", unitName, "\" for team ", team,
          ". Included stations:", stationConcat.str().substr(0, stationConcat.str().length() - 1));
         result[team].second.push_back(Unit_t(unitName, stations));
+    }
+    return result;
+ }
+
+std::map<uint16_t, std::pair<uint16_t, uint16_t>> TeamParser::parseScoring(const ParseResult& parse)
+{
+    std::map<uint16_t, std::pair<uint16_t, uint16_t>> result;
+    auto range = parse.equal_range("TEAM");
+
+    for (auto it = range.first; it != range.second; ++it)
+    {
+
+        uint16_t id = 0;
+        uint16_t flagScore = 0;
+        uint16_t deathScore = 0;
+        bool set = false;
+        for (auto keyValIt = it->second.cbegin(); keyValIt != it->second.cend(); ++keyValIt)
+        {
+            const std::string& key = keyValIt->first;
+            const std::vector<std::string>& values = keyValIt->second;
+
+            if (values.size() != 1)
+            {
+                Log::writeToLog(Log::ERR, "Unexpected number of values in key:\"", key, "\". Number of values:", values.size());
+                throw TeamParseError("Invalid number of keys when reading team score information");
+            }
+
+            std::istringstream sstream(values.at(0));
+            if (key == "id") {
+                sstream >> id;
+            } else if (key == "flag_score") {
+                set = true;
+                sstream >> flagScore;
+            } else if (key == "death_score") {
+                set = true;
+                sstream >> deathScore;
+            }
+        }
+        if (set)
+        {
+            result[id] = std::pair<uint16_t, uint16_t>(flagScore, deathScore);
+        }
     }
     return result;
  }

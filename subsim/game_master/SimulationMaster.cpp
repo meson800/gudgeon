@@ -3,6 +3,8 @@
 #include <sstream>
 #include <math.h>
 
+#include "../common/TeamParser.h"
+
 #include "Targeting.h"
 #include "../common/Log.h"
 #include "../common/Exceptions.h"
@@ -28,6 +30,7 @@ SimulationMaster::SimulationMaster(Network* network_, const std::string& filenam
 {
     ParseResult result = GenericParser::parse(filename);
     config = ConfigParser::parseConfig(result);
+    overrideScores = TeamParser::parseScoring(result);
 
     
     lobbyInit = std::unique_ptr<LobbyHandler>(new LobbyHandler(result));
@@ -372,7 +375,16 @@ void SimulationMaster::runSimForUnit(UnitState *unitState)
             startLoc.first, startLoc.second, config.collisionRadius*2))
         {
             Log::writeToLog(Log::L_DEBUG, "Team ", unitState->team, " unit ", unitState->unit, " returned a flag");
-            scores[unitState->team] += 5;
+
+            // check for an override score
+            if (overrideScores.count(unitState->team) > 0)
+            {
+                scores[unitState->team] += overrideScores[unitState->team].first;
+            }
+            else
+            {
+                scores[unitState->team] += 5;
+            }
             // remove flag, restoring it to its position on the map
             
             unitState->hasFlag = false;
@@ -419,11 +431,22 @@ void SimulationMaster::damage(uint32_t team, uint32_t unit, int16_t amount)
         u->respawning = true;
         u->respawnCooldown = config.respawnCooldown;
 
+        uint16_t benefit = 0;
+        // check for override score
+        if (overrideScores.count(team) > 0)
+        {
+            benefit = overrideScores[team].second;
+        }
+        else
+        {
+            benefit = 1;
+        }
+
         for (auto& pair : scores)
         {
             if (pair.first != team)
             {
-                ++pair.second;
+                pair.second += benefit;
             }
         }
 

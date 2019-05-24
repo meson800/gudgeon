@@ -102,6 +102,9 @@ private:
     /// Stores the current team scores
     std::map<uint32_t, uint32_t> scores;
 
+    /// Stores the overriden game scores
+    std::map<uint16_t, std::pair<uint16_t, uint16_t>> overrideScores;
+
     /// Stores the game configuration
     Config config;
 };

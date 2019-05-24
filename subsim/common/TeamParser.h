@@ -22,4 +22,5 @@ class TeamParser
 {
 public:
     static std::map<uint16_t, Team_t> parseStations(const ParseResult& parse);
+    static std::map<uint16_t, std::pair<uint16_t, uint16_t>> parseScoring(const ParseResult& parse);
 };
