@@ -320,6 +320,7 @@ void UI::runSDLloop(bool& startupDone, std::mutex& startupMux)
                 }
                 TTF_Quit();
                 SDL_Quit();
+                exit(0);
                 return;
             }
         }
@@ -383,7 +384,7 @@ void UI::runSDLloop(bool& startupDone, std::mutex& startupMux)
                 {
                     if (event.key.keysym.sym == SDLK_ESCAPE)
                     {
-                        exit(0);
+                        shouldShutdown = true;
                     }
 
                     KeyEvent ke;
@@ -523,7 +524,7 @@ void UI::runSDLloop(bool& startupDone, std::mutex& startupMux)
 
                 case SDL_QUIT:
                 {
-                    exit(0);
+                    shouldShutdown = true;
                 }
                 break;
 
