@@ -80,6 +80,9 @@ SDL_Renderer* UI::getFreeRenderer(uint16_t minWidth, uint16_t minHeight)
         throw SDLError("Error in SDL_CreateWindowAndRenderer");
     }
 
+    SDL_SetWindowBordered(newWindow, SDL_FALSE);
+    SDL_SetWindowPosition(newWindow, 0, 0);
+
     // Clear the screen initially
     SDL_SetRenderDrawColor(newRenderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
     SDL_RenderClear(newRenderer);
