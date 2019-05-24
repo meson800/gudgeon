@@ -74,7 +74,7 @@ SDL_Renderer* UI::getFreeRenderer(uint16_t minWidth, uint16_t minHeight)
     SDL_Window * newWindow;
     SDL_Renderer * newRenderer;
     
-    if (SDL_CreateWindowAndRenderer(minWidth, minHeight, SDL_WINDOW_OPENGL, &newWindow, &newRenderer) != 0)
+    if (SDL_CreateWindowAndRenderer(minWidth, minHeight, SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN, &newWindow, &newRenderer) != 0)
     {
         Log::writeToLog(Log::ERR, "Couldn't create a new window and renderer of size (", minWidth, ",", minHeight, ")");
         throw SDLError("Error in SDL_CreateWindowAndRenderer");

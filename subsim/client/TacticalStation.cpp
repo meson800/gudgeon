@@ -9,8 +9,8 @@
 #include <SDL2_gfxPrimitives.h>
 #include <sstream>
 
-#define WIDTH 1280
-#define HEIGHT 960
+#define WIDTH 3840
+#define HEIGHT 2160
 
 static constexpr uint32_t rgba_to_color(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 {
