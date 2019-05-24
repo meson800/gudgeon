@@ -97,7 +97,7 @@ HandleResult VoiceHandler::handleClearAudio(ClearAudio* event)
 
 HandleResult VoiceHandler::handleTheme(ThemeAudio* event)
 {
-    for (int i = 0; i < 4; ++i)
+    for (int i = 0; i < 20; ++i)
     {
         if (SDL_QueueAudio(outputDeviceID, theme.data(), theme.size()) < 0)
         {
