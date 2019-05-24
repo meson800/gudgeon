@@ -381,6 +381,11 @@ void UI::runSDLloop(bool& startupDone, std::mutex& startupMux)
                 case SDL_KEYDOWN:
                 case SDL_KEYUP:
                 {
+                    if (event.key.keysym.sym == SDLK_ESCAPE)
+                    {
+                        exit(0);
+                    }
+
                     KeyEvent ke;
                     ke.isDown = event.type == SDL_KEYDOWN;
                     ke.repeat = event.key.repeat;
@@ -513,6 +518,12 @@ void UI::runSDLloop(bool& startupDone, std::mutex& startupMux)
                     TextInputEvent te;
                     te.text = event.text.text;
                     EventSystem::getGlobalInstance()->queueEvent(te);
+                }
+                break;
+
+                case SDL_QUIT:
+                {
+                    exit(0);
                 }
                 break;
 
