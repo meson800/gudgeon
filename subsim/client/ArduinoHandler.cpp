@@ -16,25 +16,25 @@ ArduinoHandler::ArduinoHandler(uint32_t team_, uint32_t unit_)
     , inputChecksum(0)
     , serialPortFD(-1)
 {
-    if (openSerialPort())
-    {
-        loopThread = std::thread(&ArduinoHandler::runLoop, this);
-    }
-    else
-    {
-        Log::writeToLog(Log::ERR, "Could not connect to Arduino; falling back to keyboard control.");
-    }
+    loopThread = std::thread(&ArduinoHandler::runLoop, this);
 }
 
 bool ArduinoHandler::openSerialPort()
 {
     const char *serialPortPath = "/dev/ttyACM0";
-    Log::writeToLog(Log::WARN, "Arduino handler connecting to Arduino at ", serialPortPath);
+    Log::writeToLog(Log::INFO, "Arduino handler trying to connect to Arduino at ", serialPortPath);
     serialPortFD = open(serialPortPath, O_RDWR|O_NONBLOCK);
     if (serialPortFD == -1)
     {
         Log::writeToLog(Log::WARN, "Arduino handler: open() failed: ", strerror(errno));
-        return false;
+        serialPortPath = "/dev/ttyACM1";
+        Log::writeToLog(Log::INFO, "Arduino handler retrying at ", serialPortPath);
+        serialPortFD = open(serialPortPath, O_RDWR|O_NONBLOCK);
+        if (serialPortFD == -1)
+        {
+            Log::writeToLog(Log::WARN, "Arduino handler: open() failed: ", strerror(errno));
+            return false;
+        }
     }
 
     /* shamelessly stolen from:
@@ -81,9 +81,9 @@ bool ArduinoHandler::openSerialPort()
     while (!receiveInput())
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        if (attempts++ > 100)
+        if (attempts++ > 10)
         {
-            Log::writeToLog(Log::WARN, "Arduino handler: did not receive input from Arduino within 1 second");
+            Log::writeToLog(Log::WARN, "Arduino handler: did not receive input from Arduino within 0.1 second");
             return false;
         }
     }
@@ -99,6 +99,8 @@ bool ArduinoHandler::openSerialPort()
         return false;
     }
 
+    Log::writeToLog(Log::INFO, "Arduino handler connected successfully");
+
     return true;
 }
 
@@ -111,6 +113,7 @@ ArduinoHandler::~ArduinoHandler()
         loopThread.join();
     }
     Log::writeToLog(Log::INFO, "Arduino thread shutdown successfully.");
+
     close(serialPortFD);
 }
 
@@ -127,6 +130,13 @@ HandleResult ArduinoHandler::handleUnitState(UnitState* state)
 void ArduinoHandler::runLoop()
 {
     Log::writeToLog(Log::INFO, "Arduino thread started");
+
+    while (!openSerialPort() && !shouldShutdown)
+    {
+        Log::writeToLog(Log::ERR, "Could not connect to Arduino; trying again.");
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    }
+
     while (!shouldShutdown)
     {
         {
@@ -214,7 +224,6 @@ void ArduinoHandler::runLoop()
                 Log::writeToLog(Log::L_DEBUG, "Fired torpedos/mines");
             }
         }
-        Log::writeToLog(Log::L_DEBUG, "Arduino debugValue:", cont.debugValue);
         lastCont = cont;
 
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -235,7 +244,7 @@ int parseHex(int character) {
 
 bool ArduinoHandler::receiveInput() {
   bool gotAMessage = false;
-  Log::writeToLog(Log::L_DEBUG, "Arduino begin receiveInput()");
+  bool saidSentUnrecognized = false;
   while (true) {
     int c = receiveInputChar();
     if (c == EOF) {
@@ -247,7 +256,6 @@ bool ArduinoHandler::receiveInput() {
       if (inputPos == inputBufSize && inputChecksum == 0) {
         memcpy(&cont, inputBuf, sizeof(Control));
         gotAMessage = true;
-        Log::writeToLog(Log::L_DEBUG, "Received a Control from Arduino");
       } else {
         if (inputPos < inputBufSize) {
           Log::writeToLog(Log::ERR, "Arduino sent too-small message");
@@ -260,7 +268,10 @@ bool ArduinoHandler::receiveInput() {
     } else {
       int h = parseHex(c);
       if (h == -1) {
-        Log::writeToLog(Log::ERR, "Arduino sent unrecognized character");
+        if (!saidSentUnrecognized) {
+          Log::writeToLog(Log::ERR, "Arduino sent unrecognized character(s)");
+          saidSentUnrecognized = true;
+        }
         inputPos = inputBufSize + 1;
         continue;
       }
@@ -284,7 +295,6 @@ bool ArduinoHandler::receiveInput() {
       inputPos += 1;
     }
   }
-  Log::writeToLog(Log::L_DEBUG, "Arduino end receiveInput()");
   return gotAMessage;
 }
 
@@ -310,7 +320,6 @@ int generateHex(int value) {
 }
 
 void ArduinoHandler::sendOutput() {
-  Log::writeToLog(Log::L_DEBUG, "Arduino begin sendOutput()");
   sendOutputChar('[');
   uint8_t checksum = 0;
   const uint8_t *outputBuf = (const uint8_t *)&disp;
@@ -322,7 +331,6 @@ void ArduinoHandler::sendOutput() {
   sendOutputChar(generateHex((checksum >> 4) & 0x0F));
   sendOutputChar(generateHex(checksum & 0x0F));
   sendOutputChar(']');
-  Log::writeToLog(Log::L_DEBUG, "Arduino end sendOutput()");
 }
 
 void ArduinoHandler::sendOutputChar(uint8_t c) {
