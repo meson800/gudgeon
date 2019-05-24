@@ -109,20 +109,22 @@ public:
      */
     std::vector<bool> tubeIsArmed;
 
-    /// Stores the different possible loaded states
+    /// Stores the different possible loaded states. Must be kept in sync with
+    /// the corresponding enum in the Arduino code.
     enum TubeStatus
     {
-        Empty,
-        Torpedo,
-        Mine
+        Empty = 0,
+        Torpedo = 1,
+        Mine = 2
     };
 
-    /// Stores the different steering directions
+    /// Stores the different steering directions. Must be kept in sync with
+    /// the corresponding enum in the Arduino code.
     enum SteeringDirection
     {
-        Left,
-        Right,
-        Center,
+        Center = 0,
+        Left = 1,
+        Right = 2
     };
 
     /// Stores the occupancy of the tubes

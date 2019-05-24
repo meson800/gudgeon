@@ -216,7 +216,7 @@ HandleResult TacticalStation::handleUnitState(UnitState* state)
         lastState = *state;
         scheduleRedraw();
     }
-    return HandleResult::Stop;
+    return HandleResult::Continue;
 }
 
 HandleResult TacticalStation::handleSonarDisplay(SonarDisplayState* sonar)

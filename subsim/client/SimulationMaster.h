@@ -8,6 +8,7 @@
 #include "TacticalStation.h"
 #include "HelmStation.h"
 #include "VoiceHandler.h"
+#include "ArduinoHandler.h"
 
 #include <memory>
 
@@ -55,6 +56,9 @@ private:
 
     /// Internal mapping of teams/units/stations
     std::vector<SimulationStart::Station> stations;
+
+    /// Smart pointer for the ArduinoHandler
+    std::unique_ptr<ArduinoHandler> arduinoHandler;
 
     /// Smart pointer for the voice handler
     std::unique_ptr<VoiceHandler> voiceHandler;

@@ -67,6 +67,8 @@ void SimulationMaster::createStations()
             helm.push_back(std::shared_ptr<HelmStation>(new HelmStation(station.team, station.unit, teamNames)));
         }
     }
+
+    arduinoHandler.reset(new ArduinoHandler(stations.front().team, stations.front().unit));
 }
 
 bool SimulationMaster::ConnectionEstablished(RakNet::RakNetGUID other)
