@@ -50,7 +50,6 @@ private:
     /// Stores the currently selected entry under our cursor
     uint16_t selectedTeam;
     uint16_t selectedUnit;
-    uint16_t selectedStation;
 
     std::map<uint16_t, Team_owner_t> unpackedState;
 

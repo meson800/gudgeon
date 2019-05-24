@@ -17,7 +17,6 @@ LobbyHandler::LobbyHandler()
     , EventReceiver({dispatchEvent<LobbyHandler, KeyEvent, &LobbyHandler::getKeypress>})
     , selectedTeam(1)
     , selectedUnit(0)
-    , selectedStation(0)
 {
     Log::writeToLog(Log::L_DEBUG, "LobbyHandler started");
 }
@@ -52,88 +51,84 @@ HandleResult LobbyHandler::getKeypress(KeyEvent* event)
     Log::writeToLog(Log::L_DEBUG, "Got keyup press:", event->key);
     {
         std::lock_guard<std::mutex> guard(mux);
-        
+
+        bool isAssigned =
+            unpackedState[selectedTeam]
+                .second[selectedUnit]
+                    .second[0].second == network->getOurGUID();
+
         switch (event->key)
         {
             case Key::Left:
             {
-                // Go to the previous team
-                auto it = unpackedState.find(selectedTeam);
-                if (it == unpackedState.end())
+                if (!isAssigned)
                 {
-                    Log::writeToLog(Log::ERR, "Cursor is on invalid team:", selectedTeam);
-                    throw LobbyError("Invalid cursor team location!");
-                }
+                    // Go to the previous team
+                    auto it = unpackedState.find(selectedTeam);
+                    if (it == unpackedState.end())
+                    {
+                        Log::writeToLog(Log::ERR, "Cursor is on invalid team:", selectedTeam);
+                        throw LobbyError("Invalid cursor team location!");
+                    }
 
-                if (it != unpackedState.begin())
-                {
-                    --it;
-                    selectedTeam = it->first;
-                    selectedUnit = 0;
-                    selectedStation = 0;
+                    if (it != unpackedState.begin())
+                    {
+                        --it;
+                        selectedTeam = it->first;
+                        selectedUnit = 0;
+                    }
                 }
             }
             break;
 
             case Key::Right:
             {
-                // go to the next team
-                auto it = unpackedState.find(selectedTeam);
-                if (it == unpackedState.end())
+                if (!isAssigned)
                 {
-                    Log::writeToLog(Log::ERR, "Cursor is on invalid team:", selectedTeam);
-                    throw LobbyError("Invalid cursor team location!");
-                }
+                    // go to the next team
+                    auto it = unpackedState.find(selectedTeam);
+                    if (it == unpackedState.end())
+                    {
+                        Log::writeToLog(Log::ERR, "Cursor is on invalid team:", selectedTeam);
+                        throw LobbyError("Invalid cursor team location!");
+                    }
 
-                ++it;
-                if (it != unpackedState.end())
-                {
-                    selectedTeam = it->first;
-                    selectedUnit = 0;
-                    selectedStation = 0;
+                    ++it;
+                    if (it != unpackedState.end())
+                    {
+                        selectedTeam = it->first;
+                        selectedUnit = 0;
+                    }
                 }
             }
             break;
 
             case Key::Down:
             {
-                // Go to the next station
-                uint32_t numUnits = unpackedState[selectedTeam].second.size();
-                uint32_t numStations = unpackedState[selectedTeam].second[selectedUnit].second.size();
-                if (selectedStation < numStations - 1)
+                if (!isAssigned)
                 {
-                    ++selectedStation;
-                    break;
-                }
-
-                // Otherwise, go to the next unit
-                if (selectedUnit < numUnits - 1)
-                {
-                    ++selectedUnit;
-                    selectedStation = 0;
-                    break;
+                    // Go to the next unit
+                    uint32_t numUnits = unpackedState[selectedTeam].second.size();
+                    if (selectedUnit < numUnits - 1)
+                    {
+                        ++selectedUnit;
+                        break;
+                    }
                 }
             }
             break;
 
             case Key::Up:
             {
-                // Go up to the next station
-                uint32_t numUnits = unpackedState[selectedTeam].second.size();
-                uint32_t numStations = unpackedState[selectedTeam].second[selectedUnit].second.size();
-
-                if (selectedStation > 0)
+                if (!isAssigned)
                 {
-                    --selectedStation;
-                    break;
-                }
-
-                // Otherwise, go to the previous unit
-                if (selectedUnit > 0)
-                {
-                    --selectedUnit;
-                    selectedStation = unpackedState[selectedTeam].second[selectedUnit].second.size() - 1;
-                    break;
+                    // Go up to the previous unit
+                    uint32_t numUnits = unpackedState[selectedTeam].second.size();
+                    if (selectedUnit > 0)
+                    {
+                        --selectedUnit;
+                        break;
+                    }
                 }
             }
             break;
@@ -141,17 +136,17 @@ HandleResult LobbyHandler::getKeypress(KeyEvent* event)
             case Key::Enter:
             {
                 LobbyStatusRequest request;
-                LobbyStatusRequest::StationID id;
-                id.team = selectedTeam;
-                id.unit = selectedUnit;
-                id.station = selectedStation;
-
-                bool should_assign = unpackedState[selectedTeam].second[selectedUnit].second[selectedStation].second != network->getOurGUID();
-
-                request.stations.push_back(std::pair<LobbyStatusRequest::StationID, bool>(id, should_assign));
+                for (int i = 0; i < unpackedState[selectedTeam].second[selectedUnit].second.size(); ++i)
+                {
+                    LobbyStatusRequest::StationID id;
+                    id.team = selectedTeam;
+                    id.unit = selectedUnit;
+                    id.station = i;
+                    request.stations.push_back(
+                        std::pair<LobbyStatusRequest::StationID, bool>(id, !isAssigned));
+                }
                 network->sendMessage(network->getFirstConnectionGUID(), &request, PacketReliability::RELIABLE_SEQUENCED);
             }
-                
         }
     }
     scheduleRedraw();
@@ -234,7 +229,7 @@ void LobbyHandler::redraw()
                     color = us_color;
                 }
 
-                if (selectedTeam == team && selectedUnit == unit && selectedStation == station)
+                if (selectedTeam == team && selectedUnit == unit)
                 {
                     filledCircleColor(renderer, x + 5, y + 15, 13, us_hover_color);
                 }
