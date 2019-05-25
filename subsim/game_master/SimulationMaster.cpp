@@ -1,6 +1,7 @@
 #include "SimulationMaster.h"
 #include <algorithm>
 #include <sstream>
+#include <random>
 #include <math.h>
 
 #include "../common/TeamParser.h"
@@ -8,6 +9,9 @@
 #include "Targeting.h"
 #include "../common/Log.h"
 #include "../common/Exceptions.h"
+
+std::random_device rd;
+std::mt19937 gen;
 
 inline bool didCollide(int64_t x1, int64_t y1, int64_t x2, int64_t y2, int32_t radius)
 {
@@ -31,6 +35,8 @@ SimulationMaster::SimulationMaster(Network* network_, const std::string& filenam
     ParseResult result = GenericParser::parse(filename);
     config = ConfigParser::parseConfig(result);
     overrideScores = TeamParser::parseScoring(result);
+
+    gen = std::mt19937(rd());
 
     
     lobbyInit = std::unique_ptr<LobbyHandler>(new LobbyHandler(result));
@@ -68,10 +74,21 @@ UnitState SimulationMaster::initialUnitState(uint32_t team, uint32_t unit)
     unitState.remainingTorpedos = config.maxTorpedos;
     unitState.remainingMines = config.maxMines;
     unitState.torpedoDistance = 100;
-    unitState.x = start.first
-        + config.collisionRadius * 2
-            * (unit - 0.5 * (assignments[team].size() - 1));
+    unitState.x = start.first;
     unitState.y = start.second;
+
+    // jitter the x/y coordinates by up the exclusion radius, restarting if we in a wall
+    auto dist = std::uniform_int_distribution<int16_t>(-config.mineExclusionRadius / 2, config.mineExclusionRadius / 2);
+    int64_t newX, newY;
+    do
+    {
+        newX = unitState.x + dist(gen);
+        newY = unitState.y + dist(gen);
+    } while (config.terrain.colorAt(newX / config.terrain.scale, newY / config.terrain.scale) == Terrain::WALL);
+
+    unitState.x = newX;
+    unitState.y = newY;
+
     unitState.depth = 0;
     unitState.heading = 90;
     unitState.direction = UnitState::SteeringDirection::Center;
@@ -498,6 +515,8 @@ HandleResult SimulationMaster::simStart(SimulationStartServer* event)
     std::ostringstream sstream;
     for (auto& teamPair : assignments)
     {
+        // Initalize zero scores
+        scores[teamPair.first] = 0;
         sstream << "Team " << teamPair.first << ": {";
         for (auto& units : teamPair.second)
         {
@@ -546,8 +565,6 @@ HandleResult SimulationMaster::simStart(SimulationStartServer* event)
 
             flags[nextFlagID++] = flag;
 
-            // Initalize zero scores
-            scores[flag.team] = 0;
         }
     }
 
